@@ -24,7 +24,7 @@
 
   <style>
     /* =========================
-     * BASE / TOKENS
+     * BASE / TOKENS (PREMIUM)
      * ======================= */
     *, *::before, *::after { box-sizing: border-box; }
     * { margin: 0; padding: 0; }
@@ -36,10 +36,12 @@
       --bg1: #071e16;
       --bg2: #05281d;
 
+      /* warm gold */
       --gold0: #FFF1C4;
       --gold1: #F59E0B;
       --gold2: #78350F;
 
+      /* emerald */
       --green0: #bbf7d0;
       --green1: #22c55e;
       --green2: #16a34a;
@@ -51,6 +53,12 @@
       --shadow-soft: 0 0 60px -14px rgba(34, 197, 94, 0.18);
 
       --ring: rgba(34,197,94,0.62);
+
+      /* premium optics */
+      --glass: rgba(255,255,255,0.08);
+      --shadow-deep: rgba(0,0,0,0.68);
+      --gold-glow: rgba(245,158,11,0.22);
+      --bulb-warm: rgba(245,158,11,0.78);
 
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-right: env(safe-area-inset-right, 0px);
@@ -212,7 +220,7 @@
     }
 
     /* =========================
-     * WHEEL — CLEAN (ANTI BOX)
+     * WHEEL — PREMIUM (ANTI BOX)
      * ======================= */
     .wheel-container{
       position: relative;
@@ -225,6 +233,7 @@
       padding-top: clamp(14px, 3.2vw, 22px);
     }
 
+    /* Replace heavy box-shadow (can look boxy on some GPUs) with pure radial glow */
     .wheel-container::before{
       content:"";
       position: absolute;
@@ -236,9 +245,11 @@
       border-radius: 50%;
       pointer-events: none;
       z-index: 0;
-      box-shadow:
-        0 34px 86px rgba(0,0,0,0.66),
-        0 0 46px rgba(245,158,11,0.16);
+      background:
+        radial-gradient(circle at 50% 55%, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.58) 26%, rgba(0,0,0,0.00) 64%),
+        radial-gradient(circle at 50% 50%, rgba(245,158,11,0.18) 0%, rgba(245,158,11,0.06) 28%, rgba(245,158,11,0.00) 62%);
+      filter: blur(2px);
+      opacity: 0.95;
     }
 
     .wheel-wrapper{
@@ -257,10 +268,10 @@
     }
 
     /* =========================
-     * LIGHTS — REAL CASINO BULBS (HTML)
-     * - IDLE: chase slow (looks rotating)
+     * LIGHTS — PREMIUM 3D BULBS
+     * - IDLE: chase slow (illusion rotating)
      * - SPIN: chase fast
-     * - RESULT: chase stop, all ON breathe smooth
+     * - RESULT: stop chase, all ON breathe
      * ======================= */
     .wheel-lights{
       position: absolute;
@@ -271,23 +282,24 @@
       opacity: 1;
       transform: translateZ(0);
       will-change: opacity;
+      isolation: isolate;
     }
 
-    /* glass overlay (keep) */
+    /* subtle lens/glass */
     .wheel-lights::after{
       content:"";
       position:absolute;
-      inset: clamp(18px, 4.2vw, 24px);
+      inset: clamp(16px, 4.0vw, 24px);
       border-radius: 50%;
       pointer-events:none;
       background:
-        radial-gradient(circle at 30% 22%, rgba(255,255,255,0.08), transparent 46%),
-        radial-gradient(circle at 70% 74%, rgba(245,158,11,0.10), transparent 58%),
+        radial-gradient(circle at 30% 22%, rgba(255,255,255,0.10), transparent 46%),
+        radial-gradient(circle at 70% 74%, rgba(245,158,11,0.14), transparent 58%),
         radial-gradient(circle at 50% 50%, rgba(0,0,0,0.18), transparent 62%);
       border: 1px solid rgba(255, 232, 176, 0.16);
       box-shadow:
         inset 0 0 0 1px rgba(0,0,0,0.18),
-        inset 0 0 20px rgba(245,158,11,0.06);
+        inset 0 0 22px rgba(245,158,11,0.08);
       opacity: 0.92;
       z-index: 3;
     }
@@ -296,85 +308,133 @@
       position: absolute;
       left: 50%;
       top: 50%;
-      width: clamp(8.5px, 2.2vw, 12px);
-      height: clamp(8.5px, 2.2vw, 12px);
+      width: clamp(9px, 2.25vw, 12.8px);
+      height: clamp(9px, 2.25vw, 12.8px);
       border-radius: 999px;
-      transform: translate(-50%, -50%);
-      background:
-        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(255,241,196,0.92) 38%, rgba(245,158,11,0.92) 68%, rgba(120,53,15,0.95) 100%);
-      box-shadow:
-        0 0 0 1px rgba(0,0,0,0.22),
-        0 0 10px rgba(245,158,11,0.22),
-        0 0 22px rgba(245,158,11,0.18);
+      transform: translate(-50%, -50%) translateZ(0);
       opacity: 0.55;
       will-change: opacity, transform, filter;
+
+      /* bulb core (warm) */
+      background:
+        radial-gradient(circle at 30% 28%, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.55) 16%, rgba(255,241,196,0.95) 34%, rgba(245,158,11,0.90) 62%, rgba(120,53,15,0.98) 100%);
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.26),
+        0 0 10px rgba(245,158,11,0.20),
+        0 0 22px rgba(245,158,11,0.16);
+      filter: saturate(1.12);
     }
+
+    /* socket ring (adds depth) */
+    .light-bulb::before{
+      content:"";
+      position:absolute;
+      inset: -22%;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(0,0,0,0.45), rgba(0,0,0,0.10) 62%, rgba(0,0,0,0.0) 72%),
+        conic-gradient(from 20deg,
+          rgba(255,255,255,0.18),
+          rgba(0,0,0,0.00) 18%,
+          rgba(255,255,255,0.10) 38%,
+          rgba(0,0,0,0.00) 58%,
+          rgba(255,255,255,0.16) 100%);
+      opacity: 0.55;
+      pointer-events:none;
+      filter: blur(0.2px);
+    }
+
+    /* specular highlight */
     .light-bulb::after{
       content:"";
       position:absolute;
       inset: 18%;
       border-radius: 999px;
-      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.85), rgba(255,255,255,0.10) 65%, transparent 72%);
-      opacity: 0.75;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(255,255,255,0.18) 52%, transparent 70%);
+      opacity: 0.85;
       pointer-events:none;
+      mix-blend-mode: screen;
     }
 
-    /* CHASE KEYFRAMES (per-bulb delay creates rotation illusion) */
+    /* CHASE KEYFRAMES (premium, less flat) */
     @keyframes bulbChase {
-      0%   { opacity: 1;   transform: translate(-50%,-50%) scale(1.10); filter: drop-shadow(0 0 10px rgba(245,158,11,0.55)); }
-      8%   { opacity: 1;   transform: translate(-50%,-50%) scale(1.18); filter: drop-shadow(0 0 14px rgba(245,158,11,0.75)); }
-      16%  { opacity: 0.72;transform: translate(-50%,-50%) scale(1.02); filter: drop-shadow(0 0 9px rgba(245,158,11,0.35)); }
-      100% { opacity: 0.45;transform: translate(-50%,-50%) scale(0.98); filter: drop-shadow(0 0 6px rgba(245,158,11,0.20)); }
+      0%   { opacity: 0.38; transform: translate(-50%,-50%) scale(0.96); filter: drop-shadow(0 0 6px rgba(245,158,11,0.18)); }
+      6%   { opacity: 1;    transform: translate(-50%,-50%) scale(1.18); filter: drop-shadow(0 0 14px rgba(245,158,11,0.78)); }
+      14%  { opacity: 0.78; transform: translate(-50%,-50%) scale(1.06); filter: drop-shadow(0 0 10px rgba(245,158,11,0.40)); }
+      100% { opacity: 0.34; transform: translate(-50%,-50%) scale(0.96); filter: drop-shadow(0 0 6px rgba(245,158,11,0.16)); }
     }
 
     @keyframes bulbBreathe {
-      0%   { opacity: 0.92; transform: translate(-50%,-50%) scale(1.02); filter: drop-shadow(0 0 14px rgba(245,158,11,0.55)); }
-      50%  { opacity: 1;    transform: translate(-50%,-50%) scale(1.08); filter: drop-shadow(0 0 18px rgba(245,158,11,0.75)); }
-      100% { opacity: 0.92; transform: translate(-50%,-50%) scale(1.02); filter: drop-shadow(0 0 14px rgba(245,158,11,0.55)); }
+      0%   { opacity: 0.86; transform: translate(-50%,-50%) scale(1.02); filter: drop-shadow(0 0 14px rgba(245,158,11,0.55)); }
+      50%  { opacity: 1;    transform: translate(-50%,-50%) scale(1.10); filter: drop-shadow(0 0 20px rgba(245,158,11,0.85)); }
+      100% { opacity: 0.86; transform: translate(-50%,-50%) scale(1.02); filter: drop-shadow(0 0 14px rgba(245,158,11,0.55)); }
     }
 
-    /* defaults */
     .wheel-wrapper.lights-idle .light-bulb{
-      animation: bulbChase 3.9s linear infinite;
+      animation: bulbChase 4.2s linear infinite;
       animation-delay: calc(var(--i) * -0.12s);
     }
     .wheel-wrapper.lights-spin .light-bulb{
-      animation: bulbChase 0.95s linear infinite;
+      animation: bulbChase 0.92s linear infinite;
       animation-delay: calc(var(--i) * -0.045s);
       box-shadow:
-        0 0 0 1px rgba(0,0,0,0.18),
-        0 0 14px rgba(245,158,11,0.35),
-        0 0 34px rgba(245,158,11,0.25);
+        0 0 0 1px rgba(0,0,0,0.22),
+        0 0 14px rgba(245,158,11,0.32),
+        0 0 36px rgba(245,158,11,0.24);
     }
     .wheel-wrapper.lights-result .light-bulb{
       animation: bulbBreathe 1.55s ease-in-out infinite;
       animation-delay: 0s;
       opacity: 0.95;
       box-shadow:
-        0 0 0 1px rgba(0,0,0,0.18),
-        0 0 18px rgba(245,158,11,0.40),
-        0 0 44px rgba(245,158,11,0.28);
+        0 0 0 1px rgba(0,0,0,0.22),
+        0 0 20px rgba(245,158,11,0.42),
+        0 0 48px rgba(245,158,11,0.30);
     }
 
     /* =========================
-     * POINTER — MODERN METAL CASINO
+     * POINTER — PREMIUM CASINO + WOBBLE
      * ======================= */
     .pointer{
       position: absolute;
-      top: clamp(-32px, -6.4vw, -20px);
+      top: clamp(-34px, -6.9vw, -22px);
       left: 50%;
       transform: translateX(-50%) translateZ(0);
+      transform-origin: 50% 14%;
       z-index: 30;
-      width: clamp(40px, 10.5vw, 58px);
-      height: clamp(56px, 13.6vw, 78px);
+      width: clamp(42px, 10.8vw, 62px);
+      height: clamp(58px, 14.2vw, 82px);
       filter:
-        drop-shadow(0 16px 26px rgba(0,0,0,0.55))
-        drop-shadow(0 0 18px rgba(245,158,11,0.14));
+        drop-shadow(0 18px 28px rgba(0,0,0,0.58))
+        drop-shadow(0 0 20px rgba(245,158,11,0.16));
       pointer-events: none;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
+      will-change: transform, filter;
     }
     .pointer svg { width: 100%; height: 100%; display:block; }
+
+    @keyframes pointerWobble {
+      0%   { transform: translateX(-50%) rotate(0deg) translateY(0px); }
+      25%  { transform: translateX(-50%) rotate(-2.2deg) translateY(0.6px); }
+      50%  { transform: translateX(-50%) rotate(0deg) translateY(0px); }
+      75%  { transform: translateX(-50%) rotate(2.2deg) translateY(0.8px); }
+      100% { transform: translateX(-50%) rotate(0deg) translateY(0px); }
+    }
+
+    @keyframes pointerTick {
+      0%   { transform: translateX(-50%) rotate(0deg) translateY(0px); }
+      35%  { transform: translateX(-50%) rotate(-6deg) translateY(1.2px); }
+      100% { transform: translateX(-50%) rotate(0deg) translateY(0px); }
+    }
+
+    .wheel-wrapper.is-spinning .pointer{
+      animation: pointerWobble 220ms ease-in-out infinite;
+    }
+    .pointer.tick{
+      animation: pointerTick 120ms ease-out 1;
+    }
 
     /* =========================
      * OUTER RIM — GOLD METAL (STATIC)
@@ -393,23 +453,23 @@
         radial-gradient(circle at 30% 22%, rgba(255,255,255,0.22), transparent 44%),
         radial-gradient(circle at 50% 86%, rgba(0,0,0,0.60), transparent 58%),
         conic-gradient(from 10deg,
-          rgba(255,255,255,0.22),
+          rgba(255,255,255,0.26),
           rgba(0,0,0,0.00) 10%,
-          rgba(255,255,255,0.10) 18%,
+          rgba(255,255,255,0.12) 18%,
           rgba(0,0,0,0.00) 28%,
-          rgba(255,255,255,0.08) 38%,
+          rgba(255,255,255,0.10) 38%,
           rgba(0,0,0,0.00) 52%,
-          rgba(255,255,255,0.12) 64%,
+          rgba(255,255,255,0.14) 64%,
           rgba(0,0,0,0.00) 78%,
-          rgba(255,255,255,0.22) 100%
+          rgba(255,255,255,0.26) 100%
         ),
         linear-gradient(180deg,
-          rgba(255, 241, 196, 0.92) 0%,
-          rgba(245, 158, 11, 0.94) 46%,
-          rgba(120, 53, 15, 0.96) 100%
+          rgba(255, 241, 196, 0.94) 0%,
+          rgba(245, 158, 11, 0.95) 46%,
+          rgba(120, 53, 15, 0.98) 100%
         );
 
-      border: 1px solid rgba(255, 232, 176, 0.24);
+      border: 1px solid rgba(255, 232, 176, 0.26);
       box-shadow:
         0 28px 70px rgba(0,0,0,0.58),
         0 0 34px rgba(245,158,11,0.16);
@@ -418,6 +478,22 @@
       -webkit-transform: translateZ(0);
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
+    }
+
+    /* inner bevel ring */
+    .wheel-outer::before{
+      content:"";
+      position:absolute;
+      inset: clamp(10px, 2.6vw, 14px);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 30%, rgba(255,255,255,0.12), transparent 58%),
+        radial-gradient(circle at 50% 75%, rgba(0,0,0,0.30), transparent 62%),
+        linear-gradient(180deg, rgba(255,255,255,0.10), rgba(0,0,0,0.08));
+      border: 1px solid rgba(0,0,0,0.22);
+      opacity: 0.55;
+      pointer-events:none;
+      z-index: 2;
     }
 
     .wheel-outer::after{
@@ -439,8 +515,8 @@
       border: 1px solid rgba(255,255,255,0.10);
       box-shadow:
         inset 0 0 0 1px rgba(0,0,0,0.22),
-        inset 0 18px 32px rgba(0,0,0,0.28),
-        inset 0 -14px 24px rgba(255,255,255,0.06);
+        inset 0 18px 34px rgba(0,0,0,0.30),
+        inset 0 -16px 26px rgba(255,255,255,0.06);
       position: relative;
       will-change: transform;
       transform: rotate(0deg);
@@ -453,17 +529,22 @@
       --spin-dur: 6000ms;
     }
 
+    /* premium surface shading */
     .wheel-inner::before{
       content:"";
       position:absolute;
       inset:0;
       border-radius:50%;
       background:
-        radial-gradient(circle at 35% 28%, rgba(255,255,255,0.16), transparent 55%),
-        radial-gradient(circle at 68% 72%, rgba(34,197,94,0.10), transparent 58%);
+        radial-gradient(circle at 35% 28%, rgba(255,255,255,0.18), transparent 54%),
+        radial-gradient(circle at 68% 72%, rgba(34,197,94,0.10), transparent 58%),
+        repeating-conic-gradient(from 0deg,
+          rgba(255,255,255,0.00) 0 14deg,
+          rgba(255,255,255,0.015) 14deg 16deg);
       pointer-events:none;
-      opacity: 0.58;
+      opacity: 0.62;
       z-index: 2;
+      mix-blend-mode: overlay;
     }
 
     .wheel-inner::after{
@@ -472,10 +553,10 @@
       inset: 0;
       border-radius: 50%;
       background:
-        radial-gradient(420px 260px at 30% 18%, rgba(255,255,255,0.10), transparent 58%),
-        radial-gradient(520px 300px at 78% 84%, rgba(0,0,0,0.22), transparent 62%);
+        radial-gradient(420px 260px at 30% 18%, rgba(255,255,255,0.12), transparent 58%),
+        radial-gradient(520px 300px at 78% 84%, rgba(0,0,0,0.24), transparent 62%);
       pointer-events:none;
-      opacity: 0.65;
+      opacity: 0.68;
       z-index: 4;
     }
 
@@ -491,59 +572,99 @@
       position:absolute;
       left:50%;
       top:50%;
-      font-weight: 1000;
+      font-weight: 1100;
       font-size: clamp(14px, 3.2vw, 20px);
       user-select:none;
       pointer-events:none;
       white-space:nowrap;
       z-index: 10;
-      letter-spacing: 0.4px;
+      letter-spacing: 0.55px;
       transform-origin: center center;
 
       max-width: 72%;
       overflow: hidden;
       text-overflow: ellipsis;
 
-      text-shadow: 0 2px 0 rgba(0,0,0,0.18), 0 10px 26px rgba(0,0,0,0.45);
+      /* premium type (emboss + subtle stroke) */
+      -webkit-text-stroke: 0.55px rgba(0,0,0,0.22);
+      text-shadow:
+        0 2px 0 rgba(0,0,0,0.18),
+        0 10px 26px rgba(0,0,0,0.46),
+        0 0 14px rgba(255,255,255,0.05);
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.20));
       image-rendering: -webkit-optimize-contrast;
     }
 
+    /* =========================
+     * CENTER CAP — CASINO PREMIUM
+     * ======================= */
     .wheel-center{
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%) translateZ(0);
-      width: clamp(56px, 14.5vw, 70px);
-      height: clamp(56px, 14.5vw, 70px);
+      width: clamp(58px, 14.8vw, 74px);
+      height: clamp(58px, 14.8vw, 74px);
       border-radius: 50%;
       background:
-        radial-gradient(circle at 30% 25%, rgba(255,255,255,0.22), transparent 48%),
-        conic-gradient(from 30deg, rgba(255,255,255,0.12), rgba(0,0,0,0) 35%, rgba(255,255,255,0.08) 65%, rgba(0,0,0,0) 100%),
-        linear-gradient(180deg, rgba(255, 241, 196, 0.88), rgba(245,158,11,0.92));
-      border: 1px solid rgba(255, 232, 176, 0.24);
+        radial-gradient(circle at 30% 24%, rgba(255,255,255,0.26), transparent 48%),
+        repeating-conic-gradient(from 0deg,
+          rgba(255,255,255,0.06) 0 10deg,
+          rgba(0,0,0,0.00) 10deg 20deg),
+        conic-gradient(from 30deg, rgba(255,255,255,0.14), rgba(0,0,0,0) 35%, rgba(255,255,255,0.10) 65%, rgba(0,0,0,0) 100%),
+        linear-gradient(180deg, rgba(255, 241, 196, 0.90), rgba(245,158,11,0.94));
+      border: 1px solid rgba(255, 232, 176, 0.28);
       box-shadow:
-        0 18px 40px rgba(0,0,0,0.50),
-        0 0 18px rgba(245,158,11,0.18);
+        0 18px 44px rgba(0,0,0,0.52),
+        0 0 22px rgba(245,158,11,0.20),
+        inset 0 0 0 1px rgba(0,0,0,0.20),
+        inset 0 10px 18px rgba(0,0,0,0.18);
       z-index: 20;
       display: flex;
       align-items: center;
       justify-content: center;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
+      overflow: hidden;
+      isolation: isolate;
     }
 
+    /* inner dark hub */
     .wheel-center::after{
       content: "";
-      width: clamp(26px, 8vw, 38px);
-      height: clamp(26px, 8vw, 38px);
+      width: clamp(28px, 8.2vw, 40px);
+      height: clamp(28px, 8.2vw, 40px);
       border-radius: 50%;
       background:
-        radial-gradient(circle at 30% 25%, rgba(255,255,255,0.16), transparent 55%),
-        radial-gradient(circle at 50% 50%, rgba(0,0,0,0.18), transparent 60%),
-        linear-gradient(180deg, rgba(6,18,14,0.92), rgba(6,18,14,0.62));
-      border: 1px solid rgba(255,255,255,0.12);
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.35);
+        radial-gradient(circle at 35% 30%, rgba(255,255,255,0.14), transparent 52%),
+        radial-gradient(circle at 50% 55%, rgba(0,0,0,0.35), transparent 66%),
+        linear-gradient(180deg, rgba(6,18,14,0.94), rgba(6,18,14,0.66));
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow:
+        inset 0 0 14px rgba(0,0,0,0.46),
+        0 0 0 1px rgba(0,0,0,0.25);
+      opacity: 0.98;
     }
+
+    /* subtle sheen spin on center (not rotation, just light sweep) */
+    .wheel-center::before{
+      content:"";
+      position:absolute;
+      inset:-18%;
+      border-radius: 50%;
+      background: conic-gradient(from 90deg,
+        rgba(255,255,255,0.00),
+        rgba(255,255,255,0.14),
+        rgba(255,255,255,0.00) 46%,
+        rgba(255,255,255,0.10),
+        rgba(255,255,255,0.00) 100%);
+      opacity: 0.26;
+      mix-blend-mode: screen;
+      transform: rotate(0deg);
+      pointer-events:none;
+      animation: centerSheen 3.6s linear infinite;
+    }
+    @keyframes centerSheen { to { transform: rotate(360deg); } }
 
     /* =========================
      * CARD / INPUT
@@ -1075,6 +1196,9 @@
       * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
       .winners-table-row.is-new::after { display: none !important; }
       .nav-spinner{ animation: none !important; }
+      .wheel-wrapper.is-spinning .pointer{ animation: none !important; }
+      .pointer.tick{ animation: none !important; }
+      .wheel-center::before{ animation: none !important; }
     }
   </style>
 </head>
@@ -1096,14 +1220,14 @@
           <div class="wheel-lights inner" id="wheelLightsInner" aria-hidden="true"></div>
 
           <!-- POINTER -->
-          <div class="pointer" aria-hidden="true">
+          <div class="pointer" id="pointer" aria-hidden="true">
             <svg viewBox="0 0 64 90" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stop-color="rgba(255,255,255,0.85)"/>
-                  <stop offset="0.25" stop-color="rgba(185,185,185,0.9)"/>
-                  <stop offset="0.55" stop-color="rgba(90,90,90,0.95)"/>
-                  <stop offset="1" stop-color="rgba(20,20,20,0.98)"/>
+                  <stop offset="0" stop-color="rgba(255,255,255,0.90)"/>
+                  <stop offset="0.22" stop-color="rgba(205,205,205,0.92)"/>
+                  <stop offset="0.55" stop-color="rgba(95,95,95,0.96)"/>
+                  <stop offset="1" stop-color="rgba(18,18,18,0.98)"/>
                 </linearGradient>
                 <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0" stop-color="#FFF1C4"/>
@@ -1111,7 +1235,7 @@
                   <stop offset="1" stop-color="#78350F"/>
                 </linearGradient>
                 <radialGradient id="cap" cx="35%" cy="30%" r="70%">
-                  <stop offset="0" stop-color="rgba(255,255,255,0.95)"/>
+                  <stop offset="0" stop-color="rgba(255,255,255,0.98)"/>
                   <stop offset="0.45" stop-color="#FFF1C4"/>
                   <stop offset="1" stop-color="#B45309"/>
                 </radialGradient>
@@ -1119,11 +1243,11 @@
 
               <!-- outer gold frame -->
               <path d="M32 86 L10 34 C10 34 14 10 32 10 C50 10 54 34 54 34 L32 86 Z"
-                    fill="url(#gold)" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
+                    fill="url(#gold)" stroke="rgba(255,255,255,0.24)" stroke-width="2"/>
 
               <!-- inner steel -->
               <path d="M32 80 L18 36 C18 36 20 18 32 18 C44 18 46 36 46 36 L32 80 Z"
-                    fill="url(#metal)" opacity="0.95"/>
+                    fill="url(#metal)" opacity="0.96"/>
 
               <!-- top cap -->
               <circle cx="32" cy="27" r="11" fill="url(#cap)" stroke="rgba(0,0,0,0.22)" stroke-width="2"/>
@@ -1256,10 +1380,11 @@
 
   <script>
     /* ======================================================================
-     * FINAL — PATCH:
-     * ✅ Light bulbs REAL (HTML) + chase rotation illusion (idle/spin) + result hold breathe
-     * ✅ Ring gold static (no fake rotate)
-     * ✅ Pointer modern metal casino
+     * FINAL — PREMIUM WHEEL PATCH:
+     * ✅ Bulbs upgraded (3D + socket + glow) + chase (idle/spin) + result breathe
+     * ✅ Pointer modern + wobble during spin + tick snap
+     * ✅ Center cap more casino (depth + sheen)
+     * ✅ Anti "box shadow" artifact behind wheel (radial glow)
      * ✅ Pause winners saat SPIN + saat MODAL open, resume setelah modal ditutup
      * ✅ BONUS 10% lock + 1x spin per browser (persist)
      * ====================================================================== */
@@ -1388,6 +1513,22 @@
       else wrap.classList.add("lights-idle");
     }
 
+    function setSpinVisual(on){
+      const wrap = document.getElementById("wheelWrap");
+      if (!wrap) return;
+      wrap.classList.toggle("is-spinning", !!on);
+    }
+
+    function pulsePointerTick(){
+      const p = document.getElementById("pointer");
+      if (!p) return;
+      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      p.classList.remove("tick");
+      void p.offsetWidth;
+      p.classList.add("tick");
+      setTimeout(() => p.classList.remove("tick"), 160);
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       const spinBtn = document.getElementById("spinBtn");
       const userIdInput = document.getElementById("userIdInput");
@@ -1491,15 +1632,15 @@
     });
 
     // =========================
-    // BULBS (HTML) — visible on iOS
+    // BULBS (HTML) — premium count
     // =========================
     function buildBulbRingHTML() {
       const host = document.getElementById("wheelLightsInner");
       if (!host) return;
       host.innerHTML = "";
 
-      const count = 32;         // casino feel
-      const r = 97.5;           // in 200 viewbox units
+      const count = 40;         // more premium density
+      const r = 97.2;
       const VB = 200;
       const cx = VB/2, cy = VB/2;
 
@@ -1584,6 +1725,7 @@
     }
 
     function playTick() {
+      pulsePointerTick();
       try {
         const a = tickPool[tickPoolIdx++ % tickPool.length];
         a.currentTime = 0;
@@ -1656,7 +1798,7 @@
       for (let i = 0; i < n; i++) {
         const a = i * seg;
         const b = (i + 1) * seg;
-        const color = (i % 2 === 0) ? "#064e3b" : "#f1f5f9";
+        const color = (i % 2 === 0) ? "#064e3b" : "#f8fafc";
         parts.push(`${color} ${a}deg ${b}deg`);
       }
       const wheel = document.getElementById("wheel");
@@ -1672,7 +1814,7 @@
 
       const n = PRIZES.length;
       const segmentAngle = 360 / n;
-      const radius = Math.round(Math.min(wheel.clientWidth, wheel.clientHeight) * 0.35);
+      const radius = Math.round(Math.min(wheel.clientWidth, wheel.clientHeight) * 0.355);
 
       PRIZES.forEach((prize, index) => {
         const angle = index * segmentAngle + segmentAngle / 2;
@@ -1683,9 +1825,10 @@
 
         const isLight = (index % 2 === 1);
         div.style.color = isLight ? "#05281d" : "#ffffff";
+
         div.style.textShadow = isLight
-          ? "0 2px 0 rgba(255,255,255,0.18), 0 10px 22px rgba(0,0,0,0.28)"
-          : "0 2px 0 rgba(0,0,0,0.18), 0 12px 26px rgba(0,0,0,0.50)";
+          ? "0 2px 0 rgba(255,255,255,0.18), 0 10px 22px rgba(0,0,0,0.28), 0 0 10px rgba(255,255,255,0.08)"
+          : "0 2px 0 rgba(0,0,0,0.18), 0 12px 26px rgba(0,0,0,0.50), 0 0 12px rgba(255,255,255,0.06)";
 
         if (/bonus/i.test(prize)) {
           div.style.fontSize = "clamp(12px, 3vw, 16px)";
@@ -2250,6 +2393,9 @@
 
       isSpin = true;
 
+      // premium pointer wobble ON
+      setSpinVisual(true);
+
       // pause history while spinning
       pauseHistory("spin");
 
@@ -2292,6 +2438,9 @@
         wheel.classList.remove("spinning");
         wheel.style.transform = `rotate(${totalRotation}deg)`;
         currentRotation = totalRotation;
+
+        // stop wobble
+        setSpinVisual(false);
 
         try { spinSound.pause(); spinSound.currentTime = 0; } catch (_) {}
 
