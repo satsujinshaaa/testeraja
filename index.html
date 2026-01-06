@@ -219,7 +219,8 @@
     }
 
     /* =========================
-     * WHEEL — CASINO RIM + INNER LIGHTS (ANTI BOX / ANTI “LECET”)
+     * WHEEL — CASINO RIM + INNER LIGHTS (ANTI BOX)
+     * PATCH: anti “lecet” di bawah + presisi jarum/dot + clamp glow
      * ======================= */
     .wheel-container{
       position: relative;
@@ -231,12 +232,10 @@
 
       --wheel-size: min(460px, 92vw);
 
-      /* ✅ presisi pointer vs dots */
-      --pointer-overhang: 6px;          /* makin kecil = pointer makin masuk */
-      --lights-inset: 0px;              /* 0 = pas di diameter wheel-wrapper */
-      --rim-pad: clamp(12px, 3vw, 15px);
-
+      /* PATCH: tambah ruang agar shadow wheel tidak “nabrak” card bawah saat mobile stack */
       padding-top: clamp(14px, 3.2vw, 22px);
+      padding-bottom: clamp(10px, 3vw, 18px);
+      margin-bottom: clamp(6px, 2vw, 12px);
     }
 
     .wheel-container::before{
@@ -251,10 +250,10 @@
       pointer-events: none;
       z-index: 0;
 
-      /* ✅ anti “kotak”: shadow hanya di circle */
+      /* ✅ anti “kotak”: NO filter, pure shadow on circle */
       box-shadow:
         0 34px 86px rgba(0,0,0,0.66),
-        0 0 46px rgba(245,158,11,0.16);
+        0 0 46px rgba(245,158,11,0.18);
     }
 
     .wheel-wrapper{
@@ -272,12 +271,12 @@
       transform: translateZ(0);
       will-change: transform;
 
-      /* ✅ stop “bocor” render/blur banding di iOS */
+      /* PATCH: iOS rendering stabilizer */
       contain: layout paint;
     }
 
     /* =========================
-     * LIGHT RING (SVG via JS) — INNER ONLY (STATIONARY)
+     * LIGHT RING (SVG via JS) — INNER ONLY
      * ======================= */
     .wheel-lights{
       position: absolute;
@@ -287,13 +286,12 @@
       display: grid;
       place-items: center;
 
-      transform: translateZ(0);
-      will-change: opacity;
-      opacity: 0.99;
+      transform: translateZ(0) rotate(0deg);
+      will-change: transform, opacity;
+      opacity: 0.98;
 
       /* ✅ IMPORTANT: no CSS filter (anti kotak) */
       filter: none;
-      -webkit-filter: none;
 
       /* tokens */
       --bulb-speed: 2.8s;
@@ -306,7 +304,8 @@
     .wheel-lights.outer{ display: none !important; }
 
     .wheel-lights.inner{
-      inset: var(--lights-inset);
+      /* PATCH: posisi lebih presisi (nggak terlalu keluar/masuk) */
+      inset: clamp(6px, 1.7vw, 10px);
       opacity: 1;
     }
 
@@ -317,22 +316,21 @@
       overflow: visible;
     }
 
-    /* ring “kaca” tipis biar rapi (tanpa bikin seam) */
     .wheel-lights.inner::after{
       content:"";
       position:absolute;
-      inset: clamp(10px, 2.4vw, 14px);
+      inset: clamp(10px, 2.6vw, 14px);
       border-radius: 50%;
       pointer-events:none;
       background:
         radial-gradient(circle at 30% 22%, rgba(255,255,255,0.10), transparent 44%),
-        radial-gradient(circle at 70% 74%, rgba(245,158,11,0.12), transparent 56%),
-        radial-gradient(circle at 50% 50%, rgba(0,0,0,0.16), transparent 62%);
-      border: 1px solid rgba(255, 232, 176, 0.16);
+        radial-gradient(circle at 70% 74%, rgba(245,158,11,0.14), transparent 56%),
+        radial-gradient(circle at 50% 50%, rgba(0,0,0,0.18), transparent 62%);
+      border: 1px solid rgba(255, 232, 176, 0.18);
       box-shadow:
-        inset 0 0 0 1px rgba(0,0,0,0.18),
-        inset 0 0 24px rgba(245,158,11,0.07);
-      opacity: 0.94;
+        inset 0 0 0 1px rgba(0,0,0,0.22),
+        inset 0 0 26px rgba(245,158,11,0.08);
+      opacity: 0.92;
     }
 
     @keyframes bulbTwinkle{
@@ -351,46 +349,46 @@
     }
 
     /* =========================
-     * POINTER (lebih masuk + presisi)
+     * POINTER (PATCH: presisi jarak jarum vs dot)
      * ======================= */
     .pointer{
       position: absolute;
-      top: calc(var(--pointer-overhang) * -1);
+      /* PATCH: top lebih presisi (jarum “ngarah” ke ring dot) */
+      top: clamp(-26px, -5.6vw, -16px);
       left: 50%;
-      transform: translateX(-50%);
+      transform: translateX(-50%) translateZ(0);
       z-index: 30;
-      width: clamp(42px, 10vw, 54px);
-      height: clamp(52px, 12vw, 66px);
-      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.55));
+
+      /* PATCH: sedikit lebih proporsional */
+      width: clamp(42px, 10.5vw, 56px);
+      height: clamp(54px, 13vw, 70px);
+
+      filter: drop-shadow(0 8px 14px rgba(0,0,0,0.55));
       pointer-events: none;
 
-      transform-origin: 50% 100%;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
     }
     .pointer svg { width: 100%; height: 100%; }
 
     /* =========================
-     * OUTER RIM — GOLD METAL (seam dipindah ke atas)
+     * OUTER RIM — GOLD METAL
+     * PATCH: glow pulse via pseudo (tidak overwrite box-shadow => hilang artefak “lecet”)
      * ======================= */
     .wheel-outer{
       width: 100%;
       height: 100%;
       border-radius: 50%;
-      padding: var(--rim-pad);
+      padding: clamp(12px, 3vw, 15px);
       position: relative;
       z-index: 2;
       isolation: isolate;
       overflow: hidden;
 
-      /* ✅ Safari/iOS: paksa clip bulat biar ga ada “lecet”/banding kotak */
-      clip-path: circle(50% at 50% 50%);
-      -webkit-mask-image: -webkit-radial-gradient(white, black);
-
       background:
         radial-gradient(circle at 30% 22%, rgba(255,255,255,0.22), transparent 44%),
         radial-gradient(circle at 50% 86%, rgba(0,0,0,0.60), transparent 58%),
-        conic-gradient(from -90deg,
+        conic-gradient(from 10deg,
           rgba(255,255,255,0.22),
           rgba(0,0,0,0.00) 10%,
           rgba(255,255,255,0.10) 18%,
@@ -410,7 +408,7 @@
       border: 1px solid rgba(255, 232, 176, 0.24);
       box-shadow:
         0 28px 70px rgba(0,0,0,0.58),
-        0 0 34px rgba(245,158,11,0.16);
+        0 0 34px rgba(245,158,11,0.18);
 
       transform: translateZ(0);
       -webkit-transform: translateZ(0);
@@ -424,17 +422,30 @@
       position:absolute;
       inset: 8px;
       border-radius: 50%;
-      border: 1px solid rgba(255, 232, 176, 0.20);
+      border: 1px solid rgba(255, 232, 176, 0.22);
       pointer-events:none;
       opacity: 0.90;
       z-index: 3;
+    }
+
+    /* PATCH: glow overlay (no box-shadow overwrite) */
+    .wheel-outer::before{
+      content:"";
+      position:absolute;
+      inset: -2px;
+      border-radius: 50%;
+      pointer-events:none;
+      z-index: 1;
+      opacity: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(245,158,11,0.18), transparent 62%);
+      transition: opacity 180ms ease;
     }
 
     .wheel-inner{
       width: 100%;
       height: 100%;
       border-radius: 50%;
-      background: var(--wheel-bg, conic-gradient(from -90deg, #064e3b 0deg 60deg, #f8fafc 60deg 120deg, #064e3b 120deg 180deg, #f8fafc 180deg 240deg, #064e3b 240deg 300deg, #f8fafc 300deg 360deg));
+      background: var(--wheel-bg, conic-gradient(from 0deg, #064e3b 0deg 60deg, #f8fafc 60deg 120deg, #064e3b 120deg 180deg, #f8fafc 180deg 240deg, #064e3b 240deg 300deg, #f8fafc 300deg 360deg));
       border: 1px solid rgba(255,255,255,0.10);
       box-shadow:
         inset 0 0 0 1px rgba(0,0,0,0.22),
@@ -446,18 +457,17 @@
       overflow: hidden;
       isolation: isolate;
       background-clip: padding-box;
-
-      /* ✅ iOS: paksa clip bulat untuk render conic */
-      clip-path: circle(50% at 50% 50%);
-      -webkit-mask-image: -webkit-radial-gradient(white, black);
-
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
       transform-style: flat;
       -webkit-transform-style: flat;
+      image-rendering: -webkit-optimize-contrast;
 
       /* ✅ sync spin duration from JS */
       --spin-dur: 6000ms;
+
+      /* PATCH: clamp paint */
+      contain: paint;
     }
 
     .wheel-inner::before{
@@ -466,7 +476,7 @@
       inset:0;
       border-radius:50%;
       background:
-        radial-gradient(circle at 35% 28%, rgba(255,255,255,0.16), transparent 55%),
+        radial-gradient(circle at 35% 28%, rgba(255,255,255,0.18), transparent 55%),
         radial-gradient(circle at 68% 72%, rgba(34,197,94,0.10), transparent 58%);
       pointer-events:none;
       opacity: 0.58;
@@ -479,10 +489,10 @@
       inset: 0;
       border-radius: 50%;
       background:
-        radial-gradient(420px 260px at 30% 18%, rgba(255,255,255,0.10), transparent 58%),
+        radial-gradient(420px 260px at 30% 18%, rgba(255,255,255,0.12), transparent 58%),
         radial-gradient(520px 300px at 78% 84%, rgba(0,0,0,0.22), transparent 62%);
       pointer-events:none;
-      opacity: 0.62;
+      opacity: 0.65;
       z-index: 4;
     }
 
@@ -512,8 +522,10 @@
       text-overflow: ellipsis;
 
       text-shadow: 0 2px 0 rgba(0,0,0,0.18), 0 10px 26px rgba(0,0,0,0.45);
+      image-rendering: -webkit-optimize-contrast;
     }
 
+    /* PATCH: hub lebih bersih (hilang “cincin gelap” artefak) */
     .wheel-center{
       position: absolute;
       top: 50%;
@@ -523,13 +535,13 @@
       height: clamp(56px, 14.5vw, 70px);
       border-radius: 50%;
       background:
-        radial-gradient(circle at 30% 25%, rgba(255,255,255,0.22), transparent 48%),
-        conic-gradient(from -90deg, rgba(255,255,255,0.12), rgba(0,0,0,0) 35%, rgba(255,255,255,0.08) 65%, rgba(0,0,0,0) 100%),
-        linear-gradient(180deg, rgba(255, 241, 196, 0.90), rgba(245,158,11,0.92));
-      border: 1px solid rgba(255, 232, 176, 0.24);
+        radial-gradient(circle at 30% 22%, rgba(255,255,255,0.22), transparent 48%),
+        conic-gradient(from 30deg, rgba(255,255,255,0.10), rgba(0,0,0,0) 38%, rgba(255,255,255,0.08) 68%, rgba(0,0,0,0) 100%),
+        linear-gradient(180deg, rgba(255, 241, 196, 0.90), rgba(245,158,11,0.94));
+      border: 1px solid rgba(255, 232, 176, 0.22);
       box-shadow:
-        0 18px 40px rgba(0,0,0,0.48),
-        0 0 16px rgba(245,158,11,0.20);
+        0 16px 34px rgba(0,0,0,0.48),
+        0 0 14px rgba(245,158,11,0.18);
       z-index: 20;
       display: flex;
       align-items: center;
@@ -545,30 +557,36 @@
       height: clamp(26px, 8vw, 38px);
       border-radius: 50%;
       background:
-        radial-gradient(circle at 30% 25%, rgba(255,255,255,0.18), transparent 55%),
-        radial-gradient(circle at 50% 50%, rgba(0,0,0,0.22), transparent 60%),
-        linear-gradient(180deg, rgba(6,18,14,0.94), rgba(6,18,14,0.62));
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,0.16), transparent 58%),
+        radial-gradient(circle at 50% 50%, rgba(0,0,0,0.14), transparent 62%),
+        linear-gradient(180deg, rgba(6,18,14,0.92), rgba(6,18,14,0.60));
       border: 1px solid rgba(255,255,255,0.12);
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.38);
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.32);
     }
 
-    .wheel-wrapper.is-spinning .wheel-outer{
-      animation: glowPulse 520ms ease-in-out infinite alternate;
+    .wheel-wrapper.is-spinning .wheel-outer::before{
+      opacity: 1;
+      animation: glowPulseOverlay 520ms ease-in-out infinite alternate;
     }
+
     .wheel-wrapper.is-spinning .pointer{
       animation: pointerTick 220ms ease-in-out infinite alternate;
+      transform-origin: 50% 100%;
     }
-    @keyframes glowPulse{
-      from { box-shadow: 0 28px 70px rgba(0,0,0,0.58), 0 0 20px rgba(245,158,11,0.10); }
-      to   { box-shadow: 0 28px 70px rgba(0,0,0,0.58), 0 0 34px rgba(245,158,11,0.18); }
+
+    @keyframes glowPulseOverlay{
+      from { opacity: 0.28; }
+      to   { opacity: 0.70; }
     }
+
     @keyframes pointerTick{
-      from { transform: translateX(-50%) rotate(-1deg); }
-      to   { transform: translateX(-50%) rotate(1deg); }
+      from { transform: translateX(-50%) rotate(-1deg) translateZ(0); }
+      to   { transform: translateX(-50%) rotate(1deg) translateZ(0); }
     }
 
     /* =========================
-     * CARD / INPUT (iOS placeholder/caret FIX)
+     * CARD / INPUT
+     * PATCH: iOS placeholder/caret turun fix (baseline lock)
      * ======================= */
     .input-section{
       background: var(--card);
@@ -591,16 +609,15 @@
     .input-section p { color: rgba(255, 255, 255, 0.72); margin-bottom: 18px; font-size: 0.95rem; line-height: 1.4; }
     label { display: block; margin-bottom: 10px; font-weight: 900; color: rgba(255,255,255,0.9); }
 
-    /* ✅ iOS Safari: placeholder “geser” biasanya karena line-height/padding/letter-spacing.
-       Di sini kita kunci baseline supaya placeholder & teks sama persis. */
     input{
       width: 100%;
       height: 54px;
 
-      /* IMPORTANT: iOS no-zoom + baseline stable */
-      font-size: 18px;                 /* >=16 agar iOS tidak auto-zoom */
-      line-height: 54px;               /* kunci baseline (placeholder tidak turun/naik) */
-      padding: 0 18px;                 /* vertical 0 biar tidak shifting */
+      /* ✅ iOS FIX: lock baseline */
+      line-height: 54px;
+      padding: 0 18px;
+
+      font-size: 18px;
       text-align: center;
 
       background: rgba(255,255,255,0.06);
@@ -612,41 +629,46 @@
 
       margin-bottom: 14px;
       transition:
+        transform 0.12s ease,
         box-shadow 0.22s ease,
         border-color 0.22s ease,
         background 0.22s ease;
 
       outline: none;
-      appearance: none;
       -webkit-appearance: none;
+      appearance: none;
 
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
 
-      /* ✅ jangan terlalu agresif di input (iOS sensitif) */
-      letter-spacing: 0.6px;
+      /* PATCH: letter-spacing besar bikin iOS placeholder baseline “geser”
+         => input dibuat normal, placeholder boleh tetap ada spacing */
+      letter-spacing: 0.2px;
 
       box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25);
 
-      /* stabil rendering */
       transform: translateZ(0);
       -webkit-font-smoothing: antialiased;
     }
-    input:focus{
-      border-color: rgba(34,197,94,0.52);
-      background: rgba(255,255,255,0.08);
-      box-shadow:
-        0 0 0 4px rgba(34,197,94,0.16),
-        0 16px 40px rgba(0,0,0,0.40);
-    }
+
+    /* iOS Safari: pastikan placeholder ikut line-height yang sama */
     input::placeholder{
       color: rgba(255,255,255,0.38);
-      letter-spacing: 0.8px;
+      letter-spacing: 0.9px;
       line-height: 54px;
       opacity: 1;
     }
     input::-webkit-input-placeholder{
       line-height: 54px;
       opacity: 1;
+    }
+
+    input:focus{
+      border-color: rgba(34,197,94,0.52);
+      background: rgba(255,255,255,0.08);
+      box-shadow:
+        0 0 0 4px rgba(34,197,94,0.16),
+        0 16px 40px rgba(0,0,0,0.40);
+      transform: translateY(-1px) translateZ(0);
     }
 
     .primary-btn{
@@ -667,8 +689,8 @@
       position: relative;
       overflow: hidden;
       transform: translateZ(0);
-      appearance: none;
       -webkit-appearance: none;
+      appearance: none;
     }
     .primary-btn::before{
       content:"";
@@ -718,8 +740,8 @@
       touch-action: manipulation;
       position: relative;
       overflow: hidden;
-      appearance: none;
       -webkit-appearance: none;
+      appearance: none;
     }
     .secondary-btn:hover{ background: rgba(0,0,0,0.50); border-color: rgba(255,255,255,0.28); }
     .secondary-btn:active{ transform: scale(0.99); }
@@ -761,6 +783,7 @@
       border-radius: 15px;
       overflow: hidden;
       min-width: 0;
+      isolation: isolate;
     }
 
     .winners-header{
@@ -785,6 +808,7 @@
       padding-bottom: 2px;
       scrollbar-width: thin;
       scrollbar-color: rgba(34,197,94,0.32) rgba(0,0,0,0.20);
+      -webkit-overflow-scrolling: touch;
     }
     .winners-table::-webkit-scrollbar{ width: 6px; }
     .winners-table::-webkit-scrollbar-track{ background: rgba(0,0,0,0.20); }
@@ -939,6 +963,7 @@
       -webkit-overflow-scrolling: touch;
       scrollbar-width: thin;
       scrollbar-color: rgba(34,197,94,0.30) rgba(0,0,0,0.20);
+      isolation: isolate;
     }
     @keyframes zoomIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
 
@@ -1251,10 +1276,11 @@
   <script>
     /* ======================================================================
      * FINAL — FULL PATCH (READY REPLACE)
-     * ✅ FIX iOS input baseline (placeholder tidak “geser turun”)
-     * ✅ FIX wheel “lecet/cacat” (seam conic + clip iOS)
-     * ✅ Pointer & dot ring lebih presisi (phase + posisi)
-     * ✅ Anti glow/shadow bocor (contain/clip)
+     * ✅ PATCH 2026-01-06:
+     *  - iOS input baseline lock (placeholder/caret tidak “turun”)
+     *  - Wheel: anti artefak “lecet” + glow pulse tidak overwrite box-shadow
+     *  - Pointer + ring dot lebih presisi
+     *  - Clamp glow/shadow supaya tidak bocor ke card bawah
      * ====================================================================== */
 
     const SPIN_DURATION_MS = 6000;
@@ -1469,17 +1495,17 @@
     });
 
     // =========================
-    // DOT BULBS RING (SVG) — presisi (gap tepat di tengah atas)
+    // DOT BULBS RING (SVG) — INNER ONLY (balanced + presisi)
     // =========================
     function buildBulbRing() {
       buildBulbRingOne("wheelLightsInner", {
-        r: 92.0,           // ✅ sedikit lebih dekat ke rim (lebih presisi)
+        r: 90.0,            // PATCH: sedikit lebih dekat rim
         count: 24,
-        coreR: 2.75,
-        glowR: 4.15,
+        coreR: 2.45,
+        glowR: 3.65,
         blur: 1.45,
         glowOpacity: 0.56,
-        phase: Math.PI / 24  // ✅ 7.5deg => GAP tepat di atas (pointer di tengah)
+        phase: Math.PI / 28
       });
     }
 
@@ -1552,7 +1578,7 @@
       defs.append(grad, glowFilter);
       svg.appendChild(defs);
 
-      const r = opt.r || 92;
+      const r = opt.r || 90;
       const count = opt.count || 24;
       const phase = opt.phase || 0;
 
@@ -1570,7 +1596,7 @@
         const cGlow = document.createElementNS(NS, "circle");
         cGlow.setAttribute("cx", x.toFixed(2));
         cGlow.setAttribute("cy", y.toFixed(2));
-        cGlow.setAttribute("r", String(opt.glowR || 4.15));
+        cGlow.setAttribute("r", String(opt.glowR || 3.65));
         cGlow.setAttribute("fill", "#F59E0B");
         cGlow.setAttribute("class", "bulb bulb-glow");
         cGlow.style.setProperty("--i", i);
@@ -1579,7 +1605,7 @@
         const c = document.createElementNS(NS, "circle");
         c.setAttribute("cx", x.toFixed(2));
         c.setAttribute("cy", y.toFixed(2));
-        c.setAttribute("r", String(opt.coreR || 2.75));
+        c.setAttribute("r", String(opt.coreR || 2.45));
         c.setAttribute("fill", `url(#${gradId})`);
         c.setAttribute("class", "bulb bulb-core");
         c.style.setProperty("--i", i);
@@ -1589,10 +1615,10 @@
       const ring = document.createElementNS(NS, "circle");
       ring.setAttribute("cx", String(cx));
       ring.setAttribute("cy", String(cy));
-      ring.setAttribute("r", String(r - 9));
+      ring.setAttribute("r", String(r - 8));
       ring.setAttribute("fill", "none");
-      ring.setAttribute("stroke", "rgba(255, 232, 176, 0.16)");
-      ring.setAttribute("stroke-width", "1.10");
+      ring.setAttribute("stroke", "rgba(255, 232, 176, 0.18)");
+      ring.setAttribute("stroke-width", "1.15");
 
       svg.append(gGlow, gTop, ring);
       host.appendChild(svg);
@@ -1728,7 +1754,7 @@
     }
 
     // =========================
-    // WHEEL BG + TEXT (GREEN/WHITE) — seam pindah ke atas
+    // WHEEL BG + TEXT (GREEN/WHITE)
     // =========================
     function setWheelBackground() {
       const n = PRIZES.length;
@@ -1741,7 +1767,7 @@
         parts.push(`${color} ${a}deg ${b}deg`);
       }
       const wheel = document.getElementById("wheel");
-      wheel.style.setProperty("--wheel-bg", `conic-gradient(from -90deg, ${parts.join(",")})`);
+      wheel.style.setProperty("--wheel-bg", `conic-gradient(from 0deg, ${parts.join(",")})`);
     }
 
     function drawWheelPrizes() {
