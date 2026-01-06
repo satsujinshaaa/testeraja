@@ -1,0 +1,2755 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <!-- Privacy: prevent referrer leakage -->
+  <meta name="referrer" content="no-referrer" />
+
+  <!-- NOTE: isi og:url + canonical dengan URL final halaman kamu -->
+  <meta property="og:url" content="" />
+  <link rel="canonical" href="" />
+
+  <meta property="og:title" content="MADETOTO2 - Spin & Win" />
+  <meta name="description" content="PUTAR RODANYA & DAPATKAN HADIAH FANTASTIS HINGGA 200 RIBU RUPIAH!" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://shortq.org/gmbrmadetoto2" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="MADETOTO2 - Spin & Win" />
+  <meta name="twitter:description" content="PUTAR RODANYA & DAPATKAN HADIAH FANTASTIS HINGGA 200 RIBU RUPIAH!" />
+  <meta name="twitter:image" content="https://shortq.org/gmbrmadetoto2" />
+
+  <!-- ✅ theme hijau -->
+  <meta name="theme-color" content="#071a12" />
+  <link rel="shortcut icon" href="https://shortq.org/gmbrmadetoto2" type="image/x-icon" />
+
+  <style>
+    /* =========================
+     * BASE / TOKENS (CLEAN + ANTI LEAK)
+     * ======================= */
+    *, *::before, *::after { box-sizing: border-box; }
+    * { margin: 0; padding: 0; }
+
+    :root{
+      color-scheme: dark;
+
+      /* ✅ green depth */
+      --bg0: #06130f;
+      --bg1: #071e16;
+      --bg2: #05281d;
+
+      /* keep name --gold* to avoid refactor; now it's GREEN accent */
+      --gold0: #bbf7d0;  /* soft mint */
+      --gold1: #22c55e;  /* neon green */
+      --gold2: #16a34a;  /* deep green */
+
+      --card: rgba(34, 197, 94, 0.06);
+      --cardBorder: rgba(34, 197, 94, 0.22);
+
+      --radius-lg: 20px;
+      --shadow-soft: 0 0 60px -14px rgba(34, 197, 94, 0.18);
+
+      --ring: rgba(34,197,94,0.62);
+
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+    }
+
+    html{
+      width: 100%;
+      height: 100%;
+      background: var(--bg0);
+      overscroll-behavior: none;
+      -webkit-text-size-adjust: 100%;
+      text-rendering: optimizeLegibility;
+      scrollbar-gutter: stable;
+    }
+
+    body{
+      min-height: 100%;
+      background:
+        radial-gradient(820px 520px at 85% 18%, rgba(34,197,94,0.14), transparent 58%),
+        radial-gradient(920px 540px at 18% 10%, rgba(255,255,255,0.06), transparent 62%),
+        radial-gradient(760px 520px at 25% 86%, rgba(20,184,166,0.08), transparent 55%),
+        linear-gradient(135deg, var(--bg0) 0%, var(--bg1) 48%, var(--bg2) 100%);
+      color: #ffffff;
+      font-family:
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "SF Pro Display",
+        "SF Pro Text",
+        "Segoe UI Variable",
+        "Segoe UI",
+        Roboto,
+        Oxygen,
+        Ubuntu,
+        Cantarell,
+        "Helvetica Neue",
+        Arial,
+        sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      overscroll-behavior: none;
+      position: relative;
+      isolation: isolate;
+    }
+
+    @supports (overflow: clip){
+      html, body { overflow-x: clip; }
+    }
+    @supports not (overflow: clip){
+      html, body { overflow-x: hidden; }
+    }
+
+    body.modal-open { overflow: hidden; }
+
+    img, video, canvas, svg { max-width: 100%; height: auto; display: block; }
+    a, button, input { -webkit-tap-highlight-color: transparent; }
+
+    ::selection{
+      background: rgba(34,197,94,0.22);
+      color: #fff;
+    }
+
+    /* =========================
+     * LAYOUT
+     * ======================= */
+    .container{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      padding-left: calc(20px + var(--safe-left));
+      padding-right: calc(20px + var(--safe-right));
+      padding-top: calc(20px + var(--safe-top));
+      padding-bottom: calc(20px + var(--safe-bottom));
+    }
+    @media (max-width: 420px){
+      .container{
+        padding: 16px;
+        padding-left: calc(16px + var(--safe-left));
+        padding-right: calc(16px + var(--safe-right));
+        padding-top: calc(16px + var(--safe-top));
+        padding-bottom: calc(16px + var(--safe-bottom));
+      }
+    }
+
+    /* =========================
+     * HEADER (1 JUDUL UTAMA + HIJAU SERAGAM)
+     * ======================= */
+    header{
+      text-align: center;
+      padding: clamp(16px, 3.4vw, 22px) clamp(14px, 3vw, 18px);
+      position: relative;
+      z-index: 10;
+
+      background: rgba(6, 18, 14, 0.72);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 18px 60px rgba(0,0,0,0.44);
+
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    header::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:
+        radial-gradient(300px 180px at 18% 25%, rgba(255,255,255,0.10), transparent 62%),
+        radial-gradient(360px 220px at 82% 40%, rgba(34,197,94,0.18), transparent 62%);
+      pointer-events:none;
+      opacity: 0.22;
+      filter: blur(1px);
+      z-index: 0;
+    }
+
+    .hero-title{
+      position: relative;
+      z-index: 2;
+      font-weight: 1100;
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+      line-height: 1.08;
+      font-size: clamp(1.35rem, 3.6vw, 2.65rem);
+      text-shadow: 0 18px 44px rgba(0,0,0,0.55);
+      text-wrap: balance;
+      margin: 2px 0 10px;
+    }
+
+    .hero-title span{
+      background: linear-gradient(180deg, var(--gold0) 0%, var(--gold1) 55%, var(--gold2) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 14px 28px rgba(34,197,94,0.20));
+    }
+
+    .subtitle{
+      font-size: clamp(0.96rem, 2.1vw, 1.28rem);
+      color: rgba(255,255,255,0.84);
+      font-weight: 650;
+      position: relative;
+      z-index: 2;
+      line-height: 1.35;
+      text-shadow: 0 10px 26px rgba(0,0,0,0.55);
+      max-width: 980px;
+      margin-left: auto;
+      margin-right: auto;
+      text-wrap: balance;
+    }
+
+    .main-content{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(18px, 4vw, 34px);
+      align-items: start;
+      margin: clamp(18px, 4vw, 28px) 0 40px;
+    }
+    .main-content > * { min-width: 0; }
+    @media (max-width: 900px){
+      .main-content{ grid-template-columns: 1fr; gap: 26px; }
+    }
+
+    /* =========================
+     * WHEEL — CASINO RIM + INNER LIGHTS (ANTI BOX / ANTI “LECET”)
+     * ======================= */
+    .wheel-container{
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      isolation: isolate;
+      background: transparent;
+
+      --wheel-size: min(460px, 92vw);
+
+      /* ✅ presisi pointer vs dots */
+      --pointer-overhang: 6px;          /* makin kecil = pointer makin masuk */
+      --lights-inset: 0px;              /* 0 = pas di diameter wheel-wrapper */
+      --rim-pad: clamp(12px, 3vw, 15px);
+
+      padding-top: clamp(14px, 3.2vw, 22px);
+    }
+
+    .wheel-container::before{
+      content:"";
+      position: absolute;
+      width: var(--wheel-size);
+      height: var(--wheel-size);
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+
+      /* ✅ anti “kotak”: shadow hanya di circle */
+      box-shadow:
+        0 34px 86px rgba(0,0,0,0.66),
+        0 0 46px rgba(245,158,11,0.16);
+    }
+
+    .wheel-wrapper{
+      position: relative;
+      width: var(--wheel-size);
+      aspect-ratio: 1 / 1;
+      height: auto;
+      max-width: 100%;
+      touch-action: manipulation;
+      user-select: none;
+      background: transparent;
+      isolation: isolate;
+      z-index: 1;
+
+      transform: translateZ(0);
+      will-change: transform;
+
+      /* ✅ stop “bocor” render/blur banding di iOS */
+      contain: layout paint;
+    }
+
+    /* =========================
+     * LIGHT RING (SVG via JS) — INNER ONLY (STATIONARY)
+     * ======================= */
+    .wheel-lights{
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9;
+      display: grid;
+      place-items: center;
+
+      transform: translateZ(0);
+      will-change: opacity;
+      opacity: 0.99;
+
+      /* ✅ IMPORTANT: no CSS filter (anti kotak) */
+      filter: none;
+      -webkit-filter: none;
+
+      /* tokens */
+      --bulb-speed: 2.8s;
+      --bulb-delay-step: -0.085s;
+      --bulb-dim: 0.64;
+      --bulb-peak: 1;
+      --bulb-scale: 1.08;
+    }
+
+    .wheel-lights.outer{ display: none !important; }
+
+    .wheel-lights.inner{
+      inset: var(--lights-inset);
+      opacity: 1;
+    }
+
+    .wheel-lights svg{
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+
+    /* ring “kaca” tipis biar rapi (tanpa bikin seam) */
+    .wheel-lights.inner::after{
+      content:"";
+      position:absolute;
+      inset: clamp(10px, 2.4vw, 14px);
+      border-radius: 50%;
+      pointer-events:none;
+      background:
+        radial-gradient(circle at 30% 22%, rgba(255,255,255,0.10), transparent 44%),
+        radial-gradient(circle at 70% 74%, rgba(245,158,11,0.12), transparent 56%),
+        radial-gradient(circle at 50% 50%, rgba(0,0,0,0.16), transparent 62%);
+      border: 1px solid rgba(255, 232, 176, 0.16);
+      box-shadow:
+        inset 0 0 0 1px rgba(0,0,0,0.18),
+        inset 0 0 24px rgba(245,158,11,0.07);
+      opacity: 0.94;
+    }
+
+    @keyframes bulbTwinkle{
+      0%   { opacity: var(--bulb-dim); transform: scale(0.98); }
+      18%  { opacity: var(--bulb-peak); transform: scale(var(--bulb-scale)); }
+      46%  { opacity: 0.78; transform: scale(1.00); }
+      100% { opacity: var(--bulb-dim); transform: scale(0.98); }
+    }
+
+    .wheel-lights.inner .bulb{
+      animation: bulbTwinkle var(--bulb-speed) ease-in-out infinite;
+      animation-delay: calc(var(--i) * var(--bulb-delay-step));
+      will-change: opacity, transform;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    /* =========================
+     * POINTER (lebih masuk + presisi)
+     * ======================= */
+    .pointer{
+      position: absolute;
+      top: calc(var(--pointer-overhang) * -1);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
+      width: clamp(42px, 10vw, 54px);
+      height: clamp(52px, 12vw, 66px);
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.55));
+      pointer-events: none;
+
+      transform-origin: 50% 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .pointer svg { width: 100%; height: 100%; }
+
+    /* =========================
+     * OUTER RIM — GOLD METAL (seam dipindah ke atas)
+     * ======================= */
+    .wheel-outer{
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      padding: var(--rim-pad);
+      position: relative;
+      z-index: 2;
+      isolation: isolate;
+      overflow: hidden;
+
+      /* ✅ Safari/iOS: paksa clip bulat biar ga ada “lecet”/banding kotak */
+      clip-path: circle(50% at 50% 50%);
+      -webkit-mask-image: -webkit-radial-gradient(white, black);
+
+      background:
+        radial-gradient(circle at 30% 22%, rgba(255,255,255,0.22), transparent 44%),
+        radial-gradient(circle at 50% 86%, rgba(0,0,0,0.60), transparent 58%),
+        conic-gradient(from -90deg,
+          rgba(255,255,255,0.22),
+          rgba(0,0,0,0.00) 10%,
+          rgba(255,255,255,0.10) 18%,
+          rgba(0,0,0,0.00) 28%,
+          rgba(255,255,255,0.08) 38%,
+          rgba(0,0,0,0.00) 52%,
+          rgba(255,255,255,0.12) 64%,
+          rgba(0,0,0,0.00) 78%,
+          rgba(255,255,255,0.22) 100%
+        ),
+        linear-gradient(180deg,
+          rgba(255, 241, 196, 0.92) 0%,
+          rgba(245, 158, 11, 0.94) 46%,
+          rgba(120, 53, 15, 0.96) 100%
+        );
+
+      border: 1px solid rgba(255, 232, 176, 0.24);
+      box-shadow:
+        0 28px 70px rgba(0,0,0,0.58),
+        0 0 34px rgba(245,158,11,0.16);
+
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    .wheel-outer::after{
+      content:"";
+      position:absolute;
+      inset: 8px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 232, 176, 0.20);
+      pointer-events:none;
+      opacity: 0.90;
+      z-index: 3;
+    }
+
+    .wheel-inner{
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--wheel-bg, conic-gradient(from -90deg, #064e3b 0deg 60deg, #f8fafc 60deg 120deg, #064e3b 120deg 180deg, #f8fafc 180deg 240deg, #064e3b 240deg 300deg, #f8fafc 300deg 360deg));
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow:
+        inset 0 0 0 1px rgba(0,0,0,0.22),
+        inset 0 18px 32px rgba(0,0,0,0.28),
+        inset 0 -14px 24px rgba(255,255,255,0.06);
+      position: relative;
+      will-change: transform;
+      transform: rotate(0deg);
+      overflow: hidden;
+      isolation: isolate;
+      background-clip: padding-box;
+
+      /* ✅ iOS: paksa clip bulat untuk render conic */
+      clip-path: circle(50% at 50% 50%);
+      -webkit-mask-image: -webkit-radial-gradient(white, black);
+
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transform-style: flat;
+      -webkit-transform-style: flat;
+
+      /* ✅ sync spin duration from JS */
+      --spin-dur: 6000ms;
+    }
+
+    .wheel-inner::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:50%;
+      background:
+        radial-gradient(circle at 35% 28%, rgba(255,255,255,0.16), transparent 55%),
+        radial-gradient(circle at 68% 72%, rgba(34,197,94,0.10), transparent 58%);
+      pointer-events:none;
+      opacity: 0.58;
+      z-index: 2;
+    }
+
+    .wheel-inner::after{
+      content:"";
+      position:absolute;
+      inset: 0;
+      border-radius: 50%;
+      background:
+        radial-gradient(420px 260px at 30% 18%, rgba(255,255,255,0.10), transparent 58%),
+        radial-gradient(520px 300px at 78% 84%, rgba(0,0,0,0.22), transparent 62%);
+      pointer-events:none;
+      opacity: 0.62;
+      z-index: 4;
+    }
+
+    .wheel-inner.spinning{
+      animation: spin-wheel var(--spin-dur) cubic-bezier(0.15, 0, 0.15, 1) forwards;
+    }
+    @keyframes spin-wheel{
+      from { transform: rotate(var(--from-rotation, 0deg)); }
+      to   { transform: rotate(var(--rotation)); }
+    }
+
+    .prize-text{
+      position:absolute;
+      left:50%;
+      top:50%;
+      font-weight: 1000;
+      font-size: clamp(14px, 3.2vw, 20px);
+      user-select:none;
+      pointer-events:none;
+      white-space:nowrap;
+      z-index: 10;
+      letter-spacing: 0.4px;
+      transform-origin: center center;
+
+      max-width: 72%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      text-shadow: 0 2px 0 rgba(0,0,0,0.18), 0 10px 26px rgba(0,0,0,0.45);
+    }
+
+    .wheel-center{
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate3d(-50%, -50%, 0);
+      width: clamp(56px, 14.5vw, 70px);
+      height: clamp(56px, 14.5vw, 70px);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,0.22), transparent 48%),
+        conic-gradient(from -90deg, rgba(255,255,255,0.12), rgba(0,0,0,0) 35%, rgba(255,255,255,0.08) 65%, rgba(0,0,0,0) 100%),
+        linear-gradient(180deg, rgba(255, 241, 196, 0.90), rgba(245,158,11,0.92));
+      border: 1px solid rgba(255, 232, 176, 0.24);
+      box-shadow:
+        0 18px 40px rgba(0,0,0,0.48),
+        0 0 16px rgba(245,158,11,0.20);
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    .wheel-center::after{
+      content: "";
+      width: clamp(26px, 8vw, 38px);
+      height: clamp(26px, 8vw, 38px);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,0.18), transparent 55%),
+        radial-gradient(circle at 50% 50%, rgba(0,0,0,0.22), transparent 60%),
+        linear-gradient(180deg, rgba(6,18,14,0.94), rgba(6,18,14,0.62));
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.38);
+    }
+
+    .wheel-wrapper.is-spinning .wheel-outer{
+      animation: glowPulse 520ms ease-in-out infinite alternate;
+    }
+    .wheel-wrapper.is-spinning .pointer{
+      animation: pointerTick 220ms ease-in-out infinite alternate;
+    }
+    @keyframes glowPulse{
+      from { box-shadow: 0 28px 70px rgba(0,0,0,0.58), 0 0 20px rgba(245,158,11,0.10); }
+      to   { box-shadow: 0 28px 70px rgba(0,0,0,0.58), 0 0 34px rgba(245,158,11,0.18); }
+    }
+    @keyframes pointerTick{
+      from { transform: translateX(-50%) rotate(-1deg); }
+      to   { transform: translateX(-50%) rotate(1deg); }
+    }
+
+    /* =========================
+     * CARD / INPUT (iOS placeholder/caret FIX)
+     * ======================= */
+    .input-section{
+      background: var(--card);
+      border: 1px solid var(--cardBorder);
+      border-radius: var(--radius-lg);
+      padding: clamp(18px, 4vw, 30px);
+      box-shadow: var(--shadow-soft);
+      margin-bottom: 14px;
+      overflow: hidden;
+      isolation: isolate;
+    }
+    @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
+      .input-section{
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+      }
+    }
+
+    .input-section h2 { font-size: 1.35rem; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+    .input-section p { color: rgba(255, 255, 255, 0.72); margin-bottom: 18px; font-size: 0.95rem; line-height: 1.4; }
+    label { display: block; margin-bottom: 10px; font-weight: 900; color: rgba(255,255,255,0.9); }
+
+    /* ✅ iOS Safari: placeholder “geser” biasanya karena line-height/padding/letter-spacing.
+       Di sini kita kunci baseline supaya placeholder & teks sama persis. */
+    input{
+      width: 100%;
+      height: 54px;
+
+      /* IMPORTANT: iOS no-zoom + baseline stable */
+      font-size: 18px;                 /* >=16 agar iOS tidak auto-zoom */
+      line-height: 54px;               /* kunci baseline (placeholder tidak turun/naik) */
+      padding: 0 18px;                 /* vertical 0 biar tidak shifting */
+      text-align: center;
+
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 12px;
+
+      color: rgba(255,255,255,0.94);
+      caret-color: rgba(255,255,255,0.92);
+
+      margin-bottom: 14px;
+      transition:
+        box-shadow 0.22s ease,
+        border-color 0.22s ease,
+        background 0.22s ease;
+
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+
+      /* ✅ jangan terlalu agresif di input (iOS sensitif) */
+      letter-spacing: 0.6px;
+
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25);
+
+      /* stabil rendering */
+      transform: translateZ(0);
+      -webkit-font-smoothing: antialiased;
+    }
+    input:focus{
+      border-color: rgba(34,197,94,0.52);
+      background: rgba(255,255,255,0.08);
+      box-shadow:
+        0 0 0 4px rgba(34,197,94,0.16),
+        0 16px 40px rgba(0,0,0,0.40);
+    }
+    input::placeholder{
+      color: rgba(255,255,255,0.38);
+      letter-spacing: 0.8px;
+      line-height: 54px;
+      opacity: 1;
+    }
+    input::-webkit-input-placeholder{
+      line-height: 54px;
+      opacity: 1;
+    }
+
+    .primary-btn{
+      width: 100%;
+      height: 64px;
+      font-size: 22px;
+      font-weight: 1000;
+      letter-spacing: 1.2px;
+      background: linear-gradient(to bottom, var(--gold1), var(--gold2));
+      color: rgba(0,0,0,0.92);
+      border: 1px solid rgba(34,197,94,0.65);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.22s ease, background 0.22s ease, opacity 0.2s ease;
+      box-shadow: 0 0 34px rgba(34,197,94,0.26);
+      font-family: inherit;
+      touch-action: manipulation;
+      position: relative;
+      overflow: hidden;
+      transform: translateZ(0);
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .primary-btn::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.0), rgba(255,255,255,0.35), rgba(255,255,255,0.0));
+      transform: translateX(-120%);
+      opacity: 0.75;
+      pointer-events:none;
+    }
+    .primary-btn:hover:not(:disabled){
+      transform: translateY(-1px);
+      box-shadow: 0 0 44px rgba(34,197,94,0.34);
+      background: linear-gradient(to bottom, var(--gold0), var(--gold1));
+    }
+    .primary-btn:hover:not(:disabled)::before{ animation: sheen 900ms ease-out; }
+    @keyframes sheen{ from { transform: translateX(-120%); } to { transform: translateX(120%); } }
+    .primary-btn:active:not(:disabled){ transform: translateY(0px) scale(0.99); box-shadow: 0 0 22px rgba(34,197,94,0.22); }
+    .primary-btn:disabled{ opacity: 0.62; cursor: not-allowed; }
+
+    .primary-btn.fx::after{
+      content:"";
+      position:absolute;
+      left: var(--fx-x, 50%);
+      top: var(--fx-y, 50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: radial-gradient(circle, rgba(255,255,255,0.70), rgba(34,197,94,0.14), rgba(0,0,0,0.0));
+      animation: ripple 520ms ease-out forwards;
+      pointer-events:none;
+    }
+    @keyframes ripple{ to { transform: translate(-50%, -50%) scale(32); opacity: 0; } }
+
+    .secondary-btn{
+      width: 100%;
+      height: 52px;
+      font-size: 16px;
+      font-weight: 1000;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.35);
+      color: rgba(255,255,255,0.92);
+      cursor: pointer;
+      transition: transform 0.12s ease, background 0.2s ease, border-color 0.2s ease;
+      touch-action: manipulation;
+      position: relative;
+      overflow: hidden;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .secondary-btn:hover{ background: rgba(0,0,0,0.50); border-color: rgba(255,255,255,0.28); }
+    .secondary-btn:active{ transform: scale(0.99); }
+
+    .jackpot-display{ display:flex; flex-direction:column; align-items:center; gap:6px; padding-top:14px; }
+    .jackpot-label{ font-size:0.85rem; color: rgba(255,255,255,0.6); }
+    .jackpot-amount{
+      font-size: 1.22rem;
+      font-weight: 1000;
+      color: #4ade80;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+      letter-spacing: 1px;
+    }
+    .jackpot-meta{
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.55);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+      letter-spacing: 0.3px;
+      text-align: center;
+    }
+
+    .spun-message{
+      text-align: center;
+      padding: 13px 14px;
+      background: rgba(239, 68, 68, 0.18);
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      border-radius: 10px;
+      color: rgba(248, 113, 113, 0.92);
+      margin-bottom: 14px;
+      line-height: 1.35;
+    }
+
+    /* =========================
+     * WINNERS (GREEN)
+     * ======================= */
+    .winners-section{
+      background: rgba(0,0,0,0.26);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 15px;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .winners-header{
+      background: linear-gradient(to right, rgba(34,197,94,0.22), rgba(34,197,94,0.06));
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(34,197,94,0.14);
+      font-weight: 1000;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .winners-table{
+      width: 100%;
+      max-height: 320px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      display: block;
+      overscroll-behavior: contain;
+      scroll-behavior: smooth;
+      padding-bottom: 2px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(34,197,94,0.32) rgba(0,0,0,0.20);
+    }
+    .winners-table::-webkit-scrollbar{ width: 6px; }
+    .winners-table::-webkit-scrollbar-track{ background: rgba(0,0,0,0.20); }
+    .winners-table::-webkit-scrollbar-thumb{ background: rgba(34,197,94,0.30); border-radius: 3px; }
+    .winners-table::-webkit-scrollbar-thumb:hover{ background: rgba(34,197,94,0.52); }
+
+    .winners-table-header,
+    .winners-table-row{
+      display: grid;
+      grid-template-columns: 56px minmax(0, 1fr) clamp(120px, 28vw, 170px);
+      gap: 10px;
+      padding: 12px 18px;
+      align-items: center;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .winners-table-header{
+      background: rgba(0,0,0,0.62);
+      font-weight: 1000;
+      color: rgba(187,247,208,0.92);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 2px solid rgba(34,197,94,0.20);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      isolation: isolate;
+    }
+
+    .winners-table-row{
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      position: relative;
+      transition: transform 260ms ease, background 220ms ease;
+      will-change: transform;
+      cursor: default;
+      user-select: none;
+    }
+
+    .winners-table-row.is-user{
+      cursor: pointer;
+      background: rgba(34,197,94,0.08);
+      box-shadow: inset 0 0 0 1px rgba(34,197,94,0.18);
+    }
+    .winners-table-row.is-user:hover{
+      background: rgba(34,197,94,0.11);
+    }
+    .winners-table-row:hover:not(.is-user){
+      background: rgba(255,255,255,0.02);
+    }
+
+    .winner-no{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+      color: rgba(255,255,255,0.62);
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .winner-id{
+      font-weight: 1000;
+      color: #fff;
+      text-transform: none;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .winner-meta{
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.55);
+      margin-top: 2px;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .winner-prize{
+      text-align: right;
+      font-weight: 1000;
+      color: #4ade80;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    @keyframes rowIn{ from{ opacity:0; transform: translateY(-8px); } to{ opacity:1; transform: translateY(0); } }
+    @keyframes shimmer{
+      from{ transform: translateX(-65%); opacity: 0; }
+      15%{ opacity: 1; }
+      to{ transform: translateX(65%); opacity: 0; }
+    }
+
+    .winners-table-row.is-new{
+      animation: rowIn 240ms ease-out;
+      background: linear-gradient(90deg, rgba(34,197,94,0.12), rgba(255,255,255,0.03));
+      box-shadow: inset 0 0 0 1px rgba(34,197,94,0.18);
+    }
+    .winners-table-row.is-new::after{
+      content:"";
+      position:absolute;
+      inset: 0;
+      pointer-events:none;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+      transform: translateX(-65%);
+      animation: shimmer 980ms ease-out forwards;
+    }
+
+    @media (max-width: 420px){
+      .winners-table-header,
+      .winners-table-row{
+        grid-template-columns: 44px minmax(0, 1fr);
+      }
+      .winner-prize{
+        grid-column: 2 / 3;
+        text-align: left;
+        margin-top: 2px;
+      }
+    }
+
+    /* =========================
+     * MODAL (NO CLOSE BUTTON)
+     * ======================= */
+    .modal{
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.78);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: calc(14px + var(--safe-top)) calc(14px + var(--safe-right)) calc(14px + var(--safe-bottom)) calc(14px + var(--safe-left));
+    }
+    .modal.show { display: flex; }
+
+    .modal-content{
+      background: linear-gradient(135deg, rgba(6,18,14,0.96), rgba(7,30,22,0.96));
+      border: 1px solid rgba(34,197,94,0.55);
+      border-radius: 20px;
+      padding: clamp(18px, 4vw, 40px);
+      text-align: center;
+      max-width: 520px;
+      width: 100%;
+      box-shadow: 0 0 70px rgba(34,197,94,0.16);
+      animation: zoomIn 0.22s ease-out;
+      max-height: min(84vh, 720px);
+      overflow: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(34,197,94,0.30) rgba(0,0,0,0.20);
+    }
+    @keyframes zoomIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
+    .modal-content h1 { font-size: clamp(1.8rem, 3.4vw, 2.5rem); margin-bottom: 8px; }
+    .modal-content p { color: rgba(255, 255, 255, 0.82); margin-bottom: 14px; font-size: 1.05rem; line-height: 1.45; }
+
+    .prize-amount{
+      font-size: clamp(2rem, 6vw, 3rem);
+      font-weight: 1100;
+      color: var(--gold0);
+      margin: 18px 0 10px;
+      line-height: 1.1;
+      text-shadow: 0 18px 40px rgba(0,0,0,0.55);
+    }
+    .prize-meta{
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.70);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+      letter-spacing: 0.6px;
+      color: rgba(255,255,255,0.92);
+      font-weight: 900;
+    }
+
+    .modal-actions{
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 16px;
+      align-items: center;
+    }
+    .modal-actions .primary-btn{ max-width: 320px; height: 58px; font-size: 20px; }
+    .modal-actions .secondary-btn{ max-width: 320px; height: 52px; font-size: 16px; }
+
+    /* =========================
+     * TOAST
+     * ======================= */
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: calc(18px + var(--safe-bottom));
+      transform: translateX(-50%);
+      z-index: 1200;
+      width: min(520px, calc(100vw - 28px));
+      background: rgba(0,0,0,0.72);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: none;
+      gap: 10px;
+      align-items: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      isolation: isolate;
+    }
+    .toast.show{ display: flex; animation: toastIn 180ms ease-out; }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(6px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+    .toast .dot{
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--gold1);
+      box-shadow: 0 0 14px rgba(34,197,94,0.38);
+      flex: 0 0 auto;
+    }
+    .toast .msg{
+      color: rgba(255,255,255,0.92);
+      font-weight: 800;
+      line-height: 1.3;
+      font-size: 0.98rem;
+    }
+    .toast.error .dot{ background: #ef4444; box-shadow: 0 0 12px rgba(239,68,68,0.35); }
+    .toast.success .dot{ background: #4ade80; box-shadow: 0 0 14px rgba(34,197,94,0.34); }
+
+    /* =========================
+     * LOADING OVERLAY (CLAIM)
+     * ======================= */
+    .nav-loading{
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+
+      background: rgba(0,0,0,0.78);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+
+      padding: calc(14px + var(--safe-top)) calc(14px + var(--safe-right)) calc(14px + var(--safe-bottom)) calc(14px + var(--safe-left));
+
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+
+      transform: translateZ(0);
+      transition:
+        opacity 240ms ease,
+        visibility 0s linear 240ms;
+      isolation: isolate;
+    }
+    .nav-loading.show{
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition:
+        opacity 240ms ease,
+        visibility 0s;
+    }
+
+    .nav-loading-card{
+      width: min(520px, calc(100vw - 28px));
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: linear-gradient(135deg, rgba(6,18,14,0.96), rgba(7,30,22,0.96));
+      box-shadow: 0 25px 80px rgba(0,0,0,0.55);
+      padding: 18px 18px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+
+      transform: translateY(4px);
+      transition: transform 240ms ease;
+    }
+    .nav-loading.show .nav-loading-card{ transform: translateY(0); }
+
+    .nav-spinner{
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 3px solid rgba(255,255,255,0.16);
+      border-top-color: rgba(34,197,94,0.92);
+      animation: navSpin 820ms linear infinite;
+      flex: 0 0 auto;
+    }
+    @keyframes navSpin{ to{ transform: rotate(360deg); } }
+
+    .nav-title{
+      font-weight: 1000;
+      color: rgba(255,255,255,0.94);
+      line-height: 1.2;
+    }
+    .nav-sub{
+      font-size: 0.92rem;
+      color: rgba(255,255,255,0.62);
+      margin-top: 2px;
+    }
+
+    /* =========================
+     * ACCESSIBILITY + REDUCED MOTION
+     * ======================= */
+    :focus-visible{
+      outline: 3px solid var(--ring);
+      outline-offset: 3px;
+      border-radius: 10px;
+    }
+    @media (prefers-reduced-motion: reduce){
+      * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+      .winners-table-row.is-new::after { display: none !important; }
+      .nav-spinner{ animation: none !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1 class="hero-title">SELAMAT DATANG DI <span>MADETOTO2</span></h1>
+      <p class="subtitle">PUTAR RODANYA &amp; DAPATKAN HADIAH FANTASTIS HINGGA 200 RIBU RUPIAH!</p>
+    </header>
+
+    <div class="main-content">
+      <div class="wheel-container">
+        <div class="wheel-wrapper" id="wheelWrap">
+          <div class="wheel-lights inner" id="wheelLightsInner" aria-hidden="true"></div>
+
+          <div class="pointer" aria-hidden="true">
+            <svg viewBox="0 0 48 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M24 60L4 20C4 20 8 4 24 4C40 4 44 20 44 20L24 60Z" fill="#22c55e" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
+              <circle cx="24" cy="16" r="8" fill="#F8FAFC" stroke="rgba(0,0,0,0.18)" stroke-width="2"/>
+            </svg>
+          </div>
+
+          <div class="wheel-outer">
+            <div class="wheel-inner" id="wheel" aria-label="Lucky wheel">
+              <div class="wheel-center" aria-hidden="true"></div>
+              <!-- Prize texts generated by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="input-section">
+          <h2>MASUKKAN USER ID</h2>
+          <p>Masukkan User ID Anda untuk memutar roda keberuntungan.</p>
+
+          <label for="userIdInput">User ID</label>
+          <input
+            type="text"
+            id="userIdInput"
+            placeholder="Contoh: User123"
+            maxlength="20"
+            autocomplete="off"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
+            inputmode="text"
+          />
+
+          <button id="spinBtn" class="primary-btn" type="button">SPIN SEKARANG!</button>
+
+          <div class="jackpot-display" aria-live="polite">
+            <div class="jackpot-label">Total Jackpot</div>
+            <div class="jackpot-amount" id="jackpot">IDR 888.888.888</div>
+            <div class="jackpot-meta" id="jackpotMeta">Update: --:--:--</div>
+          </div>
+        </div>
+
+        <div id="spunMessage" class="spun-message" style="display:none;">
+          Kesempatan spin Anda sudah habis. Silakan klaim hadiah Anda.
+        </div>
+
+        <div class="winners-section">
+          <div class="winners-header">🏆 50 Riwayat Spin Terakhir</div>
+          <div class="winners-table" id="winnersTable" aria-live="polite">
+            <div class="winners-table-header">
+              <div>NO</div>
+              <div>USER ID</div>
+              <div>HADIAH</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">
+    <div class="dot" aria-hidden="true"></div>
+    <div class="msg" id="toastMsg">Toast</div>
+  </div>
+
+  <!-- Modal (NO close button) -->
+  <div class="modal" id="prizeModal" role="dialog" aria-modal="true" aria-labelledby="prizeTitle" aria-hidden="true">
+    <div class="modal-content" role="document">
+      <h1 id="prizeTitle">SELAMAT!</h1>
+      <p>Anda memenangkan hadiah:</p>
+      <div class="prize-amount" id="prizeAmount">BONUS 10%</div>
+
+      <div class="prize-meta">
+        User ID: <span class="mono" id="modalUserId">-</span><br/>
+        Waktu: <span class="mono" id="modalTime">-</span>
+      </div>
+
+      <p style="margin-top: 14px;">Silakan klaim melalui Live Chat dan sertakan User ID.</p>
+
+      <div class="modal-actions">
+        <button type="button" class="primary-btn" id="claimBtn">KLAIM SEKARANG</button>
+        <button type="button" class="secondary-btn" id="downloadBtn">UNDUH HASIL</button>
+      </div>
+      <div class="prize-meta" style="margin-top:10px;">
+        Klik tombol unduh untuk mendapatkan hasil. File akan tersimpan otomatis di perangkat Anda.
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay (Claim) -->
+  <div class="nav-loading" id="navLoading" aria-hidden="true">
+    <div class="nav-loading-card" role="status" aria-live="polite" aria-atomic="true">
+      <div class="nav-spinner" aria-hidden="true"></div>
+      <div>
+        <div class="nav-title">Menghubungkan…</div>
+        <div class="nav-sub">Mengarahkan ke halaman klaim</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chaport Live Chat -->
+  <script type="text/javascript">
+    (function(w,d,v3){
+      w.chaportConfig = { appId : '6937b4ead2823b3f94b0a834' };
+      if(w.chaport) return;
+      v3 = w.chaport = {};
+      v3._q = [];
+      v3._l = {};
+      v3.q = function(){ v3._q.push(arguments) };
+      v3.on = function(e,fn){ if(!v3._l[e]) v3._l[e]=[]; v3._l[e].push(fn) };
+      var s = d.createElement('script');
+      s.type = 'text/javascript';
+      s.async = true;
+      s.src = 'https://app.chaport.com/javascripts/insert.js';
+      var ss = d.getElementsByTagName('script')[0];
+      ss.parentNode.insertBefore(s, ss);
+    })(window, document);
+  </script>
+
+  <!-- Audio (Sound auto ON) -->
+  <audio id="bgMusic" loop playsinline preload="auto"></audio>
+  <audio id="spinSound" playsinline preload="auto"></audio>
+  <audio id="tickSound" playsinline preload="auto"></audio>
+  <audio id="winSound" playsinline preload="auto"></audio>
+  <audio id="historySound" playsinline preload="auto"></audio>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    /* ======================================================================
+     * FINAL — FULL PATCH (READY REPLACE)
+     * ✅ FIX iOS input baseline (placeholder tidak “geser turun”)
+     * ✅ FIX wheel “lecet/cacat” (seam conic + clip iOS)
+     * ✅ Pointer & dot ring lebih presisi (phase + posisi)
+     * ✅ Anti glow/shadow bocor (contain/clip)
+     * ====================================================================== */
+
+    const SPIN_DURATION_MS = 6000;
+
+    // === CLAIM NAV ===
+    const CLAIM_URL = "https://newmadetoto2.com/";
+    const CLAIM_OVERLAY_MIN_MS = 700;
+    let claimInFlight = false;
+
+    // === localStorage prefix + migration ===
+    const LS_PREFIX = "mt2_spin_v1:";
+    const LS = {
+      HAS_SPUN: LS_PREFIX + "hasSpun",
+      SPIN_AT: LS_PREFIX + "spinAt",
+      LAST_USER_ID: LS_PREFIX + "lastUserId",
+      JACKPOT_VAL: LS_PREFIX + "jackpotVal"
+    };
+
+    function lsGet(key, fallback = "") {
+      try {
+        const v = localStorage.getItem(key);
+        return (v == null ? fallback : v);
+      } catch (_) {
+        return fallback;
+      }
+    }
+    function lsSet(key, value) {
+      try { localStorage.setItem(key, String(value)); } catch (_) {}
+    }
+    function migrateLegacyKeys() {
+      const legacy = {
+        hasSpun: "hasSpun",
+        spinAt: "spinAt",
+        lastUserId: "lastUserId",
+        jackpotVal: "jackpotVal"
+      };
+
+      const newHas = lsGet(LS.HAS_SPUN, "");
+      const oldHas = lsGet(legacy.hasSpun, "");
+      if (!newHas && oldHas) lsSet(LS.HAS_SPUN, oldHas);
+
+      const newSpinAt = lsGet(LS.SPIN_AT, "");
+      const oldSpinAt = lsGet(legacy.spinAt, "");
+      if (!newSpinAt && oldSpinAt) lsSet(LS.SPIN_AT, oldSpinAt);
+
+      const newLast = lsGet(LS.LAST_USER_ID, "");
+      const oldLast = lsGet(legacy.lastUserId, "");
+      if (!newLast && oldLast) lsSet(LS.LAST_USER_ID, oldLast);
+
+      const newJack = lsGet(LS.JACKPOT_VAL, "");
+      const oldJack = lsGet(legacy.jackpotVal, "");
+      if (!newJack && oldJack) lsSet(LS.JACKPOT_VAL, oldJack);
+    }
+
+    // ===================== PRIZE SET (DEMO LOCK RESULT) =====================
+    const PRIZES = ["25K", "50K", "75K", "100K", "200K", "BONUS 10%"];
+    const BONUS_LABEL = "BONUS 10%";
+    const BONUS_INDEX = PRIZES.indexOf(BONUS_LABEL);
+
+    const PRIZE_DISPLAY_MAP = {
+      "25K": "IDR 25.000",
+      "50K": "IDR 50.000",
+      "75K": "IDR 75.000",
+      "100K": "IDR 100.000",
+      "200K": "IDR 200.000",
+      "BONUS 10%": "BONUS 10%",
+    };
+
+    // =========================
+    // STATE
+    // =========================
+    migrateLegacyKeys();
+
+    let hasSpun = lsGet(LS.HAS_SPUN, "false") === "true";
+    let spinAt = Number(lsGet(LS.SPIN_AT, "0") || "0") || 0;
+    let savedUserId = String(lsGet(LS.LAST_USER_ID, "") || "");
+
+    let isSpin = false;
+    let currentRotation = 0;
+    let lastResult = null;
+
+    let winners = generateMockWinnersRandom();
+    let liveTimer = 0;
+
+    let rowElById = new Map();
+    let winnersById = new Map();
+
+    let jackpotTimer = 0;
+    let jackpotSaveTimer = 0;
+    let jackpot = initJackpot();
+
+    let spikeUntilMs = 0;
+    let spikeMul = 1;
+
+    let toastTimer = 0;
+    let metaTimer = 0;
+
+    let lastFocusedEl = null;
+
+    let tickPool = [];
+    let tickPoolIdx = 0;
+
+    let historyPool = [];
+    let historyPoolIdx = 0;
+    let historySfxAt = 0;
+
+    let nonUserToastAt = 0;
+    let audioPrimed = false;
+
+    function normalizeUserIdInput(v) {
+      return String(v == null ? "" : v).replace(/\s+/g, "");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const spinBtn = document.getElementById("spinBtn");
+      const userIdInput = document.getElementById("userIdInput");
+      const claimBtn = document.getElementById("claimBtn");
+      const downloadBtn = document.getElementById("downloadBtn");
+
+      setupAudioAutoOn();
+      buildBulbRing();
+      drawWheelPrizes();
+      initWheelAutoResize();
+
+      bootPersistedUserEntry();
+
+      renderWinners({ preserveScroll: true });
+      startMetaTicker();
+      setupHistoryRowOpen();
+
+      updateUI();
+      startJackpot();
+      startLiveHistory();
+
+      userIdInput.addEventListener("input", () => {
+        userIdInput.value = normalizeUserIdInput(userIdInput.value);
+      });
+
+      userIdInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") startSpin();
+      });
+
+      spinBtn.addEventListener("click", startSpin);
+      spinBtn.addEventListener("pointerdown", (e) => pressFX(spinBtn, e), { passive: true });
+      spinBtn.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") pressFX(spinBtn, null);
+      });
+
+      claimBtn.addEventListener("click", claimPrize);
+      claimBtn.addEventListener("pointerdown", (e) => pressFX(claimBtn, e), { passive: true });
+
+      downloadBtn.addEventListener("click", downloadResultPng);
+      downloadBtn.addEventListener("pointerdown", (e) => pressFX(downloadBtn, e), { passive: true });
+
+      document.getElementById("prizeModal").addEventListener("click", (e) => {
+        if (e.target && e.target.id === "prizeModal") closeModal();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && isModalOpen()) closeModal();
+      });
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          stopLiveHistory();
+          stopJackpot();
+        } else {
+          startLiveHistory();
+          startJackpot();
+        }
+      });
+
+      // autoplay policy
+      const kick = () => kickAudio();
+      window.addEventListener("pointerdown", kick, { passive: true, once: true });
+      window.addEventListener("keydown", kick, { passive: true, once: true });
+
+      // ✅ BFCache return
+      window.addEventListener("pageshow", () => {
+        hideNavLoading(true);
+      });
+
+      // ✅ sync antar tab
+      window.addEventListener("storage", (e) => {
+        if (!e || !e.key) return;
+
+        if (e.key === LS.HAS_SPUN || e.key === LS.SPIN_AT || e.key === LS.LAST_USER_ID) {
+          const newHas = lsGet(LS.HAS_SPUN, "false") === "true";
+          const newSpinAt = Number(lsGet(LS.SPIN_AT, "0") || "0") || 0;
+          const newUid = String(lsGet(LS.LAST_USER_ID, "") || "");
+
+          hasSpun = newHas;
+          spinAt = newSpinAt;
+          savedUserId = newUid;
+
+          bootPersistedUserEntry();
+          updateUI();
+          renderWinners({ preserveScroll: true });
+        }
+
+        if (e.key === LS.JACKPOT_VAL) {
+          const v = Number(lsGet(LS.JACKPOT_VAL, "0") || "0") || 0;
+          if (v > 1000000) {
+            jackpot = v;
+            const el = document.getElementById("jackpot");
+            const meta = document.getElementById("jackpotMeta");
+            if (el) el.textContent = `IDR ${Math.round(jackpot).toLocaleString("id-ID")}`;
+            if (meta) meta.textContent = `Update: ${fmtClock()}`;
+          }
+        }
+      });
+    });
+
+    // =========================
+    // DOT BULBS RING (SVG) — presisi (gap tepat di tengah atas)
+    // =========================
+    function buildBulbRing() {
+      buildBulbRingOne("wheelLightsInner", {
+        r: 92.0,           // ✅ sedikit lebih dekat ke rim (lebih presisi)
+        count: 24,
+        coreR: 2.75,
+        glowR: 4.15,
+        blur: 1.45,
+        glowOpacity: 0.56,
+        phase: Math.PI / 24  // ✅ 7.5deg => GAP tepat di atas (pointer di tengah)
+      });
+    }
+
+    function buildBulbRingOne(hostId, opt) {
+      const host = document.getElementById(hostId);
+      if (!host) return;
+
+      host.innerHTML = "";
+
+      const NS = "http://www.w3.org/2000/svg";
+      const VB = 200;
+      const cx = VB / 2, cy = VB / 2;
+
+      const svg = document.createElementNS(NS, "svg");
+      svg.setAttribute("viewBox", "0 0 200 200");
+      svg.setAttribute("width", "200");
+      svg.setAttribute("height", "200");
+      svg.setAttribute("aria-hidden", "true");
+      svg.setAttribute("focusable", "false");
+      svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+      const defs = document.createElementNS(NS, "defs");
+
+      const gradId = `bulbGrad_${hostId}`;
+      const grad = document.createElementNS(NS, "radialGradient");
+      grad.setAttribute("id", gradId);
+      grad.setAttribute("cx", "35%");
+      grad.setAttribute("cy", "30%");
+      grad.setAttribute("r", "72%");
+
+      const s1 = document.createElementNS(NS, "stop");
+      s1.setAttribute("offset", "0%");
+      s1.setAttribute("stop-color", "rgba(255,255,255,0.98)");
+
+      const s2 = document.createElementNS(NS, "stop");
+      s2.setAttribute("offset", "36%");
+      s2.setAttribute("stop-color", "#FFF1C4");
+
+      const s3 = document.createElementNS(NS, "stop");
+      s3.setAttribute("offset", "72%");
+      s3.setAttribute("stop-color", "#F59E0B");
+
+      const s4 = document.createElementNS(NS, "stop");
+      s4.setAttribute("offset", "100%");
+      s4.setAttribute("stop-color", "#78350F");
+
+      grad.append(s1, s2, s3, s4);
+
+      const filterId = `bulbGlow_${hostId}`;
+      const glowFilter = document.createElementNS(NS, "filter");
+      glowFilter.setAttribute("id", filterId);
+      glowFilter.setAttribute("x", "-70%");
+      glowFilter.setAttribute("y", "-70%");
+      glowFilter.setAttribute("width", "240%");
+      glowFilter.setAttribute("height", "240%");
+
+      const blur = document.createElementNS(NS, "feGaussianBlur");
+      blur.setAttribute("in", "SourceGraphic");
+      blur.setAttribute("stdDeviation", String(opt.blur != null ? opt.blur : 1.45));
+      blur.setAttribute("result", "b");
+
+      const merge = document.createElementNS(NS, "feMerge");
+      const m1 = document.createElementNS(NS, "feMergeNode");
+      m1.setAttribute("in", "b");
+      const m2 = document.createElementNS(NS, "feMergeNode");
+      m2.setAttribute("in", "SourceGraphic");
+      merge.append(m1, m2);
+
+      glowFilter.append(blur, merge);
+      defs.append(grad, glowFilter);
+      svg.appendChild(defs);
+
+      const r = opt.r || 92;
+      const count = opt.count || 24;
+      const phase = opt.phase || 0;
+
+      const gGlow = document.createElementNS(NS, "g");
+      gGlow.setAttribute("filter", `url(#${filterId})`);
+      gGlow.setAttribute("opacity", String(opt.glowOpacity != null ? opt.glowOpacity : 0.56));
+
+      const gTop = document.createElementNS(NS, "g");
+
+      for (let i = 0; i < count; i++) {
+        const a = ((i / count) * Math.PI * 2) - (Math.PI / 2) + phase;
+        const x = cx + Math.cos(a) * r;
+        const y = cy + Math.sin(a) * r;
+
+        const cGlow = document.createElementNS(NS, "circle");
+        cGlow.setAttribute("cx", x.toFixed(2));
+        cGlow.setAttribute("cy", y.toFixed(2));
+        cGlow.setAttribute("r", String(opt.glowR || 4.15));
+        cGlow.setAttribute("fill", "#F59E0B");
+        cGlow.setAttribute("class", "bulb bulb-glow");
+        cGlow.style.setProperty("--i", i);
+        gGlow.appendChild(cGlow);
+
+        const c = document.createElementNS(NS, "circle");
+        c.setAttribute("cx", x.toFixed(2));
+        c.setAttribute("cy", y.toFixed(2));
+        c.setAttribute("r", String(opt.coreR || 2.75));
+        c.setAttribute("fill", `url(#${gradId})`);
+        c.setAttribute("class", "bulb bulb-core");
+        c.style.setProperty("--i", i);
+        gTop.appendChild(c);
+      }
+
+      const ring = document.createElementNS(NS, "circle");
+      ring.setAttribute("cx", String(cx));
+      ring.setAttribute("cy", String(cy));
+      ring.setAttribute("r", String(r - 9));
+      ring.setAttribute("fill", "none");
+      ring.setAttribute("stroke", "rgba(255, 232, 176, 0.16)");
+      ring.setAttribute("stroke-width", "1.10");
+
+      svg.append(gGlow, gTop, ring);
+      host.appendChild(svg);
+    }
+
+    // =========================
+    // AUDIO (auto ON)
+    // =========================
+    function setupAudioAutoOn() {
+      const bgMusic = document.getElementById("bgMusic");
+      const spinSound = document.getElementById("spinSound");
+      const tickSound = document.getElementById("tickSound");
+      const winSound = document.getElementById("winSound");
+      const historySound = document.getElementById("historySound");
+
+      bgMusic.src = "https://cdn.pixabay.com/download/audio/2022/03/24/audio_197846c632.mp3?filename=casino-music-1-2518.mp3";
+      spinSound.src = "https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3";
+      winSound.src = "https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3";
+      tickSound.src = "https://assets.mixkit.co/active_storage/sfx/2063/2063-preview.mp3";
+      historySound.src = "https://assets.mixkit.co/active_storage/sfx/2014/2014-preview.mp3";
+
+      bgMusic.volume = 0.22;
+      spinSound.volume = 0.6;
+      winSound.volume = 0.85;
+      tickSound.volume = 0.55;
+      historySound.volume = 0.62;
+
+      tickPool = [];
+      for (let i = 0; i < 6; i++) {
+        const a = new Audio(tickSound.src);
+        a.volume = tickSound.volume;
+        a.preload = "auto";
+        tickPool.push(a);
+      }
+
+      historyPool = [];
+      for (let i = 0; i < 4; i++) {
+        const a = new Audio(historySound.src);
+        a.volume = historySound.volume;
+        a.preload = "auto";
+        historyPool.push(a);
+      }
+
+      bgMusic.play().catch(() => {});
+    }
+
+    function primeAudioPool(pool){
+      pool.forEach(a=>{
+        try{
+          const prevMuted = a.muted;
+          a.muted = true;
+          a.play().then(()=>{
+            a.pause();
+            a.currentTime = 0;
+            a.muted = prevMuted;
+          }).catch(()=>{ a.muted = prevMuted; });
+        } catch(_){}
+      });
+    }
+
+    function kickAudio() {
+      const bgMusic = document.getElementById("bgMusic");
+      if (bgMusic && bgMusic.paused) bgMusic.play().catch(() => {});
+
+      if (!audioPrimed) {
+        audioPrimed = true;
+        primeAudioPool(tickPool);
+        primeAudioPool(historyPool);
+      }
+    }
+
+    function playTick() {
+      try {
+        const a = tickPool[tickPoolIdx++ % tickPool.length];
+        a.currentTime = 0;
+        a.play().catch(() => {});
+      } catch (_) {}
+    }
+
+    function playHistorySfx() {
+      const now = Date.now();
+      if (now - historySfxAt < 700) return;
+      historySfxAt = now;
+
+      try {
+        const a = historyPool[historyPoolIdx++ % historyPool.length];
+        a.currentTime = 0;
+        a.play().catch(() => {});
+      } catch (_) {}
+    }
+
+    // =========================
+    // PRESS FX
+    // =========================
+    function pressFX(btn, ev) {
+      if (!btn) return;
+      const rect = btn.getBoundingClientRect();
+      let x = rect.width / 2, y = rect.height / 2;
+      if (ev && ev.clientX != null && ev.clientY != null) {
+        x = ev.clientX - rect.left;
+        y = ev.clientY - rect.top;
+      }
+      btn.style.setProperty("--fx-x", x + "px");
+      btn.style.setProperty("--fx-y", y + "px");
+      btn.classList.remove("fx");
+      void btn.offsetWidth;
+      btn.classList.add("fx");
+      setTimeout(() => btn.classList.remove("fx"), 560);
+
+      try {
+        if (navigator.vibrate && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          navigator.vibrate(12);
+        }
+      } catch (_) {}
+    }
+
+    // =========================
+    // TOAST
+    // =========================
+    function showToast(message, type = "info", ms = 2400) {
+      const toast = document.getElementById("toast");
+      const msg = document.getElementById("toastMsg");
+
+      toast.classList.remove("error", "success");
+      if (type === "error") toast.classList.add("error");
+      if (type === "success") toast.classList.add("success");
+
+      msg.textContent = String(message || "");
+      toast.classList.add("show");
+
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), ms);
+    }
+
+    // =========================
+    // WHEEL BG + TEXT (GREEN/WHITE) — seam pindah ke atas
+    // =========================
+    function setWheelBackground() {
+      const n = PRIZES.length;
+      const seg = 360 / n;
+      let parts = [];
+      for (let i = 0; i < n; i++) {
+        const a = i * seg;
+        const b = (i + 1) * seg;
+        const color = (i % 2 === 0) ? "#064e3b" : "#f1f5f9";
+        parts.push(`${color} ${a}deg ${b}deg`);
+      }
+      const wheel = document.getElementById("wheel");
+      wheel.style.setProperty("--wheel-bg", `conic-gradient(from -90deg, ${parts.join(",")})`);
+    }
+
+    function drawWheelPrizes() {
+      const wheel = document.getElementById("wheel");
+      if (!wheel) return;
+
+      wheel.querySelectorAll(".prize-text").forEach(el => el.remove());
+      setWheelBackground();
+
+      const n = PRIZES.length;
+      const segmentAngle = 360 / n;
+      const radius = Math.round(Math.min(wheel.clientWidth, wheel.clientHeight) * 0.35);
+
+      PRIZES.forEach((prize, index) => {
+        const angle = index * segmentAngle + segmentAngle / 2;
+
+        const div = document.createElement("div");
+        div.className = "prize-text";
+        div.textContent = prize;
+
+        const isLight = (index % 2 === 1);
+        div.style.color = isLight ? "#05281d" : "#ffffff";
+        div.style.textShadow = isLight
+          ? "0 2px 0 rgba(255,255,255,0.18), 0 10px 22px rgba(0,0,0,0.28)"
+          : "0 2px 0 rgba(0,0,0,0.18), 0 12px 26px rgba(0,0,0,0.50)";
+
+        if (/bonus/i.test(prize)) {
+          div.style.fontSize = "clamp(12px, 3vw, 16px)";
+          div.style.letterSpacing = "0.2px";
+        }
+
+        div.style.transform = `translate(-50%, -50%) rotate(${angle}deg) translate(0, -${radius}px)`;
+        wheel.appendChild(div);
+      });
+    }
+
+    function initWheelAutoResize() {
+      const wrap = document.getElementById("wheelWrap");
+      if (!wrap) return;
+
+      let t = 0;
+      const rerender = () => {
+        clearTimeout(t);
+        t = setTimeout(() => {
+          drawWheelPrizes();
+          buildBulbRing();
+        }, 80);
+      };
+
+      if (window.ResizeObserver) {
+        const ro = new ResizeObserver(rerender);
+        ro.observe(wrap);
+      } else {
+        window.addEventListener("resize", rerender, { passive: true });
+      }
+    }
+
+    // =========================
+    // HISTORY (random + realtime)
+    // =========================
+    function pickWeightedPrizeKey() {
+      const bag = [
+        ["BONUS 10%", 30],
+        ["25K", 17],
+        ["50K", 18],
+        ["75K", 14],
+        ["100K", 12],
+        ["200K", 9],
+      ];
+      const total = bag.reduce((a, [,w]) => a + w, 0);
+      let r = Math.random() * total;
+      for (const [p, w] of bag) {
+        r -= w;
+        if (r <= 0) return p;
+      }
+      return "50K";
+    }
+
+    function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function pad2(n) { return String(n).padStart(2, "0"); }
+
+    function randomUserId() {
+      const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+      const pick = (s) => s[Math.floor(Math.random() * s.length)];
+      const len = randInt(7, 11);
+      let out = "";
+      for (let i = 0; i < len; i++) {
+        out += (Math.random() < 0.30) ? String(randInt(0,9)) : pick(letters);
+      }
+      if (Math.random() < 0.35) out += String(randInt(0,9));
+      return out;
+    }
+
+    function randomUserIdUnique(used, maxTry = 40) {
+      for (let i = 0; i < maxTry; i++) {
+        const id = randomUserId();
+        if (!used.has(id)) { used.add(id); return id; }
+      }
+      const id = randomUserId();
+      used.add(id);
+      return id;
+    }
+
+    function maskUserId(str) {
+      const s = String(str || "");
+      if (s.length <= 6) return s.slice(0, 2) + "****";
+      return (s.slice(0, 3) + "****" + s.slice(-2));
+    }
+
+    function makeEntryId(prefix) {
+      return `${prefix || "w"}-${Date.now()}-${Math.random().toString(16).slice(2)}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    function generateMockWinnersRandom() {
+      let base = Date.now() - randInt(40, 220) * 1000;
+      const arr = [];
+      const used = new Set();
+
+      for (let i = 0; i < 50; i++) {
+        const prizeKey = pickWeightedPrizeKey();
+        const raw = randomUserIdUnique(used);
+
+        arr.push({
+          id: makeEntryId("seed"),
+          isUser: false,
+          fullId: "",
+          displayId: maskUserId(raw),
+          prizeKey,
+          prize: PRIZE_DISPLAY_MAP[prizeKey] || prizeKey,
+          ts: base,
+          isNew: false
+        });
+
+        base -= randInt(20, 160) * 1000;
+      }
+
+      arr.sort((a,b) => (b.ts || 0) - (a.ts || 0));
+      return arr;
+    }
+
+    function timeLabel(ts) {
+      const d = new Date(ts || Date.now());
+      const dateStr = d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
+      const timeStr = `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+
+      const diff = Math.max(0, Date.now() - (ts || Date.now()));
+      const sec = Math.floor(diff / 1000);
+
+      let rel = "baru saja";
+      if (sec >= 60) {
+        const min = Math.floor(sec / 60);
+        if (min < 60) rel = `${min}m lalu`;
+        else {
+          const hr = Math.floor(min / 60);
+          if (hr < 24) rel = `${hr}j lalu`;
+          else rel = `${Math.floor(hr / 24)}h lalu`;
+        }
+      }
+
+      return `${dateStr} ${timeStr} • ${rel}`;
+    }
+
+    function startMetaTicker() {
+      if (metaTimer) clearInterval(metaTimer);
+      metaTimer = setInterval(() => {
+        const metas = document.querySelectorAll(".winner-meta[data-ts]");
+        metas.forEach(el => {
+          const ts = Number(el.getAttribute("data-ts") || Date.now());
+          el.textContent = timeLabel(ts);
+        });
+      }, 15000);
+    }
+
+    function pushWinnerEntry(entry) {
+      if (!entry) return;
+      if (!entry.id) entry.id = makeEntryId(entry.isUser ? "user" : "live");
+
+      if (entry.isNew) playHistorySfx();
+
+      winners.forEach(w => (w.isNew = false));
+      winners.unshift(entry);
+      winners = winners.slice(0, 50);
+
+      renderWinners({ preserveScroll: true });
+      startMetaTicker();
+    }
+
+    function startLiveHistory() {
+      if (liveTimer) return;
+
+      const schedule = () => {
+        stopLiveHistory();
+        const ms = randInt(5200, 12500);
+        liveTimer = setTimeout(() => {
+          if (!isModalOpen()) {
+            const prizeKey = pickWeightedPrizeKey();
+            pushWinnerEntry({
+              id: makeEntryId("live"),
+              isUser: false,
+              fullId: "",
+              displayId: maskUserId(randomUserId()),
+              prizeKey,
+              prize: PRIZE_DISPLAY_MAP[prizeKey] || prizeKey,
+              ts: Date.now(),
+              isNew: true
+            });
+          }
+          schedule();
+        }, ms);
+      };
+
+      schedule();
+    }
+
+    function stopLiveHistory() {
+      if (liveTimer) clearTimeout(liveTimer);
+      liveTimer = 0;
+    }
+
+    // =========================
+    // WINNERS RENDER (FLIP)
+    // =========================
+    function ensureWinnersHeader(table) {
+      let header = table.querySelector(".winners-table-header");
+      if (!header) {
+        header = document.createElement("div");
+        header.className = "winners-table-header";
+        header.innerHTML = "<div>NO</div><div>USER ID</div><div>HADIAH</div>";
+        table.appendChild(header);
+      }
+      return header;
+    }
+
+    function createRowEl(entry) {
+      const row = document.createElement("div");
+      row.className = "winners-table-row" + (entry.isNew ? " is-new" : "") + (entry.isUser ? " is-user" : "");
+      row.setAttribute("data-id", entry.id);
+      row.tabIndex = entry.isUser ? 0 : -1;
+
+      const c1 = document.createElement("div");
+      c1.className = "winner-no";
+
+      const c2 = document.createElement("div");
+      c2.className = "winner-id";
+
+      const meta = document.createElement("div");
+      meta.className = "winner-meta";
+      meta.setAttribute("data-ts", String(entry.ts || Date.now()));
+
+      const c2wrap = document.createElement("div");
+      c2wrap.appendChild(c2);
+      c2wrap.appendChild(meta);
+
+      const c3 = document.createElement("div");
+      c3.className = "winner-prize";
+
+      row.append(c1, c2wrap, c3);
+      return row;
+    }
+
+    function patchRowContent(row, entry, index) {
+      row.classList.toggle("is-new", !!entry.isNew);
+      row.classList.toggle("is-user", !!entry.isUser);
+      row.tabIndex = entry.isUser ? 0 : -1;
+
+      const no = row.querySelector(".winner-no");
+      const id = row.querySelector(".winner-id");
+      const meta = row.querySelector(".winner-meta");
+      const prize = row.querySelector(".winner-prize");
+
+      if (no) no.textContent = String(index + 1);
+      if (id) id.textContent = String(entry.displayId || "");
+      if (meta) {
+        meta.setAttribute("data-ts", String(entry.ts || Date.now()));
+        meta.textContent = timeLabel(entry.ts);
+      }
+      if (prize) prize.textContent = String(entry.prize || "");
+    }
+
+    function renderWinners(opts = {}) {
+      const o = Object.assign({ preserveScroll: true }, opts);
+      const table = document.getElementById("winnersTable");
+      if (!table) return;
+
+      let prevScrollTop = 0;
+      try { prevScrollTop = table.scrollTop || 0; } catch (_) {}
+
+      ensureWinnersHeader(table);
+
+      winnersById = new Map();
+      for (const w of winners) winnersById.set(w.id, w);
+
+      const first = {};
+      for (const [id, el] of rowElById.entries()) {
+        if (!el || !el.isConnected) continue;
+        first[id] = el.getBoundingClientRect().top;
+      }
+
+      for (let i = 0; i < winners.length; i++) {
+        const w = winners[i];
+        if (!w.id) w.id = makeEntryId("w");
+        let row = rowElById.get(w.id);
+        if (!row || !row.isConnected) {
+          row = createRowEl(w);
+          rowElById.set(w.id, row);
+          table.appendChild(row);
+        }
+        patchRowContent(row, w, i);
+      }
+
+      for (const [id, el] of Array.from(rowElById.entries())) {
+        if (!winnersById.has(id)) {
+          try { el.remove(); } catch (_) {}
+          rowElById.delete(id);
+        }
+      }
+
+      const header = table.querySelector(".winners-table-header");
+      for (const w of winners) {
+        const row = rowElById.get(w.id);
+        if (row && row.isConnected) table.appendChild(row);
+      }
+      if (header && header.isConnected) table.insertBefore(header, table.firstChild);
+
+      const last = {};
+      for (const w of winners) {
+        const el = rowElById.get(w.id);
+        if (!el || !el.isConnected) continue;
+        last[w.id] = el.getBoundingClientRect().top;
+      }
+
+      requestAnimationFrame(() => {
+        for (const w of winners) {
+          const el = rowElById.get(w.id);
+          if (!el || !el.isConnected) continue;
+
+          const a = first[w.id];
+          const b = last[w.id];
+          if (typeof a !== "number" || typeof b !== "number") continue;
+
+          const dy = a - b;
+          if (Math.abs(dy) < 0.5) continue;
+
+          el.style.transform = `translateY(${dy}px)`;
+          el.style.transition = "transform 0ms";
+        }
+
+        requestAnimationFrame(() => {
+          for (const w of winners) {
+            const el = rowElById.get(w.id);
+            if (!el || !el.isConnected) continue;
+            el.style.transition = "";
+            el.style.transform = "";
+          }
+        });
+      });
+
+      if (o.preserveScroll) {
+        try { table.scrollTop = prevScrollTop; } catch (_) {}
+      }
+    }
+
+    // =========================
+    // Klik history: HANYA USER ASLI
+    // =========================
+    function setupHistoryRowOpen() {
+      const table = document.getElementById("winnersTable");
+      if (!table) return;
+
+      const tryOpen = (row) => {
+        const id = row.getAttribute("data-id");
+        const entry = winnersById.get(id);
+        if (!entry) return;
+
+        if (!entry.isUser) {
+          const now = Date.now();
+          if (now - nonUserToastAt > 1800) {
+            nonUserToastAt = now;
+            showToast("Hanya riwayat Anda yang bisa dibuka.", "error", 1800);
+          }
+          return;
+        }
+
+        const showUser = String(entry.fullId || entry.displayId || "-");
+        const prizeShow = String(entry.prize || entry.prizeKey || "-");
+        const ts = Number(entry.ts || Date.now());
+
+        lastResult = {
+          userId: showUser,
+          prizeLabel: prizeShow,
+          prizeDisplay: prizeShow,
+          ts
+        };
+
+        document.getElementById("prizeAmount").textContent = prizeShow;
+        document.getElementById("modalUserId").textContent = showUser;
+        document.getElementById("modalTime").textContent = new Date(ts).toLocaleString("id-ID", {
+          day: "2-digit", month: "short", year: "numeric",
+          hour: "2-digit", minute: "2-digit", second: "2-digit"
+        });
+
+        openModal();
+      };
+
+      table.addEventListener("click", (e) => {
+        const row = e.target && e.target.closest ? e.target.closest(".winners-table-row") : null;
+        if (!row) return;
+        tryOpen(row);
+      });
+
+      table.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        const row = e.target && e.target.classList && e.target.classList.contains("winners-table-row") ? e.target : null;
+        if (!row) return;
+        e.preventDefault();
+        tryOpen(row);
+      });
+    }
+
+    // =========================
+    // JACKPOT
+    // =========================
+    function initJackpot() {
+      const saved = Number(lsGet(LS.JACKPOT_VAL, "0") || "0");
+      if (saved && saved > 1000000) return saved;
+      const seed = randInt(880_000_000, 930_000_000);
+      lsSet(LS.JACKPOT_VAL, String(seed));
+      return seed;
+    }
+
+    function fmtClock() {
+      const d = new Date();
+      return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+    }
+
+    function startJackpot() {
+      if (jackpotTimer) return;
+
+      const el = document.getElementById("jackpot");
+      const meta = document.getElementById("jackpotMeta");
+
+      let speed = randInt(1400, 8200);
+      let last = performance.now();
+
+      const step = () => {
+        const now = performance.now();
+        const dt = Math.min(0.22, (now - last) / 1000);
+        last = now;
+
+        if (now > spikeUntilMs) {
+          spikeMul = 1;
+          if (Math.random() < 0.0012) {
+            spikeMul = 2.0 + Math.random() * 2.3;
+            spikeUntilMs = now + (2000 + Math.random() * 2500);
+          }
+        }
+
+        const noise = (Math.random() - 0.5) * 0.8;
+        let v = speed * (1 + noise) * spikeMul;
+
+        if (Math.random() < 0.03) v *= -0.25;
+
+        jackpot = Math.max(800_000_000, jackpot + v * dt);
+
+        if (el) el.textContent = `IDR ${Math.round(jackpot).toLocaleString("id-ID")}`;
+        if (meta) meta.textContent = `Update: ${fmtClock()}`;
+
+        jackpotTimer = requestAnimationFrame(step);
+      };
+
+      jackpotTimer = requestAnimationFrame(step);
+
+      if (jackpotSaveTimer) clearInterval(jackpotSaveTimer);
+      jackpotSaveTimer = setInterval(() => {
+        lsSet(LS.JACKPOT_VAL, String(Math.round(jackpot)));
+        if (Math.random() < 0.55) speed = randInt(1400, 9500);
+      }, 3000);
+    }
+
+    function stopJackpot() {
+      if (jackpotTimer) cancelAnimationFrame(jackpotTimer);
+      jackpotTimer = 0;
+      if (jackpotSaveTimer) clearInterval(jackpotSaveTimer);
+      jackpotSaveTimer = 0;
+    }
+
+    // =========================
+    // MODAL
+    // =========================
+    function isModalOpen() {
+      return document.getElementById("prizeModal").classList.contains("show");
+    }
+
+    function openModal() {
+      const modal = document.getElementById("prizeModal");
+      lastFocusedEl = document.activeElement;
+
+      modal.classList.add("show");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("modal-open");
+
+      const claimBtn = document.getElementById("claimBtn");
+      if (claimBtn) setTimeout(() => claimBtn.focus({ preventScroll: true }), 0);
+    }
+
+    function closeModal() {
+      const modal = document.getElementById("prizeModal");
+      modal.classList.remove("show");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("modal-open");
+
+      if (lastFocusedEl && lastFocusedEl.isConnected && typeof lastFocusedEl.focus === "function") {
+        lastFocusedEl.focus({ preventScroll: true });
+      }
+      lastFocusedEl = null;
+    }
+
+    // =========================
+    // UI
+    // =========================
+    function updateUI() {
+      const spinBtn = document.getElementById("spinBtn");
+      const userIdInput = document.getElementById("userIdInput");
+      const spunMessage = document.getElementById("spunMessage");
+
+      if (hasSpun) {
+        spinBtn.disabled = true;
+        spinBtn.textContent = "SUDAH SPIN";
+        userIdInput.disabled = true;
+        spunMessage.style.display = "block";
+      } else {
+        spinBtn.disabled = false;
+        spinBtn.textContent = "SPIN SEKARANG!";
+        userIdInput.disabled = false;
+        spunMessage.style.display = "none";
+      }
+    }
+
+    // =========================
+    // tick per-segment
+    // =========================
+    function scheduleTicks(rotationDeltaDeg, segmentAngleDeg, durationMs) {
+      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+      const ticks = Math.max(0, Math.floor(Math.abs(rotationDeltaDeg) / segmentAngleDeg));
+      if (ticks <= 0) return;
+
+      const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+      const maxTicks = 130;
+      const count = Math.min(ticks, maxTicks);
+
+      for (let i = 1; i <= count; i++) {
+        const t = i / count;
+        const when = Math.round(easeOutCubic(t) * durationMs);
+        const jitter = randInt(-10, 12);
+        setTimeout(() => playTick(), Math.max(0, when + jitter));
+      }
+    }
+
+    // =========================
+    // SPIN (DEMO LOCK RESULT) + strict persist
+    // =========================
+    function startSpin() {
+      kickAudio();
+
+      const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      const userIdInput = document.getElementById("userIdInput");
+      const rawUserId = userIdInput.value.trim();
+      const userId = normalizeUserIdInput(rawUserId);
+
+      if (!userId) {
+        showToast("Masukkan User ID terlebih dahulu!", "error");
+        userIdInput.focus({ preventScroll: true });
+        return;
+      }
+      if (hasSpun) {
+        showToast("Anda sudah melakukan spin! Kesempatan hanya 1x.", "error");
+        return;
+      }
+      if (isSpin) return;
+
+      isSpin = true;
+
+      const spinBtn = document.getElementById("spinBtn");
+      spinBtn.disabled = true;
+      spinBtn.textContent = "SPINNING…";
+
+      const wrap = document.getElementById("wheelWrap");
+      if (wrap) wrap.classList.add("is-spinning");
+
+      const spinSound = document.getElementById("spinSound");
+      try { spinSound.currentTime = 0; spinSound.play().catch(() => {}); } catch (_) {}
+
+      const prizeIndex = (BONUS_INDEX >= 0 ? BONUS_INDEX : 0);
+
+      const wheel = document.getElementById("wheel");
+      const n = PRIZES.length;
+      const segmentAngle = 360 / n;
+
+      const segmentCenter = (prizeIndex * segmentAngle) + (segmentAngle / 2);
+      const base = ((currentRotation % 360) + 360) % 360;
+      const desiredMod = (360 - segmentCenter + 360) % 360;
+
+      const fullSpins = 360 * (8 + Math.floor(Math.random() * 4));
+      const jitter = (Math.random() - 0.5) * (segmentAngle * 0.55);
+      const delta = (desiredMod - base + 360) % 360;
+
+      const totalRotation = currentRotation + fullSpins + delta + jitter;
+      const rotationDelta = totalRotation - currentRotation;
+
+      const durationMs = reduceMotion ? 350 : SPIN_DURATION_MS;
+
+      // ✅ sync duration to CSS (no mismatch)
+      wheel.style.setProperty("--spin-dur", durationMs + "ms");
+
+      let ended = false;
+      const onEnd = () => {
+        if (ended) return;
+        ended = true;
+
+        wheel.classList.remove("spinning");
+        wheel.style.transform = `rotate(${totalRotation}deg)`;
+        currentRotation = totalRotation;
+
+        try { spinSound.pause(); spinSound.currentTime = 0; } catch (_) {}
+
+        const winSound = document.getElementById("winSound");
+        try { winSound.currentTime = 0; winSound.play().catch(() => {}); } catch (_) {}
+
+        hasSpun = true;
+        spinAt = Date.now();
+        lsSet(LS.HAS_SPUN, "true");
+        lsSet(LS.SPIN_AT, String(spinAt));
+        lsSet(LS.LAST_USER_ID, userId);
+        savedUserId = userId;
+
+        lastResult = {
+          userId,
+          prizeLabel: BONUS_LABEL,
+          prizeDisplay: PRIZE_DISPLAY_MAP[BONUS_LABEL],
+          ts: spinAt
+        };
+
+        document.getElementById("prizeAmount").textContent = BONUS_LABEL;
+        document.getElementById("modalUserId").textContent = userId;
+        document.getElementById("modalTime").textContent = new Date(spinAt).toLocaleString("id-ID", {
+          day: "2-digit", month: "short", year: "numeric",
+          hour: "2-digit", minute: "2-digit", second: "2-digit"
+        });
+
+        pushWinnerEntry({
+          id: makeEntryId("user"),
+          isUser: true,
+          fullId: userId,
+          displayId: userId,
+          prizeKey: BONUS_LABEL,
+          prize: PRIZE_DISPLAY_MAP[BONUS_LABEL],
+          ts: spinAt,
+          isNew: true
+        });
+
+        updateUI();
+        celebrateWin();
+        openModal();
+
+        if (wrap) wrap.classList.remove("is-spinning");
+        isSpin = false;
+      };
+
+      if (reduceMotion) {
+        onEnd();
+        return;
+      }
+
+      scheduleTicks(rotationDelta, segmentAngle, durationMs);
+
+      wheel.style.setProperty("--from-rotation", currentRotation + "deg");
+      wheel.style.setProperty("--rotation", totalRotation + "deg");
+      wheel.classList.add("spinning");
+
+      wheel.addEventListener("animationend", onEnd, { once: true });
+      setTimeout(() => { onEnd(); }, durationMs + 260);
+    }
+
+    // =========================
+    // DOWNLOAD RESULT (PNG)
+    // =========================
+    function downloadResultPng() {
+      if (!lastResult) {
+        showToast("Hasil belum tersedia. Silakan spin terlebih dahulu.", "error");
+        return;
+      }
+      try { kickAudio(); } catch (_) {}
+
+      const r = lastResult;
+      const ts = r.ts || Date.now();
+
+      const baseW = 1080;
+      const baseH = 1350;
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.floor(baseW * dpr);
+      canvas.height = Math.floor(baseH * dpr);
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        showToast("Browser tidak mendukung unduhan gambar.", "error");
+        return;
+      }
+      ctx.scale(dpr, dpr);
+
+      const g = ctx.createLinearGradient(0, 0, baseW, baseH);
+      g.addColorStop(0, "#06130f");
+      g.addColorStop(0.55, "#071e16");
+      g.addColorStop(1, "#05281d");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, baseW, baseH);
+
+      drawOrb(ctx, 260, 220, 260, "rgba(34,197,94,0.14)");
+      drawOrb(ctx, 860, 320, 220, "rgba(255,255,255,0.07)");
+      drawOrb(ctx, 820, 1040, 280, "rgba(20,184,166,0.10)");
+
+      const pad = 66;
+      const cardX = pad;
+      const cardY = 120;
+      const cardW = baseW - pad * 2;
+      const cardH = baseH - 220;
+      roundRect(ctx, cardX, cardY, cardW, cardH, 34);
+
+      const cg = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH);
+      cg.addColorStop(0, "rgba(6,18,14,0.95)");
+      cg.addColorStop(1, "rgba(7,30,22,0.95)");
+      ctx.fillStyle = cg;
+      ctx.fill();
+
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "rgba(34,197,94,0.55)";
+      ctx.stroke();
+
+      ctx.font = "900 44px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillStyle = "rgba(255,255,255,0.95)";
+      ctx.fillText("MADETOTO2", cardX + 44, cardY + 90);
+
+      ctx.fillStyle = "rgba(255,255,255,0.78)";
+      ctx.font = "700 24px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillText("HASIL SPIN REWARD", cardX + 44, cardY + 140);
+
+      ctx.fillStyle = "#bbf7d0";
+      ctx.font = "1000 86px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      wrapText(ctx, String(r.prizeLabel || "BONUS 10%"), cardX + 44, cardY + 260, cardW - 88, 92);
+
+      ctx.strokeStyle = "rgba(255,255,255,0.10)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cardX + 44, cardY + 330);
+      ctx.lineTo(cardX + cardW - 44, cardY + 330);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(255,255,255,0.70)";
+      ctx.font = "800 22px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace";
+      ctx.fillText("USER ID", cardX + 44, cardY + 390);
+      ctx.fillText("WAKTU", cardX + 44, cardY + 470);
+
+      ctx.fillStyle = "rgba(255,255,255,0.96)";
+      ctx.font = "900 32px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace";
+      ctx.fillText(String(r.userId || "-"), cardX + 44, cardY + 430);
+
+      const timeStr = new Date(ts).toLocaleString("id-ID", {
+        day: "2-digit", month: "short", year: "numeric",
+        hour: "2-digit", minute: "2-digit", second: "2-digit"
+      });
+      ctx.fillText(timeStr, cardX + 44, cardY + 510);
+
+      const infoY = cardY + 580;
+      roundRect(ctx, cardX + 44, infoY, cardW - 88, 180, 22);
+      ctx.fillStyle = "rgba(0,0,0,0.30)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.10)";
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(255,255,255,0.88)";
+      ctx.font = "800 22px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      wrapText(ctx, "KLAIM melalui Live Chat dan sertakan USER ID + hasil unduh ini.", cardX + 70, infoY + 58, cardW - 140, 30);
+
+      ctx.fillStyle = "rgba(255,255,255,0.55)";
+      ctx.font = "700 18px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillText("Spin & Win • MADETOTO2", cardX + 44, cardY + cardH - 40);
+
+      const fileName = buildFileName(r.userId, ts);
+
+      const done = (blobOrDataUrl) => {
+        try {
+          if (blobOrDataUrl instanceof Blob) {
+            const url = URL.createObjectURL(blobOrDataUrl);
+            triggerDownload(url, fileName);
+            setTimeout(() => URL.revokeObjectURL(url), 2500);
+          } else if (typeof blobOrDataUrl === "string") {
+            triggerDownload(blobOrDataUrl, fileName);
+          }
+          showToast("File hasil berhasil dibuat", "success");
+        } catch (_) {
+          showToast("Gagal mengunduh. File akan dibuka di tab baru.", "error");
+          try {
+            const url = (blobOrDataUrl instanceof Blob)
+              ? URL.createObjectURL(blobOrDataUrl)
+              : String(blobOrDataUrl || "");
+            window.open(url, "_blank", "noopener,noreferrer");
+          } catch (_) {}
+        }
+      };
+
+      if (canvas.toBlob) {
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            done(canvas.toDataURL("image/png"));
+            return;
+          }
+          done(blob);
+        }, "image/png", 0.92);
+      } else {
+        done(canvas.toDataURL("image/png"));
+      }
+    }
+
+    function triggerDownload(url, filename) {
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.rel = "noopener";
+      a.target = "_blank";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      setTimeout(() => {
+        try {
+          if (/iPhone|iPad|iPod/i.test(navigator.userAgent || "")) {
+            window.open(url, "_blank", "noopener,noreferrer");
+          }
+        } catch (_) {}
+      }, 120);
+    }
+
+    function buildFileName(userId, ts) {
+      const d = new Date(ts || Date.now());
+      const y = d.getFullYear();
+      const m = pad2(d.getMonth() + 1);
+      const da = pad2(d.getDate());
+      const hh = pad2(d.getHours());
+      const mm = pad2(d.getMinutes());
+      const safeId = String(userId || "USER").replace(/[^A-Z0-9_-]/gi, "").slice(0, 18) || "USER";
+      return `MADETOTO2-REWARD-${safeId}-${y}${m}${da}-${hh}${mm}.png`;
+    }
+
+    function drawOrb(ctx, x, y, r, color) {
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, color);
+      g.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      const rr = Math.min(r, w/2, h/2);
+      ctx.beginPath();
+      ctx.moveTo(x + rr, y);
+      ctx.arcTo(x + w, y, x + w, y + h, rr);
+      ctx.arcTo(x + w, y + h, x, y + h, rr);
+      ctx.arcTo(x, y + h, x, y, rr);
+      ctx.arcTo(x, y, x + w, y, rr);
+      ctx.closePath();
+    }
+
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = String(text || "").split(/\s+/);
+      let line = "";
+      let yy = y;
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + " ";
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && n > 0) {
+          ctx.fillText(line.trim(), x, yy);
+          line = words[n] + " ";
+          yy += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line.trim(), x, yy);
+      return yy;
+    }
+
+    // =========================
+    // CLAIM (loading overlay)
+    // =========================
+    function showNavLoading() {
+      const el = document.getElementById("navLoading");
+      if (!el) return;
+
+      el.classList.add("show");
+      el.setAttribute("aria-hidden", "false");
+      document.body.classList.add("modal-open");
+    }
+
+    function hideNavLoading(immediate = false) {
+      const el = document.getElementById("navLoading");
+      if (!el) return;
+
+      const done = () => {
+        el.classList.remove("show");
+        el.setAttribute("aria-hidden", "true");
+        if (!isModalOpen()) document.body.classList.remove("modal-open");
+        claimInFlight = false;
+      };
+
+      if (immediate || (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) {
+        done();
+        return;
+      }
+
+      el.classList.remove("show");
+      el.setAttribute("aria-hidden", "true");
+      setTimeout(() => {
+        if (!isModalOpen()) document.body.classList.remove("modal-open");
+        claimInFlight = false;
+      }, 260);
+    }
+
+    function claimPrize() {
+      if (claimInFlight) return;
+      claimInFlight = true;
+
+      closeModal();
+      showNavLoading();
+
+      const start = performance.now ? performance.now() : Date.now();
+      const minHold = (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+        ? 0
+        : CLAIM_OVERLAY_MIN_MS;
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const now = performance.now ? performance.now() : Date.now();
+          const elapsed = now - start;
+          const wait = Math.max(0, minHold - elapsed);
+
+          setTimeout(() => {
+            window.location.href = CLAIM_URL;
+          }, wait);
+        });
+      });
+    }
+
+    // =========================
+    // CELEBRATE
+    // =========================
+    function celebrateWin() {
+      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+      const duration = 2200;
+      const end = Date.now() + duration;
+
+      const frame = () => {
+        try {
+          confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
+          confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
+        } catch (_) {}
+        if (Date.now() < end) requestAnimationFrame(frame);
+      };
+      frame();
+    }
+
+    // =========================
+    // Persist user entry
+    // =========================
+    function bootPersistedUserEntry() {
+      if (hasSpun && !spinAt) {
+        spinAt = Date.now();
+        lsSet(LS.SPIN_AT, String(spinAt));
+      }
+
+      if (hasSpun && savedUserId) {
+        lastResult = {
+          userId: savedUserId,
+          prizeLabel: BONUS_LABEL,
+          prizeDisplay: PRIZE_DISPLAY_MAP[BONUS_LABEL],
+          ts: spinAt || Date.now()
+        };
+
+        const already = winners.some(w => w.isUser === true);
+        if (!already) {
+          pushWinnerEntry({
+            id: makeEntryId("user"),
+            isUser: true,
+            fullId: savedUserId,
+            displayId: savedUserId,
+            prizeKey: BONUS_LABEL,
+            prize: PRIZE_DISPLAY_MAP[BONUS_LABEL],
+            ts: spinAt || Date.now(),
+            isNew: false
+          });
+        }
+      }
+    }
+  </script>
+</body>
+</html>
