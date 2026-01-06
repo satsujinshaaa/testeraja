@@ -24,7 +24,7 @@
 
   <style>
     /* =========================
-     * BASE / TOKENS (PREMIUM)
+     * BASE / TOKENS
      * ======================= */
     *, *::before, *::after { box-sizing: border-box; }
     * { margin: 0; padding: 0; }
@@ -36,12 +36,12 @@
       --bg1: #071e16;
       --bg2: #05281d;
 
-      /* warm gold */
-      --gold0: #FFF1C4;
-      --gold1: #F59E0B;
-      --gold2: #78350F;
+      /* gold metal */
+      --gold0: #FFF4D6;
+      --gold1: #F6B33D;
+      --gold2: #8A4A16;
 
-      /* emerald */
+      /* green */
       --green0: #bbf7d0;
       --green1: #22c55e;
       --green2: #16a34a;
@@ -53,12 +53,6 @@
       --shadow-soft: 0 0 60px -14px rgba(34, 197, 94, 0.18);
 
       --ring: rgba(34,197,94,0.62);
-
-      /* premium optics */
-      --glass: rgba(255,255,255,0.08);
-      --shadow-deep: rgba(0,0,0,0.68);
-      --gold-glow: rgba(245,158,11,0.22);
-      --bulb-warm: rgba(245,158,11,0.78);
 
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-right: env(safe-area-inset-right, 0px);
@@ -113,6 +107,20 @@
     }
 
     /* =========================
+     * PREMIUM FX CANVAS (sparkles + particles)
+     * ======================= */
+    #fxCanvas{
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.85;
+      mix-blend-mode: screen;
+    }
+
+    /* =========================
      * LAYOUT
      * ======================= */
     .container{
@@ -123,6 +131,8 @@
       padding-right: calc(20px + var(--safe-right));
       padding-top: calc(20px + var(--safe-top));
       padding-bottom: calc(20px + var(--safe-bottom));
+      position: relative;
+      z-index: 2; /* above fxCanvas */
     }
     @media (max-width: 420px){
       .container{
@@ -220,36 +230,79 @@
     }
 
     /* =========================
-     * WHEEL — PREMIUM (ANTI BOX)
+     * WHEEL AREA — THEME LIKE REF (beams + stage + glow)
      * ======================= */
     .wheel-container{
       position: relative;
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
       isolation: isolate;
       background: transparent;
-      --wheel-size: min(460px, 92vw);
-      padding-top: clamp(14px, 3.2vw, 22px);
+      --wheel-size: min(470px, 92vw);
+      padding-top: clamp(16px, 3.2vw, 22px);
+      padding-bottom: clamp(36px, 6.4vw, 58px);
     }
 
-    /* Replace heavy box-shadow (can look boxy on some GPUs) with pure radial glow */
+    /* soft “poster” spotlight beams */
+    .wheel-container::after{
+      content:"";
+      position:absolute;
+      left: 50%;
+      top: 22%;
+      width: calc(var(--wheel-size) * 1.48);
+      height: calc(var(--wheel-size) * 1.48);
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        conic-gradient(from -10deg,
+          rgba(255,255,255,0.00) 0deg,
+          rgba(255,255,255,0.06) 10deg,
+          rgba(255,255,255,0.00) 22deg,
+          rgba(255,255,255,0.08) 38deg,
+          rgba(255,255,255,0.00) 52deg,
+          rgba(255,255,255,0.06) 66deg,
+          rgba(255,255,255,0.00) 80deg,
+          rgba(255,255,255,0.09) 104deg,
+          rgba(255,255,255,0.00) 128deg,
+          rgba(255,255,255,0.07) 152deg,
+          rgba(255,255,255,0.00) 180deg,
+          rgba(255,255,255,0.06) 206deg,
+          rgba(255,255,255,0.00) 230deg,
+          rgba(255,255,255,0.08) 252deg,
+          rgba(255,255,255,0.00) 276deg,
+          rgba(255,255,255,0.06) 300deg,
+          rgba(255,255,255,0.00) 330deg,
+          rgba(255,255,255,0.05) 360deg
+        ),
+        radial-gradient(circle at 50% 50%, rgba(34,197,94,0.14), transparent 62%);
+      filter: blur(1px);
+      opacity: 0.62;
+      animation: beamsPulse 4.6s ease-in-out infinite;
+    }
+    @keyframes beamsPulse{
+      0%{ opacity: 0.52; transform: translate(-50%, -50%) rotate(-1.2deg) scale(0.99); }
+      50%{ opacity: 0.78; transform: translate(-50%, -50%) rotate(1.6deg) scale(1.01); }
+      100%{ opacity: 0.52; transform: translate(-50%, -50%) rotate(-1.2deg) scale(0.99); }
+    }
+
     .wheel-container::before{
       content:"";
       position: absolute;
       width: var(--wheel-size);
       height: var(--wheel-size);
       left: 50%;
-      top: 50%;
+      top: calc(50% - 8px);
       transform: translate(-50%, -50%);
       border-radius: 50%;
       pointer-events: none;
       z-index: 0;
-      background:
-        radial-gradient(circle at 50% 55%, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.58) 26%, rgba(0,0,0,0.00) 64%),
-        radial-gradient(circle at 50% 50%, rgba(245,158,11,0.18) 0%, rgba(245,158,11,0.06) 28%, rgba(245,158,11,0.00) 62%);
-      filter: blur(2px);
-      opacity: 0.95;
+      box-shadow:
+        0 34px 86px rgba(0,0,0,0.66),
+        0 0 58px rgba(246,179,61,0.16),
+        0 0 68px rgba(34,197,94,0.10);
     }
 
     .wheel-wrapper{
@@ -262,16 +315,131 @@
       user-select: none;
       background: transparent;
       isolation: isolate;
-      z-index: 1;
+      z-index: 2;
       transform: translateZ(0);
       will-change: transform;
     }
 
     /* =========================
-     * LIGHTS — PREMIUM 3D BULBS
-     * - IDLE: chase slow (illusion rotating)
-     * - SPIN: chase fast
-     * - RESULT: stop chase, all ON breathe
+     * STAGE / BASE (lights below wheel) — like poster
+     * ======================= */
+    .wheel-stage{
+      position:absolute;
+      left:50%;
+      top: calc(100% - clamp(56px, 12vw, 74px));
+      transform: translateX(-50%);
+      width: min(calc(var(--wheel-size) * 0.92), 520px);
+      height: clamp(120px, 24vw, 160px);
+      pointer-events:none;
+      z-index: 1;
+      filter:
+        drop-shadow(0 30px 70px rgba(0,0,0,0.55))
+        drop-shadow(0 0 34px rgba(34,197,94,0.14));
+    }
+
+    .wheel-stage::before{
+      content:"";
+      position:absolute;
+      left: 50%;
+      top: 58%;
+      transform: translate(-50%, -50%);
+      width: 96%;
+      height: 56%;
+      border-radius: 999px;
+      background:
+        radial-gradient(120px 60px at 20% 25%, rgba(255,255,255,0.14), transparent 60%),
+        radial-gradient(180px 80px at 70% 68%, rgba(0,0,0,0.42), transparent 62%),
+        linear-gradient(180deg, rgba(10,30,22,0.95), rgba(5,15,11,0.92));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow:
+        inset 0 18px 22px rgba(255,255,255,0.06),
+        inset 0 -22px 32px rgba(0,0,0,0.55);
+    }
+
+    .wheel-stage::after{
+      content:"";
+      position:absolute;
+      left: 50%;
+      top: 34%;
+      transform: translate(-50%, -50%);
+      width: 72%;
+      height: 38%;
+      border-radius: 999px;
+      background:
+        radial-gradient(100px 44px at 30% 25%, rgba(255,255,255,0.16), transparent 60%),
+        linear-gradient(180deg, rgba(20,60,46,0.92), rgba(8,22,16,0.92));
+      border: 1px solid rgba(34,197,94,0.22);
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.22),
+        0 0 34px rgba(34,197,94,0.16),
+        inset 0 14px 22px rgba(255,255,255,0.05);
+      opacity: 0.95;
+    }
+
+    .stage-lights{
+      position:absolute;
+      left: 50%;
+      top: 56%;
+      transform: translate(-50%, -50%);
+      width: 92%;
+      height: 56%;
+      border-radius: 999px;
+      overflow: visible;
+      pointer-events:none;
+    }
+
+    .stage-lights::before{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%);
+      width: 100%;
+      height: 100%;
+      border-radius: 999px;
+      background:
+        radial-gradient(160px 70px at 28% 30%, rgba(255,255,255,0.14), transparent 62%),
+        radial-gradient(180px 70px at 72% 62%, rgba(0,0,0,0.38), transparent 62%),
+        linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.35));
+      border: 1px solid rgba(255,255,255,0.06);
+      opacity: 0.72;
+    }
+
+    .stage-bulb{
+      position:absolute;
+      width: clamp(6.5px, 1.7vw, 9px);
+      height: clamp(6.5px, 1.7vw, 9px);
+      border-radius: 999px;
+      transform: translate(-50%, -50%);
+      background:
+        radial-gradient(circle at 30% 28%, rgba(255,255,255,0.95), rgba(187,247,208,0.85) 34%, rgba(34,197,94,0.92) 68%, rgba(10,60,40,0.98) 100%);
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.22),
+        0 0 10px rgba(34,197,94,0.28),
+        0 0 22px rgba(34,197,94,0.18);
+      opacity: 0.55;
+      will-change: opacity, transform, filter;
+      animation: stageChase 3.2s linear infinite;
+      animation-delay: calc(var(--i) * -0.11s);
+    }
+    .stage-bulb::after{
+      content:"";
+      position:absolute;
+      inset: 18%;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.85), rgba(255,255,255,0.12) 62%, transparent 74%);
+      opacity: 0.75;
+      pointer-events:none;
+    }
+    @keyframes stageChase{
+      0%   { opacity: 0.35; filter: drop-shadow(0 0 6px rgba(34,197,94,0.22)); transform: translate(-50%,-50%) scale(0.96); }
+      10%  { opacity: 1;    filter: drop-shadow(0 0 12px rgba(34,197,94,0.55)); transform: translate(-50%,-50%) scale(1.16); }
+      22%  { opacity: 0.55; filter: drop-shadow(0 0 8px rgba(34,197,94,0.32)); transform: translate(-50%,-50%) scale(1.02); }
+      100% { opacity: 0.35; filter: drop-shadow(0 0 6px rgba(34,197,94,0.22)); transform: translate(-50%,-50%) scale(0.96); }
+    }
+
+    /* =========================
+     * LIGHTS — PREMIUM 3D BULBS (ring)
      * ======================= */
     .wheel-lights{
       position: absolute;
@@ -282,24 +450,40 @@
       opacity: 1;
       transform: translateZ(0);
       will-change: opacity;
-      isolation: isolate;
     }
 
-    /* subtle lens/glass */
+    /* bulb track ring behind bulbs */
+    .wheel-lights::before{
+      content:"";
+      position:absolute;
+      inset: clamp(4px, 1.8vw, 10px);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 25%, rgba(255,255,255,0.12), transparent 55%),
+        linear-gradient(180deg, rgba(255,241,196,0.16), rgba(0,0,0,0.10));
+      border: 1px solid rgba(255, 232, 176, 0.12);
+      box-shadow:
+        inset 0 0 0 1px rgba(0,0,0,0.18),
+        inset 0 0 20px rgba(246,179,61,0.08);
+      opacity: 0.92;
+      z-index: 1;
+    }
+
+    /* glass overlay */
     .wheel-lights::after{
       content:"";
       position:absolute;
-      inset: clamp(16px, 4.0vw, 24px);
+      inset: clamp(18px, 4.2vw, 24px);
       border-radius: 50%;
       pointer-events:none;
       background:
-        radial-gradient(circle at 30% 22%, rgba(255,255,255,0.10), transparent 46%),
-        radial-gradient(circle at 70% 74%, rgba(245,158,11,0.14), transparent 58%),
+        radial-gradient(circle at 30% 22%, rgba(255,255,255,0.08), transparent 46%),
+        radial-gradient(circle at 70% 74%, rgba(246,179,61,0.12), transparent 58%),
         radial-gradient(circle at 50% 50%, rgba(0,0,0,0.18), transparent 62%);
       border: 1px solid rgba(255, 232, 176, 0.16);
       box-shadow:
         inset 0 0 0 1px rgba(0,0,0,0.18),
-        inset 0 0 22px rgba(245,158,11,0.08);
+        inset 0 0 20px rgba(246,179,61,0.06);
       opacity: 0.92;
       z-index: 3;
     }
@@ -311,133 +495,119 @@
       width: clamp(9px, 2.25vw, 12.8px);
       height: clamp(9px, 2.25vw, 12.8px);
       border-radius: 999px;
-      transform: translate(-50%, -50%) translateZ(0);
+      transform: translate(-50%, -50%);
+      background:
+        radial-gradient(circle at 30% 28%, rgba(255,255,255,0.98), rgba(255,244,214,0.94) 34%, rgba(246,179,61,0.95) 68%, rgba(138,74,22,0.98) 100%);
+      border: 1px solid rgba(0,0,0,0.18);
+      box-shadow:
+        inset 0 1px 2px rgba(255,255,255,0.26),
+        inset 0 -2px 3px rgba(0,0,0,0.22),
+        0 0 0 1px rgba(0,0,0,0.22),
+        0 0 12px rgba(246,179,61,0.22),
+        0 0 24px rgba(246,179,61,0.16);
       opacity: 0.55;
       will-change: opacity, transform, filter;
-
-      /* bulb core (warm) */
-      background:
-        radial-gradient(circle at 30% 28%, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.55) 16%, rgba(255,241,196,0.95) 34%, rgba(245,158,11,0.90) 62%, rgba(120,53,15,0.98) 100%);
-      box-shadow:
-        0 0 0 1px rgba(0,0,0,0.26),
-        0 0 10px rgba(245,158,11,0.20),
-        0 0 22px rgba(245,158,11,0.16);
-      filter: saturate(1.12);
+      z-index: 2;
     }
-
-    /* socket ring (adds depth) */
     .light-bulb::before{
       content:"";
       position:absolute;
-      inset: -22%;
+      inset: -18%;
       border-radius: 999px;
-      background:
-        radial-gradient(circle at 50% 50%, rgba(0,0,0,0.45), rgba(0,0,0,0.10) 62%, rgba(0,0,0,0.0) 72%),
-        conic-gradient(from 20deg,
-          rgba(255,255,255,0.18),
-          rgba(0,0,0,0.00) 18%,
-          rgba(255,255,255,0.10) 38%,
-          rgba(0,0,0,0.00) 58%,
-          rgba(255,255,255,0.16) 100%);
-      opacity: 0.55;
+      background: radial-gradient(circle at 50% 50%, rgba(246,179,61,0.14), rgba(246,179,61,0.00) 66%);
+      opacity: 0.65;
       pointer-events:none;
-      filter: blur(0.2px);
     }
-
-    /* specular highlight */
     .light-bulb::after{
       content:"";
       position:absolute;
       inset: 18%;
       border-radius: 999px;
-      background:
-        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(255,255,255,0.18) 52%, transparent 70%);
-      opacity: 0.85;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.90), rgba(255,255,255,0.12) 62%, transparent 74%);
+      opacity: 0.75;
       pointer-events:none;
-      mix-blend-mode: screen;
     }
 
-    /* CHASE KEYFRAMES (premium, less flat) */
     @keyframes bulbChase {
-      0%   { opacity: 0.38; transform: translate(-50%,-50%) scale(0.96); filter: drop-shadow(0 0 6px rgba(245,158,11,0.18)); }
-      6%   { opacity: 1;    transform: translate(-50%,-50%) scale(1.18); filter: drop-shadow(0 0 14px rgba(245,158,11,0.78)); }
-      14%  { opacity: 0.78; transform: translate(-50%,-50%) scale(1.06); filter: drop-shadow(0 0 10px rgba(245,158,11,0.40)); }
-      100% { opacity: 0.34; transform: translate(-50%,-50%) scale(0.96); filter: drop-shadow(0 0 6px rgba(245,158,11,0.16)); }
+      0%   { opacity: 1;   transform: translate(-50%,-50%) scale(1.10); filter: drop-shadow(0 0 10px rgba(246,179,61,0.55)); }
+      8%   { opacity: 1;   transform: translate(-50%,-50%) scale(1.22); filter: drop-shadow(0 0 16px rgba(246,179,61,0.80)); }
+      16%  { opacity: 0.72;transform: translate(-50%,-50%) scale(1.04); filter: drop-shadow(0 0 10px rgba(246,179,61,0.40)); }
+      100% { opacity: 0.45;transform: translate(-50%,-50%) scale(0.98); filter: drop-shadow(0 0 7px rgba(246,179,61,0.20)); }
     }
 
     @keyframes bulbBreathe {
-      0%   { opacity: 0.86; transform: translate(-50%,-50%) scale(1.02); filter: drop-shadow(0 0 14px rgba(245,158,11,0.55)); }
-      50%  { opacity: 1;    transform: translate(-50%,-50%) scale(1.10); filter: drop-shadow(0 0 20px rgba(245,158,11,0.85)); }
-      100% { opacity: 0.86; transform: translate(-50%,-50%) scale(1.02); filter: drop-shadow(0 0 14px rgba(245,158,11,0.55)); }
+      0%   { opacity: 0.92; transform: translate(-50%,-50%) scale(1.02); filter: drop-shadow(0 0 16px rgba(246,179,61,0.55)); }
+      50%  { opacity: 1;    transform: translate(-50%,-50%) scale(1.10); filter: drop-shadow(0 0 22px rgba(246,179,61,0.80)); }
+      100% { opacity: 0.92; transform: translate(-50%,-50%) scale(1.02); filter: drop-shadow(0 0 16px rgba(246,179,61,0.55)); }
     }
 
     .wheel-wrapper.lights-idle .light-bulb{
-      animation: bulbChase 4.2s linear infinite;
-      animation-delay: calc(var(--i) * -0.12s);
+      animation: bulbChase 3.8s linear infinite;
+      animation-delay: calc(var(--i) * -0.11s);
     }
     .wheel-wrapper.lights-spin .light-bulb{
-      animation: bulbChase 0.92s linear infinite;
-      animation-delay: calc(var(--i) * -0.045s);
+      animation: bulbChase 0.86s linear infinite;
+      animation-delay: calc(var(--i) * -0.040s);
       box-shadow:
-        0 0 0 1px rgba(0,0,0,0.22),
-        0 0 14px rgba(245,158,11,0.32),
-        0 0 36px rgba(245,158,11,0.24);
+        inset 0 1px 2px rgba(255,255,255,0.24),
+        inset 0 -2px 3px rgba(0,0,0,0.22),
+        0 0 0 1px rgba(0,0,0,0.18),
+        0 0 18px rgba(246,179,61,0.34),
+        0 0 44px rgba(246,179,61,0.22);
     }
     .wheel-wrapper.lights-result .light-bulb{
-      animation: bulbBreathe 1.55s ease-in-out infinite;
+      animation: bulbBreathe 1.45s ease-in-out infinite;
       animation-delay: 0s;
-      opacity: 0.95;
+      opacity: 0.96;
       box-shadow:
-        0 0 0 1px rgba(0,0,0,0.22),
-        0 0 20px rgba(245,158,11,0.42),
-        0 0 48px rgba(245,158,11,0.30);
+        inset 0 1px 2px rgba(255,255,255,0.26),
+        inset 0 -2px 3px rgba(0,0,0,0.22),
+        0 0 0 1px rgba(0,0,0,0.18),
+        0 0 22px rgba(246,179,61,0.42),
+        0 0 60px rgba(246,179,61,0.26);
     }
 
     /* =========================
-     * POINTER — PREMIUM CASINO + WOBBLE
+     * POINTER — premium + “wobble” while spinning
      * ======================= */
     .pointer{
       position: absolute;
-      top: clamp(-34px, -6.9vw, -22px);
+      top: clamp(-34px, -6.4vw, -22px);
       left: 50%;
       transform: translateX(-50%) translateZ(0);
-      transform-origin: 50% 14%;
+      transform-origin: 50% 18%;
       z-index: 30;
-      width: clamp(42px, 10.8vw, 62px);
-      height: clamp(58px, 14.2vw, 82px);
+      width: clamp(40px, 10.5vw, 58px);
+      height: clamp(56px, 13.6vw, 78px);
       filter:
-        drop-shadow(0 18px 28px rgba(0,0,0,0.58))
-        drop-shadow(0 0 20px rgba(245,158,11,0.16));
+        drop-shadow(0 16px 26px rgba(0,0,0,0.55))
+        drop-shadow(0 0 18px rgba(246,179,61,0.16));
       pointer-events: none;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
-      will-change: transform, filter;
     }
     .pointer svg { width: 100%; height: 100%; display:block; }
 
-    @keyframes pointerWobble {
-      0%   { transform: translateX(-50%) rotate(0deg) translateY(0px); }
-      25%  { transform: translateX(-50%) rotate(-2.2deg) translateY(0.6px); }
-      50%  { transform: translateX(-50%) rotate(0deg) translateY(0px); }
-      75%  { transform: translateX(-50%) rotate(2.2deg) translateY(0.8px); }
-      100% { transform: translateX(-50%) rotate(0deg) translateY(0px); }
+    .pointer.is-spin{
+      animation: pointerFloat 520ms ease-in-out infinite;
+    }
+    @keyframes pointerFloat{
+      0%{ transform: translateX(-50%) rotate(-1.2deg) translateY(0px); }
+      50%{ transform: translateX(-50%) rotate(1.8deg) translateY(1px); }
+      100%{ transform: translateX(-50%) rotate(-1.2deg) translateY(0px); }
     }
 
-    @keyframes pointerTick {
-      0%   { transform: translateX(-50%) rotate(0deg) translateY(0px); }
-      35%  { transform: translateX(-50%) rotate(-6deg) translateY(1.2px); }
-      100% { transform: translateX(-50%) rotate(0deg) translateY(0px); }
+    .pointer.is-kick{
+      animation: pointerKick 120ms ease-out 1;
     }
-
-    .wheel-wrapper.is-spinning .pointer{
-      animation: pointerWobble 220ms ease-in-out infinite;
-    }
-    .pointer.tick{
-      animation: pointerTick 120ms ease-out 1;
+    @keyframes pointerKick{
+      0%{ transform: translateX(-50%) rotate(0deg); }
+      45%{ transform: translateX(-50%) rotate(-10deg); }
+      100%{ transform: translateX(-50%) rotate(0deg); }
     }
 
     /* =========================
-     * OUTER RIM — GOLD METAL (STATIC)
+     * OUTER RIM — gold metal (static)
      * ======================= */
     .wheel-outer{
       width: 100%;
@@ -453,7 +623,7 @@
         radial-gradient(circle at 30% 22%, rgba(255,255,255,0.22), transparent 44%),
         radial-gradient(circle at 50% 86%, rgba(0,0,0,0.60), transparent 58%),
         conic-gradient(from 10deg,
-          rgba(255,255,255,0.26),
+          rgba(255,255,255,0.24),
           rgba(0,0,0,0.00) 10%,
           rgba(255,255,255,0.12) 18%,
           rgba(0,0,0,0.00) 28%,
@@ -461,18 +631,18 @@
           rgba(0,0,0,0.00) 52%,
           rgba(255,255,255,0.14) 64%,
           rgba(0,0,0,0.00) 78%,
-          rgba(255,255,255,0.26) 100%
+          rgba(255,255,255,0.24) 100%
         ),
         linear-gradient(180deg,
-          rgba(255, 241, 196, 0.94) 0%,
-          rgba(245, 158, 11, 0.95) 46%,
-          rgba(120, 53, 15, 0.98) 100%
+          rgba(255, 244, 214, 0.94) 0%,
+          rgba(246, 179, 61, 0.95) 46%,
+          rgba(138, 74, 22, 0.96) 100%
         );
 
       border: 1px solid rgba(255, 232, 176, 0.26);
       box-shadow:
         0 28px 70px rgba(0,0,0,0.58),
-        0 0 34px rgba(245,158,11,0.16);
+        0 0 34px rgba(246,179,61,0.16);
 
       transform: translateZ(0);
       -webkit-transform: translateZ(0);
@@ -480,31 +650,16 @@
       -webkit-backface-visibility: hidden;
     }
 
-    /* inner bevel ring */
-    .wheel-outer::before{
-      content:"";
-      position:absolute;
-      inset: clamp(10px, 2.6vw, 14px);
-      border-radius: 50%;
-      background:
-        radial-gradient(circle at 50% 30%, rgba(255,255,255,0.12), transparent 58%),
-        radial-gradient(circle at 50% 75%, rgba(0,0,0,0.30), transparent 62%),
-        linear-gradient(180deg, rgba(255,255,255,0.10), rgba(0,0,0,0.08));
-      border: 1px solid rgba(0,0,0,0.22);
-      opacity: 0.55;
-      pointer-events:none;
-      z-index: 2;
-    }
-
     .wheel-outer::after{
       content:"";
       position:absolute;
       inset: 8px;
       border-radius: 50%;
-      border: 1px solid rgba(255, 232, 176, 0.22);
+      border: 1px solid rgba(255, 232, 176, 0.24);
       pointer-events:none;
-      opacity: 0.90;
+      opacity: 0.92;
       z-index: 3;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18);
     }
 
     .wheel-inner{
@@ -515,8 +670,8 @@
       border: 1px solid rgba(255,255,255,0.10);
       box-shadow:
         inset 0 0 0 1px rgba(0,0,0,0.22),
-        inset 0 18px 34px rgba(0,0,0,0.30),
-        inset 0 -16px 26px rgba(255,255,255,0.06);
+        inset 0 18px 32px rgba(0,0,0,0.28),
+        inset 0 -14px 24px rgba(255,255,255,0.06);
       position: relative;
       will-change: transform;
       transform: rotate(0deg);
@@ -529,20 +684,23 @@
       --spin-dur: 6000ms;
     }
 
-    /* premium surface shading */
+    /* premium shading + subtle “paper” look like poster */
     .wheel-inner::before{
       content:"";
       position:absolute;
       inset:0;
       border-radius:50%;
       background:
-        radial-gradient(circle at 35% 28%, rgba(255,255,255,0.18), transparent 54%),
-        radial-gradient(circle at 68% 72%, rgba(34,197,94,0.10), transparent 58%),
-        repeating-conic-gradient(from 0deg,
-          rgba(255,255,255,0.00) 0 14deg,
-          rgba(255,255,255,0.015) 14deg 16deg);
+        radial-gradient(circle at 35% 28%, rgba(255,255,255,0.16), transparent 56%),
+        radial-gradient(circle at 68% 72%, rgba(34,197,94,0.10), transparent 60%),
+        radial-gradient(circle at 50% 50%, rgba(0,0,0,0.12), transparent 62%),
+        repeating-radial-gradient(circle at 50% 50%,
+          rgba(255,255,255,0.02) 0px,
+          rgba(255,255,255,0.02) 2px,
+          rgba(0,0,0,0.00) 6px
+        );
       pointer-events:none;
-      opacity: 0.62;
+      opacity: 0.55;
       z-index: 2;
       mix-blend-mode: overlay;
     }
@@ -553,10 +711,10 @@
       inset: 0;
       border-radius: 50%;
       background:
-        radial-gradient(420px 260px at 30% 18%, rgba(255,255,255,0.12), transparent 58%),
-        radial-gradient(520px 300px at 78% 84%, rgba(0,0,0,0.24), transparent 62%);
+        radial-gradient(520px 320px at 30% 18%, rgba(255,255,255,0.10), transparent 58%),
+        radial-gradient(560px 320px at 78% 84%, rgba(0,0,0,0.26), transparent 62%);
       pointer-events:none;
-      opacity: 0.68;
+      opacity: 0.65;
       z-index: 4;
     }
 
@@ -568,6 +726,7 @@
       to   { transform: rotate(var(--rotation)); }
     }
 
+    /* premium label text */
     .prize-text{
       position:absolute;
       left:50%;
@@ -581,90 +740,80 @@
       letter-spacing: 0.55px;
       transform-origin: center center;
 
-      max-width: 72%;
+      max-width: 74%;
       overflow: hidden;
       text-overflow: ellipsis;
 
-      /* premium type (emboss + subtle stroke) */
-      -webkit-text-stroke: 0.55px rgba(0,0,0,0.22);
       text-shadow:
-        0 2px 0 rgba(0,0,0,0.18),
-        0 10px 26px rgba(0,0,0,0.46),
-        0 0 14px rgba(255,255,255,0.05);
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.20));
+        0 2px 0 rgba(0,0,0,0.22),
+        0 10px 26px rgba(0,0,0,0.52),
+        0 0 22px rgba(255,255,255,0.08);
       image-rendering: -webkit-optimize-contrast;
     }
 
     /* =========================
-     * CENTER CAP — CASINO PREMIUM
+     * CENTER HUB — like poster (gold ring + dark core)
      * ======================= */
     .wheel-center{
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%) translateZ(0);
-      width: clamp(58px, 14.8vw, 74px);
-      height: clamp(58px, 14.8vw, 74px);
+      width: clamp(62px, 15vw, 78px);
+      height: clamp(62px, 15vw, 78px);
       border-radius: 50%;
       background:
-        radial-gradient(circle at 30% 24%, rgba(255,255,255,0.26), transparent 48%),
-        repeating-conic-gradient(from 0deg,
-          rgba(255,255,255,0.06) 0 10deg,
-          rgba(0,0,0,0.00) 10deg 20deg),
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,0.22), transparent 48%),
         conic-gradient(from 30deg, rgba(255,255,255,0.14), rgba(0,0,0,0) 35%, rgba(255,255,255,0.10) 65%, rgba(0,0,0,0) 100%),
-        linear-gradient(180deg, rgba(255, 241, 196, 0.90), rgba(245,158,11,0.94));
+        linear-gradient(180deg, rgba(255, 244, 214, 0.92), rgba(246,179,61,0.95), rgba(138,74,22,0.96));
       border: 1px solid rgba(255, 232, 176, 0.28);
       box-shadow:
-        0 18px 44px rgba(0,0,0,0.52),
-        0 0 22px rgba(245,158,11,0.20),
-        inset 0 0 0 1px rgba(0,0,0,0.20),
-        inset 0 10px 18px rgba(0,0,0,0.18);
+        0 20px 46px rgba(0,0,0,0.52),
+        0 0 22px rgba(246,179,61,0.20),
+        inset 0 0 0 1px rgba(0,0,0,0.18);
       z-index: 20;
       display: flex;
       align-items: center;
       justify-content: center;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
-      overflow: hidden;
-      isolation: isolate;
     }
 
-    /* inner dark hub */
-    .wheel-center::after{
-      content: "";
-      width: clamp(28px, 8.2vw, 40px);
-      height: clamp(28px, 8.2vw, 40px);
-      border-radius: 50%;
-      background:
-        radial-gradient(circle at 35% 30%, rgba(255,255,255,0.14), transparent 52%),
-        radial-gradient(circle at 50% 55%, rgba(0,0,0,0.35), transparent 66%),
-        linear-gradient(180deg, rgba(6,18,14,0.94), rgba(6,18,14,0.66));
-      border: 1px solid rgba(255,255,255,0.14);
-      box-shadow:
-        inset 0 0 14px rgba(0,0,0,0.46),
-        0 0 0 1px rgba(0,0,0,0.25);
-      opacity: 0.98;
-    }
-
-    /* subtle sheen spin on center (not rotation, just light sweep) */
     .wheel-center::before{
       content:"";
       position:absolute;
-      inset:-18%;
+      inset: 10%;
       border-radius: 50%;
-      background: conic-gradient(from 90deg,
-        rgba(255,255,255,0.00),
-        rgba(255,255,255,0.14),
-        rgba(255,255,255,0.00) 46%,
-        rgba(255,255,255,0.10),
-        rgba(255,255,255,0.00) 100%);
-      opacity: 0.26;
-      mix-blend-mode: screen;
-      transform: rotate(0deg);
-      pointer-events:none;
-      animation: centerSheen 3.6s linear infinite;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,0.10), transparent 55%),
+        radial-gradient(circle at 50% 60%, rgba(0,0,0,0.28), transparent 62%),
+        linear-gradient(180deg, rgba(10,30,22,0.92), rgba(6,18,14,0.78));
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.38);
     }
-    @keyframes centerSheen { to { transform: rotate(360deg); } }
+
+    .wheel-center::after{
+      content: "";
+      width: clamp(26px, 8vw, 38px);
+      height: clamp(26px, 8vw, 38px);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,0.16), transparent 55%),
+        radial-gradient(circle at 55% 58%, rgba(0,0,0,0.35), transparent 62%),
+        linear-gradient(180deg, rgba(10,10,10,0.92), rgba(20,20,20,0.70));
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.45);
+      z-index: 1;
+    }
+
+    .wheel-inner.spinning .wheel-center{
+      animation: hubPulse 1.25s ease-in-out infinite;
+    }
+    @keyframes hubPulse{
+      0%{ filter: drop-shadow(0 0 10px rgba(246,179,61,0.14)); transform: translate(-50%,-50%) scale(1); }
+      50%{ filter: drop-shadow(0 0 18px rgba(246,179,61,0.22)); transform: translate(-50%,-50%) scale(1.04); }
+      100%{ filter: drop-shadow(0 0 10px rgba(246,179,61,0.14)); transform: translate(-50%,-50%) scale(1); }
+    }
 
     /* =========================
      * CARD / INPUT
@@ -1196,14 +1345,15 @@
       * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
       .winners-table-row.is-new::after { display: none !important; }
       .nav-spinner{ animation: none !important; }
-      .wheel-wrapper.is-spinning .pointer{ animation: none !important; }
-      .pointer.tick{ animation: none !important; }
-      .wheel-center::before{ animation: none !important; }
+      #fxCanvas{ display:none !important; }
     }
   </style>
 </head>
 
 <body>
+  <!-- Premium Particles Canvas -->
+  <canvas id="fxCanvas" aria-hidden="true"></canvas>
+
   <div class="container">
     <header>
       <h1 class="hero-title">
@@ -1216,34 +1366,34 @@
     <div class="main-content">
       <div class="wheel-container">
         <div class="wheel-wrapper lights-idle" id="wheelWrap">
-          <!-- REAL BULBS -->
+          <!-- PREMIUM BULBS -->
           <div class="wheel-lights inner" id="wheelLightsInner" aria-hidden="true"></div>
 
           <!-- POINTER -->
-          <div class="pointer" id="pointer" aria-hidden="true">
+          <div class="pointer" id="pointerEl" aria-hidden="true">
             <svg viewBox="0 0 64 90" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0" stop-color="rgba(255,255,255,0.90)"/>
-                  <stop offset="0.22" stop-color="rgba(205,205,205,0.92)"/>
-                  <stop offset="0.55" stop-color="rgba(95,95,95,0.96)"/>
+                  <stop offset="0.24" stop-color="rgba(195,195,195,0.92)"/>
+                  <stop offset="0.56" stop-color="rgba(88,88,88,0.96)"/>
                   <stop offset="1" stop-color="rgba(18,18,18,0.98)"/>
                 </linearGradient>
                 <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stop-color="#FFF1C4"/>
-                  <stop offset="0.5" stop-color="#F59E0B"/>
-                  <stop offset="1" stop-color="#78350F"/>
+                  <stop offset="0" stop-color="#FFF4D6"/>
+                  <stop offset="0.52" stop-color="#F6B33D"/>
+                  <stop offset="1" stop-color="#8A4A16"/>
                 </linearGradient>
                 <radialGradient id="cap" cx="35%" cy="30%" r="70%">
                   <stop offset="0" stop-color="rgba(255,255,255,0.98)"/>
-                  <stop offset="0.45" stop-color="#FFF1C4"/>
+                  <stop offset="0.45" stop-color="#FFF4D6"/>
                   <stop offset="1" stop-color="#B45309"/>
                 </radialGradient>
               </defs>
 
               <!-- outer gold frame -->
               <path d="M32 86 L10 34 C10 34 14 10 32 10 C50 10 54 34 54 34 L32 86 Z"
-                    fill="url(#gold)" stroke="rgba(255,255,255,0.24)" stroke-width="2"/>
+                    fill="url(#gold)" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
 
               <!-- inner steel -->
               <path d="M32 80 L18 36 C18 36 20 18 32 18 C44 18 46 36 46 36 L32 80 Z"
@@ -1251,7 +1401,7 @@
 
               <!-- top cap -->
               <circle cx="32" cy="27" r="11" fill="url(#cap)" stroke="rgba(0,0,0,0.22)" stroke-width="2"/>
-              <circle cx="32" cy="27" r="4.2" fill="rgba(10,10,10,0.75)" stroke="rgba(255,255,255,0.16)" stroke-width="1.5"/>
+              <circle cx="32" cy="27" r="4.2" fill="rgba(10,10,10,0.78)" stroke="rgba(255,255,255,0.16)" stroke-width="1.5"/>
             </svg>
           </div>
 
@@ -1261,12 +1411,17 @@
               <!-- Prize texts generated by JS -->
             </div>
           </div>
+
+          <!-- STAGE (like poster) -->
+          <div class="wheel-stage" aria-hidden="true">
+            <div class="stage-lights" id="stageLights"></div>
+          </div>
         </div>
       </div>
 
       <div>
         <div class="input-section">
-          <h2>MASUKKAN USER ID</h2>
+          <h2>MASUKKKAN USER ID</h2>
           <p>Masukkan User ID Anda untuk memutar roda keberuntungan.</p>
 
           <label for="userIdInput">User ID</label>
@@ -1380,13 +1535,11 @@
 
   <script>
     /* ======================================================================
-     * FINAL — PREMIUM WHEEL PATCH:
-     * ✅ Bulbs upgraded (3D + socket + glow) + chase (idle/spin) + result breathe
-     * ✅ Pointer modern + wobble during spin + tick snap
-     * ✅ Center cap more casino (depth + sheen)
-     * ✅ Anti "box shadow" artifact behind wheel (radial glow)
-     * ✅ Pause winners saat SPIN + saat MODAL open, resume setelah modal ditutup
-     * ✅ BONUS 10% lock + 1x spin per browser (persist)
+     * FINAL — PREMIUM WHEEL THEME PATCH (poster-style)
+     * ✅ Theme wheel + stage lights (below) + spot beams + particles
+     * ✅ Premium 3D bulbs (ring) + chase (idle/spin) + result breathe
+     * ✅ Pointer wobble/kick while spinning (matches tick feel)
+     * ✅ Keep your logic: pause history on spin + modal, BONUS 10% lock
      * ====================================================================== */
 
     const SPIN_DURATION_MS = 6000;
@@ -1489,6 +1642,10 @@
     let nonUserToastAt = 0;
     let audioPrimed = false;
 
+    // pointer element cache
+    let pointerEl = null;
+    let pointerKickT = 0;
+
     // PAUSE controller (spin + modal)
     const pauseReasons = new Set();
     function pauseHistory(reason){
@@ -1513,32 +1670,20 @@
       else wrap.classList.add("lights-idle");
     }
 
-    function setSpinVisual(on){
-      const wrap = document.getElementById("wheelWrap");
-      if (!wrap) return;
-      wrap.classList.toggle("is-spinning", !!on);
-    }
-
-    function pulsePointerTick(){
-      const p = document.getElementById("pointer");
-      if (!p) return;
-      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-      p.classList.remove("tick");
-      void p.offsetWidth;
-      p.classList.add("tick");
-      setTimeout(() => p.classList.remove("tick"), 160);
-    }
-
     document.addEventListener("DOMContentLoaded", () => {
       const spinBtn = document.getElementById("spinBtn");
       const userIdInput = document.getElementById("userIdInput");
       const claimBtn = document.getElementById("claimBtn");
       const downloadBtn = document.getElementById("downloadBtn");
 
+      pointerEl = document.getElementById("pointerEl");
+
       setupAudioAutoOn();
       buildBulbRingHTML();
+      buildStageLightsHTML();
       drawWheelPrizes();
       initWheelAutoResize();
+      initFxParticlesCanvas();
 
       bootPersistedUserEntry();
 
@@ -1632,15 +1777,129 @@
     });
 
     // =========================
-    // BULBS (HTML) — premium count
+    // PREMIUM FX CANVAS (sparkles + dust)
+    // =========================
+    function initFxParticlesCanvas(){
+      const c = document.getElementById("fxCanvas");
+      if (!c) return;
+
+      const ctx = c.getContext("2d", { alpha: true });
+      if (!ctx) return;
+
+      const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (reduceMotion) { c.style.display = "none"; return; }
+
+      let w = 0, h = 0, dpr = 1;
+      const parts = [];
+      const maxParts = 90;
+
+      const resize = () => {
+        dpr = Math.min(2, window.devicePixelRatio || 1);
+        w = Math.max(1, Math.floor(window.innerWidth));
+        h = Math.max(1, Math.floor(window.innerHeight));
+        c.width = Math.floor(w * dpr);
+        c.height = Math.floor(h * dpr);
+        c.style.width = w + "px";
+        c.style.height = h + "px";
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      };
+
+      const rand = (a,b)=> a + Math.random()*(b-a);
+      const pick = (arr)=> arr[(Math.random()*arr.length)|0];
+
+      const spawn = () => {
+        const p = {
+          x: rand(-40, w+40),
+          y: rand(-40, h+40),
+          r: rand(0.7, 2.4),
+          vy: rand(-0.14, -0.04),
+          vx: rand(-0.06, 0.06),
+          a: rand(0.15, 0.55),
+          tw: rand(0.004, 0.010),
+          ph: rand(0, Math.PI*2),
+          hue: pick([120, 140, 45, 50, 160]),
+          life: rand(2200, 5200),
+          t: 0
+        };
+        parts.push(p);
+      };
+
+      const ensure = () => {
+        while (parts.length < maxParts) spawn();
+      };
+
+      const draw = (dt) => {
+        ctx.clearRect(0,0,w,h);
+
+        // subtle vignette glow
+        const g = ctx.createRadialGradient(w*0.5, h*0.28, 0, w*0.5, h*0.28, Math.max(w,h)*0.55);
+        g.addColorStop(0, "rgba(34,197,94,0.08)");
+        g.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,w,h);
+
+        for (let i = parts.length-1; i >= 0; i--) {
+          const p = parts[i];
+          p.t += dt;
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+
+          const tw = (Math.sin(p.ph + p.t*p.tw) * 0.5 + 0.5);
+          const alpha = Math.max(0, Math.min(1, p.a * (0.55 + tw*0.65) * (1 - (p.t/p.life))));
+          const rr = p.r * (0.85 + tw*0.65);
+
+          // soft sparkle (gold/green)
+          ctx.beginPath();
+          ctx.fillStyle = `hsla(${p.hue}, 80%, 70%, ${alpha})`;
+          ctx.arc(p.x, p.y, rr, 0, Math.PI*2);
+          ctx.fill();
+
+          // tiny star cross
+          ctx.globalAlpha = alpha * 0.35;
+          ctx.strokeStyle = `hsla(${p.hue}, 85%, 78%, 1)`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(p.x - rr*2.2, p.y);
+          ctx.lineTo(p.x + rr*2.2, p.y);
+          ctx.moveTo(p.x, p.y - rr*2.2);
+          ctx.lineTo(p.x, p.y + rr*2.2);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+
+          if (p.t >= p.life || p.y < -80) {
+            parts.splice(i,1);
+            spawn();
+          }
+        }
+      };
+
+      let last = performance.now();
+      const tick = () => {
+        const now = performance.now();
+        const dt = Math.min(34, now - last);
+        last = now;
+
+        ensure();
+        draw(dt);
+
+        requestAnimationFrame(tick);
+      };
+
+      resize();
+      window.addEventListener("resize", resize, { passive: true });
+      requestAnimationFrame(tick);
+    }
+
+    // =========================
+    // BULBS (HTML) — wheel ring
     // =========================
     function buildBulbRingHTML() {
       const host = document.getElementById("wheelLightsInner");
       if (!host) return;
       host.innerHTML = "";
 
-      const count = 40;         // more premium density
-      const r = 97.2;
+      const count = 40;         // more premium
+      const r = 97.0;
       const VB = 200;
       const cx = VB/2, cy = VB/2;
 
@@ -1655,6 +1914,33 @@
         b.style.top  = (y / VB * 100).toFixed(4) + "%";
         b.style.setProperty("--i", i);
         host.appendChild(b);
+      }
+    }
+
+    // =========================
+    // STAGE LIGHTS (HTML)
+    // =========================
+    function buildStageLightsHTML(){
+      const host = document.getElementById("stageLights");
+      if (!host) return;
+      host.innerHTML = "";
+
+      const count = 28;
+      const W = 1000, H = 520;
+      const cx = W/2, cy = H/2;
+      const rx = 430, ry = 160;
+
+      for (let i=0;i<count;i++){
+        const t = (i / count) * Math.PI * 2;
+        const x = cx + Math.cos(t) * rx;
+        const y = cy + Math.sin(t) * ry;
+
+        const d = document.createElement("div");
+        d.className = "stage-bulb";
+        d.style.left = (x / W * 100).toFixed(4) + "%";
+        d.style.top  = (y / H * 100).toFixed(4) + "%";
+        d.style.setProperty("--i", i);
+        host.appendChild(d);
       }
     }
 
@@ -1724,8 +2010,17 @@
       }
     }
 
+    function pointerKick(){
+      if (!pointerEl) return;
+      if (pointerKickT) clearTimeout(pointerKickT);
+      pointerEl.classList.remove("is-kick");
+      void pointerEl.offsetWidth;
+      pointerEl.classList.add("is-kick");
+      pointerKickT = setTimeout(()=> pointerEl && pointerEl.classList.remove("is-kick"), 140);
+    }
+
     function playTick() {
-      pulsePointerTick();
+      pointerKick();
       try {
         const a = tickPool[tickPoolIdx++ % tickPool.length];
         a.currentTime = 0;
@@ -1789,7 +2084,7 @@
     }
 
     // =========================
-    // WHEEL BG + TEXT
+    // WHEEL BG + TEXT (more “poster” contrast)
     // =========================
     function setWheelBackground() {
       const n = PRIZES.length;
@@ -1798,7 +2093,7 @@
       for (let i = 0; i < n; i++) {
         const a = i * seg;
         const b = (i + 1) * seg;
-        const color = (i % 2 === 0) ? "#064e3b" : "#f8fafc";
+        const color = (i % 2 === 0) ? "#064e3b" : "#f1f5f9";
         parts.push(`${color} ${a}deg ${b}deg`);
       }
       const wheel = document.getElementById("wheel");
@@ -1825,14 +2120,13 @@
 
         const isLight = (index % 2 === 1);
         div.style.color = isLight ? "#05281d" : "#ffffff";
-
         div.style.textShadow = isLight
-          ? "0 2px 0 rgba(255,255,255,0.18), 0 10px 22px rgba(0,0,0,0.28), 0 0 10px rgba(255,255,255,0.08)"
-          : "0 2px 0 rgba(0,0,0,0.18), 0 12px 26px rgba(0,0,0,0.50), 0 0 12px rgba(255,255,255,0.06)";
+          ? "0 2px 0 rgba(255,255,255,0.20), 0 12px 26px rgba(0,0,0,0.30)"
+          : "0 2px 0 rgba(0,0,0,0.20), 0 14px 28px rgba(0,0,0,0.55), 0 0 18px rgba(255,255,255,0.06)";
 
         if (/bonus/i.test(prize)) {
           div.style.fontSize = "clamp(12px, 3vw, 16px)";
-          div.style.letterSpacing = "0.2px";
+          div.style.letterSpacing = "0.25px";
         }
 
         div.style.transform = `translate(-50%, -50%) rotate(${angle}deg) translate(0, -${radius}px)`;
@@ -1850,6 +2144,7 @@
         t = setTimeout(() => {
           drawWheelPrizes();
           buildBulbRingHTML();
+          buildStageLightsHTML();
         }, 80);
       };
 
@@ -2393,14 +2688,14 @@
 
       isSpin = true;
 
-      // premium pointer wobble ON
-      setSpinVisual(true);
-
       // pause history while spinning
       pauseHistory("spin");
 
       // lights spin mode
       setLightState("spin");
+
+      // pointer wobble during spin
+      if (pointerEl) pointerEl.classList.add("is-spin");
 
       const spinBtn = document.getElementById("spinBtn");
       spinBtn.disabled = true;
@@ -2439,9 +2734,6 @@
         wheel.style.transform = `rotate(${totalRotation}deg)`;
         currentRotation = totalRotation;
 
-        // stop wobble
-        setSpinVisual(false);
-
         try { spinSound.pause(); spinSound.currentTime = 0; } catch (_) {}
 
         const winSound = document.getElementById("winSound");
@@ -2449,6 +2741,9 @@
 
         // result lights: stop chasing, breathe ON
         setLightState("result");
+
+        // stop pointer wobble
+        if (pointerEl) pointerEl.classList.remove("is-spin");
 
         hasSpun = true;
         spinAt = Date.now();
