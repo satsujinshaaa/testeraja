@@ -141,7 +141,7 @@
     }
 
     /* =========================
-     * HEADER
+     * HEADER (1 JUDUL UTAMA + HIJAU SERAGAM)
      * ======================= */
     header{
       text-align: center;
@@ -219,7 +219,7 @@
     }
 
     /* =========================
-     * WHEEL — CASINO RIM + INNER LIGHTS (ANTI BOX)
+     * WHEEL — CASINO RIM + GLOSSY BULBS (ANTI BOX)
      * ======================= */
     .wheel-container{
       position: relative;
@@ -266,7 +266,7 @@
     }
 
     /* =========================
-     * LIGHT RING (SVG via JS) — INNER ONLY
+     * LIGHT RING (SVG via JS) — INNER ONLY (GLOSSY)
      * ======================= */
     .wheel-lights{
       position: absolute;
@@ -283,7 +283,7 @@
       /* ✅ IMPORTANT: no CSS filter (anti kotak) */
       filter: none;
 
-      /* tokens */
+      /* tokens (default) */
       --bulb-speed: 2.8s;
       --bulb-delay-step: -0.085s;
       --bulb-dim: 0.64;
@@ -293,9 +293,9 @@
 
     .wheel-lights.outer{ display: none !important; }
 
-    /* ✅ DOT: nempel dekat rim emas */
     .wheel-lights.inner{
-      inset: clamp(0px, 0.9vw, 4px);
+      /* ✅ lebih dekat ke rim emas (tidak terlalu masuk) */
+      inset: clamp(-18px, -4.6vw, -26px);
       opacity: 1;
     }
 
@@ -306,11 +306,10 @@
       overflow: visible;
     }
 
-    /* ✅ overlay kaca dipersempit supaya tidak “nabrak” dot */
     .wheel-lights.inner::after{
       content:"";
       position:absolute;
-      inset: clamp(18px, 4.2vw, 24px);
+      inset: 10px;
       border-radius: 50%;
       pointer-events:none;
       background:
@@ -331,7 +330,8 @@
       100% { opacity: var(--bulb-dim); transform: scale(0.98); }
     }
 
-    .wheel-lights.inner .bulb{
+    .wheel-lights.inner .bulb-core,
+    .wheel-lights.inner .bulb-glow{
       animation: bulbTwinkle var(--bulb-speed) ease-in-out infinite;
       animation-delay: calc(var(--i) * var(--bulb-delay-step));
       will-change: opacity, transform;
@@ -339,110 +339,96 @@
       transform-origin: center;
     }
 
-    /* ✅ FAST BLINK saat result selesai */
-    @keyframes bulbFlash{
-      0%   { opacity: 0.28; transform: scale(0.96); }
-      50%  { opacity: 1;    transform: scale(1.22); }
-      100% { opacity: 0.28; transform: scale(0.96); }
-    }
-    .wheel-lights.flash{
-      --bulb-speed: 0.28s;
-      --bulb-delay-step: -0.015s;
-      --bulb-dim: 0.28;
+    /* ✅ burst blink cepat setelah spin selesai */
+    .wheel-lights.is-burst{
+      --bulb-speed: 0.42s;
+      --bulb-delay-step: -0.02s;
+      --bulb-dim: 0.72;
       --bulb-peak: 1;
-      --bulb-scale: 1.22;
-    }
-    .wheel-lights.flash .bulb{
-      animation: bulbFlash var(--bulb-speed) ease-in-out infinite;
-    }
-    .wheel-lights.flash .bulb-glow{
-      opacity: 0.95 !important;
+      --bulb-scale: 1.14;
     }
 
     /* =========================
-     * POINTER (modern casino metal)
+     * POINTER — CASINO PIN (MODERN)
      * ======================= */
     .pointer{
       position: absolute;
-      top: clamp(-34px, -6.8vw, -22px);
+      top: clamp(-34px, -7vw, -22px);
       left: 50%;
-      transform: translateX(-50%) translateZ(0);
+      transform: translateX(-50%);
       z-index: 30;
-      width: clamp(44px, 11vw, 62px);
-      height: clamp(58px, 14.2vw, 82px);
-      filter:
-        drop-shadow(0 16px 26px rgba(0,0,0,0.55))
-        drop-shadow(0 0 18px rgba(245,158,11,0.16));
+      width: clamp(34px, 9vw, 46px);
+      height: clamp(54px, 14vw, 74px);
+      filter: drop-shadow(0 10px 16px rgba(0,0,0,0.55));
       pointer-events: none;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
     }
     .pointer svg { width: 100%; height: 100%; }
 
-    .pointer::after{
-      content:"";
-      position:absolute;
-      left: 50%;
-      top: 8%;
-      width: 52%;
-      height: 34%;
-      transform: translateX(-50%) rotate(-6deg);
-      border-radius: 999px;
-      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.55), transparent 70%);
-      opacity: 0.7;
-      pointer-events:none;
-    }
-
     /* =========================
-     * OUTER RIM — GOLD METAL
+     * OUTER RIM — GOLD CASINO (glossy + bevel)
      * ======================= */
     .wheel-outer{
       width: 100%;
       height: 100%;
       border-radius: 50%;
-      padding: clamp(12px, 3vw, 15px);
+      padding: clamp(14px, 3.2vw, 18px);
       position: relative;
       z-index: 2;
       isolation: isolate;
       overflow: hidden;
 
+      border: 1px solid rgba(255, 232, 176, 0.28);
+
       background:
-        radial-gradient(circle at 30% 22%, rgba(255,255,255,0.22), transparent 44%),
-        radial-gradient(circle at 50% 86%, rgba(0,0,0,0.60), transparent 58%),
-        conic-gradient(from 10deg,
-          rgba(255,255,255,0.22),
-          rgba(0,0,0,0.00) 10%,
-          rgba(255,255,255,0.10) 18%,
-          rgba(0,0,0,0.00) 28%,
-          rgba(255,255,255,0.08) 38%,
-          rgba(0,0,0,0.00) 52%,
-          rgba(255,255,255,0.12) 64%,
-          rgba(0,0,0,0.00) 78%,
-          rgba(255,255,255,0.22) 100%
+        radial-gradient(circle at 50% 90%, rgba(0,0,0,0.55), transparent 58%),
+        radial-gradient(circle at 30% 22%, rgba(255,255,255,0.28), transparent 46%),
+        conic-gradient(from 12deg,
+          rgba(255,255,255,0.36),
+          rgba(0,0,0,0.00) 12%,
+          rgba(255,255,255,0.16) 22%,
+          rgba(0,0,0,0.00) 34%,
+          rgba(255,255,255,0.18) 44%,
+          rgba(0,0,0,0.00) 58%,
+          rgba(255,255,255,0.20) 70%,
+          rgba(0,0,0,0.00) 84%,
+          rgba(255,255,255,0.36) 100%
         ),
         linear-gradient(180deg,
-          rgba(255, 241, 196, 0.92) 0%,
-          rgba(245, 158, 11, 0.94) 46%,
-          rgba(120, 53, 15, 0.96) 100%
+          rgba(255, 244, 205, 0.96) 0%,
+          rgba(245, 158, 11, 0.96) 44%,
+          rgba(120, 53, 15, 0.98) 100%
         );
 
-      border: 1px solid rgba(255, 232, 176, 0.24);
       box-shadow:
-        0 28px 70px rgba(0,0,0,0.58),
-        0 0 34px rgba(245,158,11,0.18);
+        0 34px 86px rgba(0,0,0,0.68),
+        0 0 44px rgba(245,158,11,0.22);
 
       transform: translateZ(0);
       -webkit-transform: translateZ(0);
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
+    }
+
+    .wheel-outer::before{
+      content:"";
+      position:absolute;
+      inset: clamp(8px, 1.8vw, 12px);
+      border-radius: 50%;
+      pointer-events:none;
+      z-index: 2;
+      background:
+        radial-gradient(circle at 50% 40%, rgba(255,255,255,0.10), transparent 56%),
+        radial-gradient(circle at 50% 100%, rgba(0,0,0,0.35), transparent 58%);
+      box-shadow:
+        inset 0 0 0 1px rgba(0,0,0,0.22),
+        inset 0 18px 26px rgba(0,0,0,0.22);
+      opacity: 0.95;
     }
 
     .wheel-outer::after{
       content:"";
       position:absolute;
-      inset: 8px;
+      inset: clamp(9px, 2.0vw, 13px);
       border-radius: 50%;
-      border: 1px solid rgba(255, 232, 176, 0.22);
+      border: 1px solid rgba(255, 232, 176, 0.18);
       pointer-events:none;
       opacity: 0.90;
       z-index: 3;
@@ -533,7 +519,7 @@
       position: absolute;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%) translateZ(0);
+      transform: translate(-50%, -50%);
       width: clamp(56px, 14.5vw, 70px);
       height: clamp(56px, 14.5vw, 70px);
       border-radius: 50%;
@@ -549,8 +535,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
     }
 
     .wheel-center::after{
@@ -567,27 +551,19 @@
     }
 
     .wheel-wrapper.is-spinning .wheel-outer{
-      animation: glowPulse 560ms ease-in-out infinite alternate;
+      animation: glowPulse 520ms ease-in-out infinite alternate;
     }
     .wheel-wrapper.is-spinning .pointer{
-      animation: pointerTick 260ms ease-in-out infinite alternate;
-      transform-origin: 50% 92%;
+      animation: pointerTick 220ms ease-in-out infinite alternate;
+      transform-origin: 50% 100%;
     }
     @keyframes glowPulse{
-      from {
-        box-shadow:
-          0 28px 70px rgba(0,0,0,0.58),
-          0 0 18px rgba(245,158,11,0.10);
-      }
-      to   {
-        box-shadow:
-          0 28px 70px rgba(0,0,0,0.58),
-          0 0 40px rgba(245,158,11,0.22);
-      }
+      from { box-shadow: 0 34px 86px rgba(0,0,0,0.68), 0 0 26px rgba(245,158,11,0.12); }
+      to   { box-shadow: 0 34px 86px rgba(0,0,0,0.68), 0 0 46px rgba(245,158,11,0.26); }
     }
     @keyframes pointerTick{
-      from { transform: translateX(-50%) rotate(-0.7deg) translateZ(0); }
-      to   { transform: translateX(-50%) rotate(0.7deg) translateZ(0); }
+      from { transform: translateX(-50%) rotate(-1deg); }
+      to   { transform: translateX(-50%) rotate(1deg); }
     }
 
     /* =========================
@@ -614,20 +590,15 @@
     .input-section p { color: rgba(255, 255, 255, 0.72); margin-bottom: 18px; font-size: 0.95rem; line-height: 1.4; }
     label { display: block; margin-bottom: 10px; font-weight: 900; color: rgba(255,255,255,0.9); }
 
-    /* ✅ iOS placeholder “geser turun” fix:
-       - line-height sama dengan height
-       - padding vertical 0
-       - placeholder letter-spacing disamakan
-    */
     input{
       width: 100%;
       height: 54px;
       font-size: 18px;
       text-align: center;
 
-      padding: 0 16px;
+      /* ✅ iOS placeholder/typing vertical alignment fix */
       line-height: 54px;
-      text-indent: 0;
+      padding: 0 16px;
 
       background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.18);
@@ -651,7 +622,6 @@
       letter-spacing: 1.2px;
 
       box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25);
-      -webkit-text-fill-color: rgba(255,255,255,0.94);
     }
     input:focus{
       border-color: rgba(34,197,94,0.52);
@@ -663,13 +633,13 @@
     }
     input::placeholder{
       color: rgba(255,255,255,0.38);
-      letter-spacing: 1.2px; /* ✅ sama */
+      letter-spacing: 0.8px;
       line-height: 54px;
-      opacity: 1;
     }
     input::-webkit-input-placeholder{
+      color: rgba(255,255,255,0.38);
+      letter-spacing: 0.8px;
       line-height: 54px;
-      opacity: 1;
     }
 
     .primary-btn{
@@ -1125,7 +1095,6 @@
       * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
       .winners-table-row.is-new::after { display: none !important; }
       .nav-spinner{ animation: none !important; }
-      .wheel-lights.flash .bulb{ animation: none !important; }
     }
   </style>
 </head>
@@ -1142,38 +1111,30 @@
         <div class="wheel-wrapper" id="wheelWrap">
           <div class="wheel-lights inner" id="wheelLightsInner" aria-hidden="true"></div>
 
+          <!-- ✅ casino pointer -->
           <div class="pointer" aria-hidden="true">
-            <svg viewBox="0 0 64 90" xmlns="http://www.w3.org/2000/svg">
+            <svg viewBox="0 0 64 96" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <linearGradient id="pgold" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stop-color="#FFF1C4"/>
-                  <stop offset="0.45" stop-color="#F59E0B"/>
-                  <stop offset="1" stop-color="#78350F"/>
+                  <stop offset="0" stop-color="#fff3c8"/>
+                  <stop offset="0.45" stop-color="#f7c85a"/>
+                  <stop offset="1" stop-color="#8a4b12"/>
                 </linearGradient>
-
-                <linearGradient id="pedge" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stop-color="rgba(255,255,255,0.55)"/>
-                  <stop offset="1" stop-color="rgba(255,255,255,0)"/>
+                <linearGradient id="psteel" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#f3f4f6"/>
+                  <stop offset="0.55" stop-color="#9ca3af"/>
+                  <stop offset="1" stop-color="#111827"/>
                 </linearGradient>
-
-                <radialGradient id="pcap" cx="35%" cy="30%" r="70%">
-                  <stop offset="0" stop-color="rgba(255,255,255,0.9)"/>
-                  <stop offset="0.5" stop-color="#FFF1C4"/>
-                  <stop offset="1" stop-color="#B45309"/>
-                </radialGradient>
               </defs>
 
-              <path d="M32 86 L10 32 C10 32 14 8 32 8 C50 8 54 32 54 32 L32 86 Z"
-                    fill="url(#pgold)" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
+              <circle cx="32" cy="16" r="10" fill="url(#pgold)" stroke="rgba(255,255,255,0.28)" stroke-width="2"/>
+              <circle cx="30" cy="14" r="3" fill="rgba(255,255,255,0.55)"/>
 
-              <path d="M32 80 L18 34 C18 34 20 16 32 16 C44 16 46 34 46 34 L32 80 Z"
-                    fill="rgba(34,197,94,0.55)"/>
+              <rect x="30.5" y="24" width="3" height="28" rx="1.5" fill="url(#psteel)" opacity="0.95"/>
 
-              <path d="M18 34 C18 34 20 16 32 16"
-                    stroke="url(#pedge)" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
-
-              <circle cx="32" cy="26" r="10.5" fill="url(#pcap)" stroke="rgba(0,0,0,0.18)" stroke-width="2"/>
-              <circle cx="32" cy="26" r="4.2" fill="rgba(6,18,14,0.75)" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"/>
+              <path d="M32 92 L22 56 Q32 50 42 56 L32 92Z"
+                    fill="url(#pgold)" stroke="rgba(0,0,0,0.28)" stroke-width="2" />
+              <path d="M27 58 Q32 55 37 58 Q32 60 27 58Z" fill="rgba(255,255,255,0.22)"/>
             </svg>
           </div>
 
@@ -1302,37 +1263,15 @@
 
   <script>
     /* ======================================================================
-     * FINAL — FULL PATCH (READY REPLACE)
-     * ✅ iOS input placeholder stabil (tidak “geser turun”)
-     * ✅ Dot ring nempel rim emas (lebih presisi)
-     * ✅ Pointer modern casino (metal + glossy)
-     * ✅ Result finish: dot blink cepat sebagai indikator selesai
-     * ✅ Anti glow leak / anti box shadow
-     * ✅ BONUS 10% (DEMO lock) + 1x spin per browser (persist)
-     * ✅ Winners: realtime random + masked; user asli full + klik buka modal
-     * ✅ Time: tanggal + jam + detik + relative
-     * ✅ Download: reward card (PNG)
-     * ✅ Claim: loading overlay smooth + BFCache safe
-     * ✅ Sync: multi-tab storage event + prefix keys + migrasi keys lama
+     * FINAL — CASINO WHEEL PATCH (READY REPLACE)
+     * ✅ Rim gold glossy + bulbs “socket & highlight” like casino
+     * ✅ Bulbs position closer to rim (no terlalu masuk)
+     * ✅ Pointer casino pin modern
+     * ✅ Burst blink cepat setelah spin selesai
+     * ✅ iOS input placeholder/typing tidak geser (line-height + padding fix)
      * ====================================================================== */
 
     const SPIN_DURATION_MS = 6000;
-
-    // === DOT FINISH FLASH ===
-    const DOT_FINISH_FLASH_MS = 1400;
-    let dotFlashTimer = 0;
-
-    function flashBulbs(ms = DOT_FINISH_FLASH_MS) {
-      const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (reduceMotion) return;
-
-      const host = document.getElementById("wheelLightsInner");
-      if (!host) return;
-
-      host.classList.add("flash");
-      clearTimeout(dotFlashTimer);
-      dotFlashTimer = setTimeout(() => host.classList.remove("flash"), Math.max(220, ms));
-    }
 
     // === CLAIM NAV ===
     const CLAIM_URL = "https://newmadetoto2.com/";
@@ -1544,17 +1483,17 @@
     });
 
     // =========================
-    // DOT BULBS RING (SVG) — INNER ONLY (balanced + nempel rim)
+    // DOT BULBS RING (SVG) — GLOSSY CASINO
     // =========================
     function buildBulbRing() {
       buildBulbRingOne("wheelLightsInner", {
-        r: 97.5,         // ✅ makin besar => makin dekat rim
-        count: 28,       // ✅ lebih rapat & casino
-        coreR: 2.25,
-        glowR: 3.85,
-        blur: 1.35,
-        glowOpacity: 0.58,
-        phase: 0         // ✅ align dengan pointer
+        r: 96.0,        // ✅ lebih dekat rim
+        count: 28,      // ✅ lebih casino
+        coreR: 2.7,
+        glowR: 4.6,
+        blur: 1.25,
+        glowOpacity: 0.62,
+        phase: Math.PI / 36
       });
     }
 
@@ -1613,7 +1552,7 @@
 
       const blur = document.createElementNS(NS, "feGaussianBlur");
       blur.setAttribute("in", "SourceGraphic");
-      blur.setAttribute("stdDeviation", String(opt.blur != null ? opt.blur : 1.35));
+      blur.setAttribute("stdDeviation", String(opt.blur != null ? opt.blur : 1.25));
       blur.setAttribute("result", "b");
 
       const merge = document.createElementNS(NS, "feMerge");
@@ -1627,13 +1566,13 @@
       defs.append(grad, glowFilter);
       svg.appendChild(defs);
 
-      const r = opt.r || 97.5;
+      const r = opt.r || 96;
       const count = opt.count || 28;
       const phase = opt.phase || 0;
 
       const gGlow = document.createElementNS(NS, "g");
       gGlow.setAttribute("filter", `url(#${filterId})`);
-      gGlow.setAttribute("opacity", String(opt.glowOpacity != null ? opt.glowOpacity : 0.58));
+      gGlow.setAttribute("opacity", String(opt.glowOpacity != null ? opt.glowOpacity : 0.62));
 
       const gTop = document.createElementNS(NS, "g");
 
@@ -1642,34 +1581,55 @@
         const x = cx + Math.cos(a) * r;
         const y = cy + Math.sin(a) * r;
 
+        // socket (dudukan)
+        const socket = document.createElementNS(NS, "circle");
+        socket.setAttribute("cx", x.toFixed(2));
+        socket.setAttribute("cy", y.toFixed(2));
+        socket.setAttribute("r", "5.6");
+        socket.setAttribute("fill", "rgba(0,0,0,0.34)");
+        socket.setAttribute("stroke", "rgba(255,255,255,0.14)");
+        socket.setAttribute("stroke-width", "0.9");
+        gTop.appendChild(socket);
+
+        // glow (besar) — ikut kedip
         const cGlow = document.createElementNS(NS, "circle");
         cGlow.setAttribute("cx", x.toFixed(2));
         cGlow.setAttribute("cy", y.toFixed(2));
-        cGlow.setAttribute("r", String(opt.glowR || 3.85));
-        cGlow.setAttribute("fill", "#F59E0B");
+        cGlow.setAttribute("r", String(opt.glowR || 4.6));
+        cGlow.setAttribute("fill", "#FBBF24");
         cGlow.setAttribute("class", "bulb bulb-glow");
         cGlow.style.setProperty("--i", i);
         gGlow.appendChild(cGlow);
 
+        // core glossy (utama) — ikut kedip
         const c = document.createElementNS(NS, "circle");
         c.setAttribute("cx", x.toFixed(2));
         c.setAttribute("cy", y.toFixed(2));
-        c.setAttribute("r", String(opt.coreR || 2.25));
+        c.setAttribute("r", String(opt.coreR || 2.7));
         c.setAttribute("fill", `url(#${gradId})`);
         c.setAttribute("class", "bulb bulb-core");
         c.style.setProperty("--i", i);
         gTop.appendChild(c);
+
+        // highlight kecil (kilap)
+        const hi = document.createElementNS(NS, "circle");
+        hi.setAttribute("cx", (x - 1.1).toFixed(2));
+        hi.setAttribute("cy", (y - 1.3).toFixed(2));
+        hi.setAttribute("r", "0.95");
+        hi.setAttribute("fill", "rgba(255,255,255,0.78)");
+        hi.setAttribute("opacity", "0.85");
+        gTop.appendChild(hi);
       }
 
       const ring = document.createElementNS(NS, "circle");
       ring.setAttribute("cx", String(cx));
       ring.setAttribute("cy", String(cy));
-      ring.setAttribute("r", String(r - 10));
+      ring.setAttribute("r", String(r - 8));
       ring.setAttribute("fill", "none");
       ring.setAttribute("stroke", "rgba(255, 232, 176, 0.18)");
       ring.setAttribute("stroke-width", "1.15");
 
-      svg.append(gGlow, gTop, ring);
+      svg.append(defs, gGlow, gTop, ring);
       host.appendChild(svg);
     }
 
@@ -2377,7 +2337,7 @@
     }
 
     // =========================
-    // SPIN (DEMO LOCK RESULT) + strict persist
+    // SPIN (DEMO LOCK RESULT) + strict persist + BULB BURST
     // =========================
     function startSpin() {
       kickAudio();
@@ -2400,6 +2360,10 @@
       if (isSpin) return;
 
       isSpin = true;
+
+      // reset burst state
+      const lights = document.getElementById("wheelLightsInner");
+      if (lights) lights.classList.remove("is-burst");
 
       const spinBtn = document.getElementById("spinBtn");
       spinBtn.disabled = true;
@@ -2447,8 +2411,14 @@
         const winSound = document.getElementById("winSound");
         try { winSound.currentTime = 0; winSound.play().catch(() => {}); } catch (_) {}
 
-        // ✅ finish indicator: dot blink cepat
-        flashBulbs();
+        // ✅ burst blink lampu saat selesai spin
+        const lights2 = document.getElementById("wheelLightsInner");
+        if (lights2) {
+          lights2.classList.remove("is-burst");
+          void lights2.offsetWidth;
+          lights2.classList.add("is-burst");
+          setTimeout(() => lights2.classList.remove("is-burst"), 900);
+        }
 
         hasSpun = true;
         spinAt = Date.now();
