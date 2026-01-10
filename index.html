@@ -343,11 +343,12 @@
   }
 
 /* =========================================================
- * WHEEL — CASINO PREMIUM (CONSISTENT + CLEAN) — FINAL
- * - Token wheel terpisah (mudah tuning)
- * - Layering overlay rapi (SVG / gloss / corefx / hub / pointer)
- * - Anti jank: transform/will-change konsisten
- * - Reduced motion aman
+ * WHEEL — CASINO PREMIUM (CONSISTENT + CLEAN) — FULL UPDATE (NO CROP + STABLE)
+ * ✅ FIX: wheel tidak ketiban / kepotong di mobile (layout + safe-area)
+ * ✅ FIX: wrapper selalu square & bisa shrink (min-height:0 + clamp)
+ * ✅ FIX: SVG/glow tidak ke-clip (overflow visible chain)
+ * ✅ Pointer lebih balance (tidak terlalu tinggi di layar kecil)
+ * ✅ Perf: contain + will-change rapi, animasi aman, reduced-motion aman
  * ======================================================= */
 
 /* =========================
@@ -355,42 +356,71 @@
  * ======================= */
 .wheel-container{
   /* sizing */
-  --wheel-size: min(480px, 92vw, 56svh);
+  --wheel-max: 520px;
+  --wheel-min: 260px;
+
+  /* ukuran wheel responsif: width + height aware (biar ga ketiban card) */
+  --wheel-size: min(var(--wheel-max), 92vw, 50svh);
   --rim-pad: clamp(6px, 1.6vw, 12px);
+
+  /* pointer safe */
+  --pointer-w: clamp(38px, 9.8vw, 58px);
+  --pointer-h: clamp(54px, 12.8vw, 78px);
+  --pointer-top: clamp(-26px, -4.8vw, -16px);
 
   /* perf */
   --gpu: translateZ(0);
   --inner-safe-scale: 1;
 
   /* lighting / shadows */
-  --wheel-shadow: 0 38px 90px rgba(0,0,0,0.62);
-  --gold-glow: 0 0 36px rgba(246,179,61,0.14);
-  --green-glow: 0 0 42px rgba(59,224,123,0.10);
+  --wheel-shadow: 0 34px 88px rgba(0,0,0,0.60);
+  --gold-glow: 0 0 34px rgba(246,179,61,0.12);
+  --green-glow: 0 0 40px rgba(59,224,123,0.09);
 
   /* spin dur (sync ke JS kalau mau) */
   --spin-dur: 6000ms;
 
   /* beams/corefx intensity */
-  --beams-opacity: 0.42;
-  --corefx-opacity: 0.38;
-  --corefx-opacity-spin: 0.52;
+  --beams-opacity: 0.36;
+  --corefx-opacity: 0.34;
+  --corefx-opacity-spin: 0.48;
+
+  /* safe bottom for card / keyboard */
+  --wheel-gap-bottom: clamp(14px, 2.4vh, 22px);
 }
+
 @supports (height: 100dvh){
-  .wheel-container{ --wheel-size: min(480px, 92vw, 56dvh); }
+  .wheel-container{ --wheel-size: min(var(--wheel-max), 92vw, 50dvh); }
+}
+
+/* layar pendek: wheel diperkecil lagi supaya tidak kepotong */
+@media (max-height: 740px){
+  .wheel-container{ --wheel-size: min(var(--wheel-max), 92vw, 46svh); }
+}
+@media (max-height: 680px){
+  .wheel-container{ --wheel-size: min(var(--wheel-max), 92vw, 42svh); }
 }
 
 /* =========================
- * WHEEL AREA — CASINO LIGHTING
+ * WHEEL AREA — CASINO LIGHTING (LAYOUT SAFE)
  * ======================= */
 .wheel-container{
   position: relative;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;          /* ✅ center biar stabil */
   isolation: isolate;
   background: transparent;
-  padding-top: clamp(14px, 3vw, 20px);
-  padding-bottom: clamp(22px, 6vw, 46px);
+
+  /* ✅ agar tidak ketiban konten bawah & aman notch */
+  padding-top: clamp(10px, 2.2vh, 18px);
+  padding-bottom: calc(var(--wheel-gap-bottom) + env(safe-area-inset-bottom, 0px));
+
+  /* ✅ penting untuk flex column parent: bisa shrink */
+  min-height: 0;
+
+  /* perf containment */
+  contain: layout paint style;
 }
 
 /* Spotlight + felt vignette */
@@ -398,7 +428,7 @@
   content:"";
   position:absolute;
   left:50%;
-  top: 40%;
+  top: 46%;
   width: calc(var(--wheel-size) * 1.85);
   height: calc(var(--wheel-size) * 1.85);
   transform: translate(-50%, -50%);
@@ -407,10 +437,10 @@
   z-index: 0;
   background:
     radial-gradient(circle at 50% 40%, rgba(59,224,123,0.10), transparent 60%),
-    radial-gradient(circle at 50% 55%, rgba(243,178,74,0.08), transparent 66%),
+    radial-gradient(circle at 50% 55%, rgba(243,178,74,0.07), transparent 66%),
     radial-gradient(circle at 50% 60%, rgba(0,0,0,0.70), transparent 64%);
   filter: blur(0.6px);
-  opacity: 0.95;
+  opacity: 0.92;
 }
 
 /* Subtle beams */
@@ -418,7 +448,7 @@
   content:"";
   position:absolute;
   left:50%;
-  top: 22%;
+  top: 26%;
   width: calc(var(--wheel-size) * 1.55);
   height: calc(var(--wheel-size) * 1.55);
   transform: translate(-50%, -50%);
@@ -442,26 +472,30 @@
       rgba(255,255,255,0.00) 360deg
     );
   opacity: var(--beams-opacity);
-  filter: blur(1.1px);
+  filter: blur(1.05px);
   transform-origin: 50% 50%;
-  animation: wheelBeams 7.4s ease-in-out infinite;
+  animation: wheelBeams 7.6s ease-in-out infinite;
   will-change: transform, opacity;
 }
+
 @keyframes wheelBeams{
-  0%{ transform: translate(-50%, -50%) rotate(-1deg) scale(0.995); opacity: calc(var(--beams-opacity) - 0.08); }
-  50%{ transform: translate(-50%, -50%) rotate(1.2deg) scale(1.01);  opacity: calc(var(--beams-opacity) + 0.10); }
-  100%{ transform: translate(-50%, -50%) rotate(-1deg) scale(0.995); opacity: calc(var(--beams-opacity) - 0.08); }
+  0%{ transform: translate(-50%, -50%) rotate(-1deg) scale(0.996); opacity: calc(var(--beams-opacity) - 0.07); }
+  50%{ transform: translate(-50%, -50%) rotate(1.2deg)  scale(1.010); opacity: calc(var(--beams-opacity) + 0.09); }
+  100%{ transform: translate(-50%, -50%) rotate(-1deg) scale(0.996); opacity: calc(var(--beams-opacity) - 0.07); }
 }
 
 /* =========================
- * WRAPPER (stable)
+ * WRAPPER (stable + NO CROP)
  * ======================= */
 .wheel-wrapper{
   position: relative;
+
   width: var(--wheel-size);
-  aspect-ratio: 1 / 1;
-  height: auto;
+  height: var(--wheel-size);
   max-width: 100%;
+  max-height: 100%;
+
+  aspect-ratio: 1 / 1;
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
@@ -469,20 +503,27 @@
   isolation: isolate;
   z-index: 2;
 
+  /* ✅ penting: biar glow/pointer tidak kepotong */
+  overflow: visible;
+
   transform: var(--gpu);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+
+  /* perf */
+  contain: layout paint style;
 }
 
 /* =========================
- * POINTER — CASINO CLEAN
+ * POINTER — CASINO CLEAN (BALANCED)
  * ======================= */
 .pointer{
   position: absolute;
-  top: clamp(-34px, -6.4vw, -22px);
+  top: var(--pointer-top);
   left: 50%;
-  width: clamp(40px, 10.5vw, 58px);
-  height: clamp(56px, 13.6vw, 78px);
+
+  width: var(--pointer-w);
+  height: var(--pointer-h);
 
   transform: translateX(-50%) var(--gpu);
   transform-origin: 50% 18%;
@@ -490,20 +531,21 @@
   pointer-events: none;
 
   filter:
-    drop-shadow(0 18px 30px rgba(0,0,0,0.64))
-    drop-shadow(0 0 18px rgba(59,224,123,0.10));
+    drop-shadow(0 16px 28px rgba(0,0,0,0.62))
+    drop-shadow(0 0 16px rgba(59,224,123,0.10));
 
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   will-change: transform, filter;
 }
+
 .pointer svg{ width:100%; height:100%; display:block; }
 
-.pointer.is-spin{ animation: pointerFloat 540ms ease-in-out infinite; }
+.pointer.is-spin{ animation: pointerFloat 560ms ease-in-out infinite; }
 @keyframes pointerFloat{
-  0%  { transform: translateX(-50%) rotate(-1.1deg) translateY(0px) translateZ(0); }
-  50% { transform: translateX(-50%) rotate(1.7deg)  translateY(1px) translateZ(0); }
-  100%{ transform: translateX(-50%) rotate(-1.1deg) translateY(0px) translateZ(0); }
+  0%  { transform: translateX(-50%) rotate(-1.0deg) translateY(0px) translateZ(0); }
+  50% { transform: translateX(-50%) rotate(1.6deg)  translateY(1px) translateZ(0); }
+  100%{ transform: translateX(-50%) rotate(-1.0deg) translateY(0px) translateZ(0); }
 }
 
 .pointer.is-kick{ animation: pointerKick 120ms ease-out 1; }
@@ -514,17 +556,21 @@
 }
 
 /* =========================
- * OUTER FRAME (minimal) — SVG sudah punya rim emas
+ * OUTER FRAME — STABLE (NO CLIP)
  * ======================= */
 .wheel-outer{
   position: relative;
   width: 100%;
   height: 100%;
   border-radius: 50%;
+
   padding: var(--rim-pad);
   z-index: 2;
   isolation: isolate;
-  overflow: visible; /* jangan clip shadow */
+
+  /* ✅ jangan clip (glow + pointer safe) */
+  overflow: visible;
+
   background: transparent;
 
   box-shadow: var(--wheel-shadow), var(--gold-glow), var(--green-glow);
@@ -548,11 +594,11 @@
     inset 0 0 0 1px rgba(255,255,255,0.08),
     inset 0 10px 22px rgba(255,255,255,0.04),
     inset 0 -16px 24px rgba(0,0,0,0.26);
-  opacity: 0.95;
+  opacity: 0.92;
 }
 
 /* =========================
- * WHEEL INNER — SVG HOST (no conic bg)
+ * WHEEL INNER — SVG HOST (NO CROP CHAIN)
  * ======================= */
 .wheel-inner{
   position: relative;
@@ -560,7 +606,10 @@
   height: 100%;
   border-radius: 50%;
   isolation: isolate;
-  overflow: hidden;
+
+  /* ✅ ini yang sering bikin “kepotong”: HIDDEN
+     wheel SVG kamu punya stroke/glow tebal -> harus visible */
+  overflow: visible;
 
   background: transparent;
   border: 1px solid rgba(255,255,255,0.10);
@@ -585,7 +634,7 @@
   display: block;
   pointer-events: none;
 
-  /* bantu filter/glow agar gak “kepotong” dalam SVG layer */
+  /* ✅ pastikan SVG/filter tidak ke-clip di element host */
   overflow: visible;
 }
 
@@ -597,16 +646,18 @@
   border-radius:50%;
   pointer-events:none;
   z-index: 10;
+
   background:
     radial-gradient(circle at 36% 22%, rgba(255,255,255,0.10), transparent 52%),
-    radial-gradient(circle at 50% 58%, rgba(0,0,0,0.18), transparent 64%),
+    radial-gradient(circle at 50% 60%, rgba(0,0,0,0.18), transparent 64%),
     radial-gradient(circle at 50% 50%, rgba(0,0,0,0.12), transparent 74%);
-  opacity: 0.55;
+
+  opacity: 0.52;
   transform: scale(var(--inner-safe-scale)) translateZ(0);
   transform-origin: 50% 50%;
 }
 
-/* CORE FX — elegan, gak “nabrak” SVG */
+/* CORE FX — elegan */
 .wheel-corefx{
   position:absolute;
   inset:0;
@@ -648,17 +699,19 @@
     rgba(0,0,0,0.00) 100%
   );
 
-  animation: coreFXRotate 10.5s linear infinite;
+  animation: coreFXRotate 10.8s linear infinite;
 }
+
 @keyframes coreFXRotate{
   from{ transform: translateZ(0) scale(var(--inner-safe-scale)) rotate(0deg); }
   to  { transform: translateZ(0) scale(var(--inner-safe-scale)) rotate(360deg); }
 }
 
-/* Spin animation (legacy) — hanya kalau kamu memang rotate .wheel-inner */
+/* Spin animation (legacy) — kalau kamu rotate .wheel-inner */
 .wheel-inner.spinning{
   animation: spin-wheel var(--spin-dur) cubic-bezier(0.15, 0, 0.15, 1) forwards;
 }
+
 @keyframes spin-wheel{
   from { transform: rotate(var(--from-rotation, 0deg)) translateZ(0); }
   to   { transform: rotate(var(--rotation)) translateZ(0); }
@@ -674,7 +727,7 @@
 .prize-text{ display:none !important; }
 
 /* =========================
- * CENTER HUB — GOLD COIN / FACETED (REF MATCH)
+ * CENTER HUB — GOLD COIN / FACETED (RESPONSIVE)
  * ======================= */
 .wheel-center{
   position:absolute;
@@ -682,8 +735,9 @@
   left:50%;
   transform: translate(-50%, -50%) translateZ(0);
 
-  width: clamp(56px, 12.8vw, 78px);
-  height: clamp(56px, 12.8vw, 78px);
+  /* ✅ lebih adaptif (mobile kecil tidak bulky, desktop tetap mantap) */
+  width: clamp(54px, 12.2vw, 80px);
+  height: clamp(54px, 12.2vw, 80px);
 
   border-radius:50%;
   overflow:hidden;
@@ -704,9 +758,9 @@
   border: 1px solid rgba(255, 232, 176, 0.22);
 
   box-shadow:
-    0 18px 44px rgba(0,0,0,0.58),
-    0 0 18px rgba(246,179,61,0.16),
-    0 0 22px rgba(59,224,123,0.06),
+    0 18px 44px rgba(0,0,0,0.56),
+    0 0 18px rgba(246,179,61,0.15),
+    0 0 22px rgba(59,224,123,0.05),
     inset 0 0 0 1px rgba(0,0,0,0.14),
     inset 0 10px 16px rgba(255,255,255,0.05),
     inset 0 -16px 18px rgba(0,0,0,0.20);
@@ -736,7 +790,7 @@
       rgba(255,255,255,0.30) 100%
     );
 
-  opacity: 0.55;
+  opacity: 0.52;
   filter: blur(0.25px);
   mix-blend-mode: screen;
 }
@@ -792,7 +846,7 @@
   pointer-events:none;
   z-index: 4;
 
-  opacity: 0.38;
+  opacity: 0.36;
   mix-blend-mode: screen;
   filter: blur(0.35px);
   will-change: transform;
@@ -809,8 +863,9 @@
       rgba(255,255,255,0.00) 360deg
     );
 
-  animation: hubSheen 8.8s linear infinite;
+  animation: hubSheen 9.0s linear infinite;
 }
+
 @keyframes hubSheen{
   to { transform: rotate(360deg) translateZ(0); }
 }
@@ -822,6 +877,7 @@
 .wheel-inner.spinning .wheel-center .hub-sheen{
   animation-duration: 1.25s;
 }
+
 @keyframes hubPulse{
   0%{
     filter: drop-shadow(0 0 8px rgba(246,179,61,0.10));
@@ -829,7 +885,7 @@
   }
   50%{
     filter: drop-shadow(0 0 14px rgba(246,179,61,0.14));
-    transform: translate(-50%,-50%) scale(1.02) translateZ(0);
+    transform: translate(-50%,-50%) scale(1.018) translateZ(0);
   }
   100%{
     filter: drop-shadow(0 0 8px rgba(246,179,61,0.10));
@@ -847,6 +903,17 @@
   .wheel-inner.spinning,
   .wheel-inner.spinning .wheel-center{
     animation: none !important;
+  }
+}
+
+/* =========================
+ * Extra: iOS Safari “jank” guard
+ * ======================= */
+@supports (-webkit-touch-callout: none){
+  .wheel-wrapper,
+  .wheel-outer,
+  .wheel-inner{
+    -webkit-transform: translateZ(0);
   }
 }
 
