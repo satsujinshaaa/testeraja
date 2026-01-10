@@ -2435,23 +2435,24 @@ function saveRotation(deg) {
   }
 
 /* =========================================================
- * 9) WHEEL SVG + LABELS — CASINO 1:1 (PREMIUM HD)
- * - Full SVG wheel: multi gold rim, bevel rings, glossy highlight
- * - Segments: clean green/ivory + vignette depth (3D)
- * - Labels: NO textLength stretch, auto-fit by measuring width
- * - Emboss text: stroke + shadow filter (crisp)
- * - Smooth resize: rAF debounced + cleanup
+ * 9) WHEEL SVG + LABELS — CASINO 1:1 (PREMIUM HD) — FIXED LAYOUT + NO CROP
+ * - Fix utama: wheel tidak “ketiban” section bawah (via CSS), dan JS resize lebih stabil
+ * - iOS Safari: VisualViewport aware (address bar naik-turun tidak bikin layout glitch)
+ * - Anti rebuild spam: hanya redraw jika ukuran benar-benar berubah
+ * - SVG anti-clip: root overflow visible + stroke besar diskalakan normal (no non-scaling on thick rings)
  * ======================================================= */
 
 function setWheelBackground() {
   const wheel = document.getElementById("wheel");
   if (!wheel) return;
-  // pastikan tidak ada conic gradient lama
   wheel.style.setProperty("--wheel-bg", "transparent");
   wheel.style.background = "transparent";
 }
 
-function drawWheelPrizes() {
+/* =========================
+ * drawWheelPrizes (STABLE)
+ * ======================= */
+function drawWheelPrizes(force = false) {
   const wheel = document.getElementById("wheel");
   if (!wheel) return;
 
@@ -2461,64 +2462,128 @@ function drawWheelPrizes() {
     if (cs.position === "static") wheel.style.position = "relative";
   } catch (_) {}
 
-  // bersihin legacy
-  wheel.querySelectorAll(".prize-text").forEach((el) => el.remove());
-  const old = wheel.querySelector("svg.wheel-svg");
-  if (old) old.remove();
-
   setWheelBackground();
 
   const prizes = (Array.isArray(PRIZES) && PRIZES.length) ? PRIZES : ["BONUS 10%"];
-  const size = Math.min(wheel.clientWidth || 0, wheel.clientHeight || 0);
+
+  // ukur real size (lebih akurat dari clientWidth saat iOS viewport berubah)
+  const r = wheel.getBoundingClientRect();
+  const w = Math.max(0, Math.floor(r.width));
+  const h = Math.max(0, Math.floor(r.height));
+  const size = Math.min(w, h);
   if (!size) return;
 
-  const svg = buildWheelSVG_CASINO(prizes);
+  // state cache
+  const ST = window.__MT2_WHEEL_CASINO || (window.__MT2_WHEEL_CASINO = {});
+  const key = `${w}x${h}|n=${prizes.length}`;
 
-  // IMPORTANT: let corefx/center overlay remain above if you have it
+  if (!force && ST._lastKey === key) return;
+  ST._lastKey = key;
+
+  // bersihin legacy
+  wheel.querySelectorAll(".prize-text").forEach((el) => el.remove());
+  const old = wheel.querySelector("svg.wheel-svg");
+  if (old) {
+    try { old.__wheel && old.__wheel.destroy && old.__wheel.destroy(); } catch(_){}
+    old.remove();
+  }
+
+  // Build SVG
+  const svg = buildWheelSVG_CASINO(prizes, {
+    // bisa kamu tuning kalau perlu:
+    innerRadius: 136,
+    uprightLabels: true,
+    animateBulbs: true
+  });
+
+  // IMPORTANT: keep overlays above if you have (corefx, gloss, html hub, pointer, etc.)
   svg.style.cssText =
     "position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;" +
-    "transform:translateZ(0);will-change:transform;z-index:0;";
+    "transform:translateZ(0);will-change:transform;z-index:0;overflow:visible;";
 
-  // taruh paling bawah di dalam wheel
   wheel.insertBefore(svg, wheel.firstChild);
 }
 
+/* =========================
+ * initWheelAutoResize (iOS SAFE)
+ * ======================= */
 function initWheelAutoResize() {
   const wrap = document.getElementById("wheelWrap");
-  if (!wrap) return;
+  const wheel = document.getElementById("wheel");
+  if (!wrap || !wheel) return;
 
   const ST = window.__MT2_WHEEL_CASINO || (window.__MT2_WHEEL_CASINO = {});
+  ST._off = ST._off || [];
+
+  // cleanup old
   if (ST.ro) { try { ST.ro.disconnect(); } catch (_) {} ST.ro = null; }
   if (ST.raf) { try { cancelAnimationFrame(ST.raf); } catch (_) {} ST.raf = 0; }
+  if (ST._off && ST._off.length) {
+    for (const off of ST._off) { try { off(); } catch(_){ } }
+    ST._off.length = 0;
+  }
 
-  const schedule = () => {
+  const schedule = (force = false) => {
     if (ST.raf) return;
     ST.raf = requestAnimationFrame(() => {
       ST.raf = 0;
-      drawWheelPrizes();
+      drawWheelPrizes(force);
     });
   };
 
+  // ResizeObserver: observe wrap + wheel (kadang 1 doang miss di iOS)
   if (window.ResizeObserver) {
-    ST.ro = new ResizeObserver(() => schedule());
-    ST.ro.observe(wrap);
-  } else {
-    window.addEventListener("resize", schedule, { passive: true });
+    ST.ro = new ResizeObserver(() => schedule(false));
+    try { ST.ro.observe(wrap); } catch(_){}
+    try { ST.ro.observe(wheel); } catch(_){}
   }
 
-  schedule();
+  // iOS Safari address bar / visual viewport changes
+  if (window.visualViewport) {
+    const vv = window.visualViewport;
+
+    let vvT = 0;
+    const onVV = () => {
+      // throttle micro-jitter
+      if (vvT) return;
+      vvT = requestAnimationFrame(() => {
+        vvT = 0;
+        schedule(false);
+      });
+    };
+
+    vv.addEventListener("resize", onVV, { passive: true });
+    vv.addEventListener("scroll", onVV, { passive: true });
+
+    ST._off.push(() => vv.removeEventListener("resize", onVV));
+    ST._off.push(() => vv.removeEventListener("scroll", onVV));
+  }
+
+  // window resize fallback
+  const onWin = () => schedule(false);
+  window.addEventListener("resize", onWin, { passive: true });
+  window.addEventListener("orientationchange", onWin, { passive: true });
+
+  ST._off.push(() => window.removeEventListener("resize", onWin));
+  ST._off.push(() => window.removeEventListener("orientationchange", onWin));
+
+  // first draw
+  schedule(true);
+
+  // expose destroy
+  ST.destroy = () => {
+    if (ST.ro) { try { ST.ro.disconnect(); } catch(_){} ST.ro = null; }
+    if (ST.raf) { try { cancelAnimationFrame(ST.raf); } catch(_){} ST.raf = 0; }
+    if (ST._off && ST._off.length) {
+      for (const off of ST._off) { try { off(); } catch(_){ } }
+      ST._off.length = 0;
+    }
+  };
 }
 
 /* =========================================================
- * SVG BUILDER — CASINO PREMIUM 1:1 (HD + REAL LIGHTING) — FULL REPLACE (v6)
- * ✅ REAL: static lighting (gloss/spec) TIDAK ikut muter → lebih “photographic”
- * ✅ NO: outer drop shadow (anti “bayangan transparan luar”)
- * ✅ MAX: bulbs glow lebih “incandescent casino” (socket + bloom bertingkat, anti mainan)
- * ✅ NEW: svg.__wheel.flashBulbs(ms) (pulse elegan)
- * ✅ NEW: svg.__wheel.setBulbMode(idle|spin|win) (sinkron UX)
- * ✅ LABEL: default UPRIGHT (tampilan lurus ala casino), bisa override di setRotation()
- * ✅ BONUS 10% seragam mengikuti style label lain
- * ✅ Seam-safe wedges, UID-safe defs, n<2 aman
+ * SVG BUILDER — CASINO PREMIUM 1:1 (HD + REAL LIGHTING) — FULL REPLACE (v6.1)
+ * FIX: anti-clip pada stroke tebal (hapus non-scaling di ring tebal + svg overflow visible)
  * ======================================================= */
 
 function buildWheelSVG_CASINO(prizes, opt = {}) {
@@ -2532,10 +2597,13 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   const VB = 1000;
   const cx = 500, cy = 500;
 
-  // ✅ proportions (modern casino)
-  const rOuter = 492;
+  // ✅ proportions
   const rimW1  = 24;
   const rimW2  = 6;
+
+  // anti-clip padding (buat stroke + glow)
+  const SAFE_PAD = 26;               // ruang aman di tepi viewBox
+  const rOuter = 500 - SAFE_PAD;     // dulu 492, sekarang aman untuk semua kondisi
 
   const rSegOut = rOuter - (rimW1 + 14);
   const rSegIn = clampNumber(Number(opt.innerRadius ?? 136), 110, 178);
@@ -2555,7 +2623,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   // labels default (casino style: upright)
   const defaultUprightLabels = (opt.uprightLabels === false) ? false : true;
 
-  // ---- uid (anti bentrok defs) ----
+  // ---- uid ----
   const uid = _wheelUid();
   const ID = (x) => `${uid}_${x}`;
 
@@ -2570,26 +2638,25 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
     viewBox: `0 0 ${VB} ${VB}`,
     preserveAspectRatio: "xMidYMid meet",
     "aria-hidden": "true",
+    overflow: "visible",
     "shape-rendering": "geometricPrecision",
     "text-rendering": "geometricPrecision"
   });
 
   /* =========================
-   * DEFS — REAL LIGHTING + ANTI “MAINAN”
+   * DEFS
    * ======================= */
   const defs = E("defs");
   defs.innerHTML = `
     <style>
-      .wheel-svg { shape-rendering: geometricPrecision; text-rendering: geometricPrecision; }
+      .wheel-svg { shape-rendering: geometricPrecision; text-rendering: geometricPrecision; overflow: visible; }
 
-      /* ---------- BULB MOTION (subtle, real) ---------- */
       .wheel-bulbs{
         --chaseDur: ${Math.max(0.01, chaseDurMs / 1000).toFixed(3)}s;
         --chaseK: ${chaseStrength.toFixed(3)};
         --winDur: 0.92s;
       }
 
-      /* shimmer runner (lebih kecil, anti kartun) */
       .wheel-bulbs .bulb-hi{
         opacity: calc(0.10 * var(--chaseK));
         transform-box: fill-box;
@@ -2606,7 +2673,6 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
         100% { opacity: calc(0.10 * var(--chaseK)); transform: scale(0.998); }
       }
 
-      /* ---------- WIN FLASH (pulse elegan) ---------- */
       .wheel-bulbs.win-flash .bulb-hi{ opacity: 0; animation: none !important; }
 
       .wheel-bulbs.win-flash .bulb-halo,
@@ -2652,7 +2718,6 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       }
     </style>
 
-    <!-- segments -->
     <linearGradient id="${ID("segGreen")}" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#0c5a43"/>
       <stop offset="1" stop-color="#063b2b"/>
@@ -2663,7 +2728,6 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       <stop offset="1" stop-color="#e9eef3"/>
     </linearGradient>
 
-    <!-- gold rim (metal “tight”) -->
     <linearGradient id="${ID("rimGold")}" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0"    stop-color="#fff8e3"/>
       <stop offset="0.18" stop-color="#f8df9f"/>
@@ -2672,14 +2736,12 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       <stop offset="1"    stop-color="#7a3f13"/>
     </linearGradient>
 
-    <!-- rim specular highlight (STATIC layer) -->
     <radialGradient id="${ID("rimSpec")}" cx="34%" cy="18%" r="70%">
       <stop offset="0"    stop-color="#ffffff" stop-opacity="0.34"/>
       <stop offset="0.34" stop-color="#ffffff" stop-opacity="0.12"/>
       <stop offset="1"    stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
 
-    <!-- segment depth + gloss (STATIC layer) -->
     <radialGradient id="${ID("segVignette")}" cx="50%" cy="50%" r="74%">
       <stop offset="0"    stop-color="#000000" stop-opacity="0"/>
       <stop offset="0.78" stop-color="#000000" stop-opacity="0.10"/>
@@ -2692,21 +2754,18 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       <stop offset="1"    stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
 
-    <!-- donut mask (slices only) -->
     <mask id="${ID("maskDonut")}">
       <rect x="0" y="0" width="${VB}" height="${VB}" fill="black"/>
       <circle cx="${cx}" cy="${cy}" r="${rSegOut}" fill="white"/>
       <circle cx="${cx}" cy="${cy}" r="${rSegIn}" fill="black"/>
     </mask>
 
-    <!-- rim band mask (ONLY rim area; so spec doesn't touch labels) -->
     <mask id="${ID("maskRimBand")}">
       <rect x="0" y="0" width="${VB}" height="${VB}" fill="black"/>
-      <circle cx="${cx}" cy="${cy}" r="${rOuter + 2}" fill="white"/>
-      <circle cx="${cx}" cy="${cy}" r="${Math.max(1, rOuter - rimW1 - 10)}" fill="black"/>
+      <circle cx="${cx}" cy="${cy}" r="${rOuter + 6}" fill="white"/>
+      <circle cx="${cx}" cy="${cy}" r="${Math.max(1, rOuter - rimW1 - 12)}" fill="black"/>
     </mask>
 
-    <!-- INNER HUB WELL -->
     <radialGradient id="${ID("hubWell")}" cx="42%" cy="34%" r="78%">
       <stop offset="0"   stop-color="#145b45" stop-opacity="0.98"/>
       <stop offset="0.55" stop-color="#083626" stop-opacity="0.98"/>
@@ -2719,7 +2778,6 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       <stop offset="1"   stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
 
-    <!-- CENTER GOLD CAP -->
     <radialGradient id="${ID("hubGold")}" cx="34%" cy="28%" r="76%">
       <stop offset="0"   stop-color="#fff7de"/>
       <stop offset="0.22" stop-color="#f7d990"/>
@@ -2734,7 +2792,6 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       <stop offset="1"   stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
 
-    <!-- bulb fill (lens warm) -->
     <radialGradient id="${ID("bulbFill")}" cx="34%" cy="24%" r="76%">
       <stop offset="0"    stop-color="#ffffff" stop-opacity="1"/>
       <stop offset="0.22" stop-color="#fff7e6" stop-opacity="1"/>
@@ -2742,13 +2799,11 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       <stop offset="1"    stop-color="#a94f16" stop-opacity="1"/>
     </radialGradient>
 
-    <!-- text emboss (tighter, premium) -->
     <filter id="${ID("txtEmboss")}" x="-24%" y="-24%" width="148%" height="148%" color-interpolation-filters="sRGB">
       <feDropShadow dx="0" dy="3.2" stdDeviation="2.6" flood-color="#000000" flood-opacity="0.54"/>
       <feDropShadow dx="0" dy="0.9" stdDeviation="0.6" flood-color="#ffffff" flood-opacity="0.09"/>
     </filter>
 
-    <!-- ✅ BULB BLOOM (bertahap, anti “kabut”) -->
     <filter id="${ID("bulbGlow")}" x="-70%" y="-70%" width="240%" height="240%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="6.2" result="b0"/>
       <feColorMatrix in="b0" type="matrix" values="
@@ -2776,7 +2831,6 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       </feMerge>
     </filter>
 
-    <!-- ✅ BULB SPARK (crisp highlight) -->
     <filter id="${ID("bulbSpark")}" x="-80%" y="-80%" width="260%" height="260%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="1.9" result="s0"/>
       <feColorMatrix in="s0" type="matrix" values="
@@ -2790,7 +2844,6 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       </feMerge>
     </filter>
 
-    <!-- hub shadow (halus) -->
     <filter id="${ID("hubShadow")}" x="-26%" y="-26%" width="152%" height="152%" color-interpolation-filters="sRGB">
       <feDropShadow dx="0" dy="5.6" stdDeviation="5.2" flood-color="#000000" flood-opacity="0.22"/>
     </filter>
@@ -2798,8 +2851,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   svg.appendChild(defs);
 
   /* =========================
-   * LAYERS (order = realism)
-   * base rotate → static seg light → labels rotate → static rim spec → bulbs rotate → hub rotate
+   * LAYERS
    * ======================= */
   const gRotateBase   = E("g", { class: "wheel-rot wheel-rot-base" });
   const gStaticSeg    = E("g", { class: "wheel-static wheel-static-seg" });
@@ -2842,7 +2894,6 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       }
     },
 
-    /* ✅ panggil ini setelah result keluar */
     flashBulbs(ms = 900) {
       const dur = clampNumber(Number(ms || 0), 220, 2200);
       const el = gBulbWrap;
@@ -2862,7 +2913,6 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       });
     },
 
-    /* ✅ mode lampu: idle/spin/win (biar sinkron UX) */
     setBulbMode(mode = "idle") {
       const el = gBulbWrap;
       if (!el) return;
@@ -2885,7 +2935,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   };
 
   /* =========================
-   * SEGMENTS (ROTATING BASE)
+   * SEGMENTS
    * ======================= */
   const gSlices = E("g", { class: "wheel-slices" });
   gRotateBase.appendChild(gSlices);
@@ -2918,7 +2968,6 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       fill
     }));
 
-    // divider (lebih tegas, beda warna utk ivory)
     if (n > 1) {
       const p1 = polar(cx, cy, rSegIn + 10, a0);
       const p2 = polar(cx, cy, rSegOut - 10, a0);
@@ -2934,7 +2983,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
     }
 
     /* =========================
-     * LABELS (ROTATE, default UPRIGHT)
+     * LABELS (UPRIGHT)
      * ======================= */
     const label = safePrizes[i];
     const tp = polar(cx, cy, rText, mid);
@@ -2968,7 +3017,6 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       "paint-order": "stroke"
     });
 
-    // ✅ BONUS 10% SERAGAM (ikut aturan slice)
     if (isIvory) {
       text.setAttribute("fill", "#063b2b");
       text.setAttribute("stroke", "#ffffff");
@@ -2988,29 +3036,25 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   }
 
   /* =========================
-   * BEVEL / RIM METAL (ROTATING BASE)
+   * RIMS / BEVEL (thick strokes MUST scale -> no vector-effect)
    * ======================= */
 
-  // bevel edge outer (lebih subtle)
   gRotateBase.appendChild(E("circle", {
     cx, cy,
     r: (rSegOut + 3),
     fill: "none",
     stroke: "#ffffff",
     "stroke-opacity": "0.11",
-    "stroke-width": "6",
-    "vector-effect": "non-scaling-stroke"
+    "stroke-width": "6"
   }));
 
-  // inner rim depth ring (NO outer drop shadow)
   gRotateBase.appendChild(E("circle", {
     cx, cy,
     r: (rOuter - rimW1 + 4),
     fill: "none",
     stroke: "#000000",
     "stroke-opacity": "0.20",
-    "stroke-width": "10",
-    "vector-effect": "non-scaling-stroke"
+    "stroke-width": "10"
   }));
   gRotateBase.appendChild(E("circle", {
     cx, cy,
@@ -3018,49 +3062,38 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
     fill: "none",
     stroke: "#ffffff",
     "stroke-opacity": "0.08",
-    "stroke-width": "3",
-    "vector-effect": "non-scaling-stroke"
+    "stroke-width": "3"
   }));
 
-  // thin outer edge highlight
   gRotateBase.appendChild(E("circle", {
     cx, cy,
     r: (rOuter - 1),
     fill: "none",
     stroke: "#ffffff",
     "stroke-opacity": "0.14",
-    "stroke-width": "2",
-    "vector-effect": "non-scaling-stroke"
+    "stroke-width": "2"
   }));
 
-  // gold rim (metal base rotates)
   gRotateBase.appendChild(E("circle", {
     cx, cy,
     r: (rOuter - rimW1 / 2),
     fill: "none",
     stroke: `url(#${ID("rimGold")})`,
-    "stroke-width": String(rimW1),
-    "vector-effect": "non-scaling-stroke"
+    "stroke-width": String(rimW1)
   }));
 
-  // accent ring (thin)
   gRotateBase.appendChild(E("circle", {
     cx, cy,
     r: (rSegOut + 18),
     fill: "none",
     stroke: "#f6b33d",
     "stroke-opacity": "0.54",
-    "stroke-width": String(rimW2),
-    "vector-effect": "non-scaling-stroke"
+    "stroke-width": String(rimW2)
   }));
 
   /* =========================
-   * STATIC LIGHTING (REALISM)
-   * - gloss & vignette: stays fixed (photographic)
-   * - rim spec: stays fixed (reflection)
+   * STATIC LIGHTING
    * ======================= */
-
-  // donut depth overlays (STATIC, only donut mask → tidak ganggu label)
   gStaticSeg.appendChild(E("rect", {
     x: 0, y: 0, width: VB, height: VB,
     fill: `url(#${ID("segVignette")})`,
@@ -3072,19 +3105,17 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
     mask: `url(#${ID("maskDonut")})`
   }));
 
-  // rim spec highlight (STATIC, masked rim band, bulbs di atas)
   gStaticRim.appendChild(E("circle", {
     cx, cy,
     r: (rOuter - rimW1 / 2),
     fill: "none",
     stroke: `url(#${ID("rimSpec")})`,
     "stroke-width": String(rimW1 + 8),
-    mask: `url(#${ID("maskRimBand")})`,
-    "vector-effect": "non-scaling-stroke"
+    mask: `url(#${ID("maskRimBand")})`
   }));
 
   /* =========================
-   * RIM LIGHTS / BULBS (ROTATING, above static spec)
+   * BULBS
    * ======================= */
   const gBulbWrap = E("g", { class: "wheel-bulbs", opacity: "1" });
 
@@ -3101,7 +3132,6 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
     const a = (360 / bulbCount) * i;
     const p = polar(cx, cy, bulbOrbit, a);
 
-    // ✅ socket ring (trik casino: bikin bulb “terpasang”, anti mainan)
     gBulbBase.appendChild(E("circle", {
       cx: p.x.toFixed(2),
       cy: p.y.toFixed(2),
@@ -3120,7 +3150,6 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       "vector-effect": "non-scaling-stroke"
     }));
 
-    // halo (ditipiskan, lebih “incandescent”)
     gBulbBase.appendChild(E("circle", {
       class: "bulb-halo2",
       cx: p.x.toFixed(2),
@@ -3139,7 +3168,6 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       "fill-opacity": "0.46"
     }));
 
-    // base bulb lens
     gBulbBase.appendChild(E("circle", {
       class: "bulb-base",
       cx: p.x.toFixed(2),
@@ -3152,7 +3180,6 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       "vector-effect": "non-scaling-stroke"
     }));
 
-    // tiny spec dot
     gBulbBase.appendChild(E("circle", {
       cx: (p.x - bulbR * 0.22).toFixed(2),
       cy: (p.y - bulbR * 0.28).toFixed(2),
@@ -3161,7 +3188,6 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       "fill-opacity": "0.74"
     }));
 
-    // shimmer runner
     if (animateBulbs) {
       const hi = E("circle", {
         class: "bulb-hi",
@@ -3181,7 +3207,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   gRotateBulbs.appendChild(gBulbWrap);
 
   /* =========================
-   * OPTIONAL: SVG HUB (ROTATING TOP)
+   * OPTIONAL: SVG HUB
    * ======================= */
   if (includeHub) {
     const gHub = E("g", { class: "wheel-hub" });
@@ -3215,9 +3241,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
     gRotateTop.appendChild(gHub);
   }
 
-  // apply initial rotation (ensures upright default is active once user calls setRotation)
   svg.__wheel.setRotation(0, { uprightLabels: defaultUprightLabels });
-
   return svg;
 }
 
