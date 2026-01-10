@@ -343,12 +343,12 @@
   }
 
 /* =========================================================
- * WHEEL — CASINO PREMIUM (CONSISTENT + CLEAN) — FULL UPDATE (NO CROP + STABLE)
- * ✅ FIX: wheel tidak ketiban / kepotong di mobile (layout + safe-area)
- * ✅ FIX: wrapper selalu square & bisa shrink (min-height:0 + clamp)
- * ✅ FIX: SVG/glow tidak ke-clip (overflow visible chain)
- * ✅ Pointer lebih balance (tidak terlalu tinggi di layar kecil)
- * ✅ Perf: contain + will-change rapi, animasi aman, reduced-motion aman
+ * WHEEL — CASINO PREMIUM (CONSISTENT + CLEAN) — FINAL (RESPONSIVE HUB + POINTER BALANCE)
+ * - Token wheel terpisah (mudah tuning)
+ * - Hub responsif (mobile/desktop aman, proporsional)
+ * - Pointer balance: posisi tidak terlalu tinggi di semua ukuran
+ * - Anti jank: transform/will-change konsisten
+ * - Reduced motion aman
  * ======================================================= */
 
 /* =========================
@@ -356,146 +356,156 @@
  * ======================= */
 .wheel-container{
   /* sizing */
-  --wheel-max: 520px;
-  --wheel-min: 260px;
-
-  /* ukuran wheel responsif: width + height aware (biar ga ketiban card) */
-  --wheel-size: min(var(--wheel-max), 92vw, 50svh);
+  --wheel-size: min(480px, 92vw, 56svh);
   --rim-pad: clamp(6px, 1.6vw, 12px);
-
-  /* pointer safe */
-  --pointer-w: clamp(38px, 9.8vw, 58px);
-  --pointer-h: clamp(54px, 12.8vw, 78px);
-  --pointer-top: clamp(-26px, -4.8vw, -16px);
 
   /* perf */
   --gpu: translateZ(0);
   --inner-safe-scale: 1;
 
-  /* lighting / shadows */
-  --wheel-shadow: 0 34px 88px rgba(0,0,0,0.60);
+  /* lighting / shadows (lebih “real” & tidak toy-ish) */
+  --wheel-shadow: 0 32px 86px rgba(0,0,0,0.68);
   --gold-glow: 0 0 34px rgba(246,179,61,0.12);
-  --green-glow: 0 0 40px rgba(59,224,123,0.09);
+  --green-glow: 0 0 40px rgba(59,224,123,0.08);
 
   /* spin dur (sync ke JS kalau mau) */
   --spin-dur: 6000ms;
 
   /* beams/corefx intensity */
-  --beams-opacity: 0.36;
+  --beams-opacity: 0.38;
   --corefx-opacity: 0.34;
-  --corefx-opacity-spin: 0.48;
+  --corefx-opacity-spin: 0.50;
 
-  /* safe bottom for card / keyboard */
-  --wheel-gap-bottom: clamp(14px, 2.4vh, 22px);
+  /* =========================
+   * HUB & POINTER RESPONSIVE TUNING
+   * ======================= */
+  /* Hub responsif: lebih adapt di mobile, tetap “berat” di desktop */
+  --hub-size: clamp(74px, calc(var(--wheel-size) * 0.215), 138px);
+
+  /* Pointer size ikut wheel biar selalu proporsional */
+  --pointer-w: clamp(36px, calc(var(--wheel-size) * 0.115), 56px);
+  --pointer-h: clamp(50px, calc(var(--wheel-size) * 0.155), 78px);
+
+  /* Pointer TOP: dibatasi supaya tidak terlalu tinggi */
+  /* (nilai negatif lebih besar = makin tinggi; kita clamp biar aman) */
+  --pointer-top: clamp(-26px, calc(var(--wheel-size) * -0.060), -16px);
+
+  /* area “bolong” overlay untuk center (supaya gloss/corefx tidak bikin tengah membesar) */
+  --hub-cut: 0.245;      /* 24.5% radius */
+  --hub-feather: 0.060;  /* feather mask */
 }
 
 @supports (height: 100dvh){
-  .wheel-container{ --wheel-size: min(var(--wheel-max), 92vw, 50dvh); }
+  .wheel-container{ --wheel-size: min(480px, 92vw, 56dvh); }
 }
 
-/* layar pendek: wheel diperkecil lagi supaya tidak kepotong */
-@media (max-height: 740px){
-  .wheel-container{ --wheel-size: min(var(--wheel-max), 92vw, 46svh); }
+/* Optional: tuning halus via container query (Chrome modern aman) */
+.wheel-container{ container-type: inline-size; }
+@container (min-width: 420px){
+  .wheel-container{
+    --hub-size: clamp(78px, calc(var(--wheel-size) * 0.225), 142px);
+    --pointer-top: clamp(-24px, calc(var(--wheel-size) * -0.056), -14px);
+    --hub-cut: 0.252;
+  }
 }
-@media (max-height: 680px){
-  .wheel-container{ --wheel-size: min(var(--wheel-max), 92vw, 42svh); }
+@container (max-width: 360px){
+  .wheel-container{
+    --hub-size: clamp(70px, calc(var(--wheel-size) * 0.205), 120px);
+    --pointer-top: clamp(-22px, calc(var(--wheel-size) * -0.052), -12px);
+    --hub-cut: 0.238;
+  }
 }
 
 /* =========================
- * WHEEL AREA — CASINO LIGHTING (LAYOUT SAFE)
+ * WHEEL AREA — CASINO LIGHTING
  * ======================= */
 .wheel-container{
   position: relative;
   display: flex;
   justify-content: center;
-  align-items: center;          /* ✅ center biar stabil */
+  align-items: flex-start;
   isolation: isolate;
   background: transparent;
 
-  /* ✅ agar tidak ketiban konten bawah & aman notch */
-  padding-top: clamp(10px, 2.2vh, 18px);
-  padding-bottom: calc(var(--wheel-gap-bottom) + env(safe-area-inset-bottom, 0px));
-
-  /* ✅ penting untuk flex column parent: bisa shrink */
-  min-height: 0;
-
-  /* perf containment */
-  contain: layout paint style;
+  /* lebih rapih (tidak bikin pointer “melayang tinggi”) */
+  padding-top: clamp(12px, 2.6vw, 18px);
+  padding-bottom: clamp(22px, 6vw, 46px);
 }
 
-/* Spotlight + felt vignette */
+/* Spotlight + felt vignette (lebih halus, lebih “HD”) */
 .wheel-container::before{
   content:"";
   position:absolute;
   left:50%;
-  top: 46%;
+  top: 40%;
   width: calc(var(--wheel-size) * 1.85);
   height: calc(var(--wheel-size) * 1.85);
   transform: translate(-50%, -50%);
   border-radius: 50%;
   pointer-events:none;
   z-index: 0;
+
   background:
-    radial-gradient(circle at 50% 40%, rgba(59,224,123,0.10), transparent 60%),
-    radial-gradient(circle at 50% 55%, rgba(243,178,74,0.07), transparent 66%),
-    radial-gradient(circle at 50% 60%, rgba(0,0,0,0.70), transparent 64%);
-  filter: blur(0.6px);
-  opacity: 0.92;
+    radial-gradient(circle at 50% 38%, rgba(59,224,123,0.085), transparent 62%),
+    radial-gradient(circle at 50% 54%, rgba(243,178,74,0.070), transparent 70%),
+    radial-gradient(circle at 50% 60%, rgba(0,0,0,0.74), transparent 66%);
+
+  filter: blur(0.55px);
+  opacity: 0.96;
 }
 
-/* Subtle beams */
+/* Subtle beams (lebih lembut, tidak “mainan”) */
 .wheel-container::after{
   content:"";
   position:absolute;
   left:50%;
-  top: 26%;
+  top: 22%;
   width: calc(var(--wheel-size) * 1.55);
   height: calc(var(--wheel-size) * 1.55);
   transform: translate(-50%, -50%);
   border-radius: 50%;
   pointer-events:none;
   z-index: 0;
+
   background:
     conic-gradient(from -12deg,
       rgba(255,255,255,0.00) 0deg,
-      rgba(255,255,255,0.05) 18deg,
+      rgba(255,255,255,0.045) 18deg,
       rgba(255,255,255,0.00) 34deg,
-      rgba(255,255,255,0.06) 64deg,
+      rgba(255,255,255,0.055) 64deg,
       rgba(255,255,255,0.00) 92deg,
-      rgba(255,255,255,0.05) 128deg,
+      rgba(255,255,255,0.045) 128deg,
       rgba(255,255,255,0.00) 154deg,
-      rgba(255,255,255,0.06) 190deg,
+      rgba(255,255,255,0.055) 190deg,
       rgba(255,255,255,0.00) 230deg,
-      rgba(255,255,255,0.05) 268deg,
+      rgba(255,255,255,0.045) 268deg,
       rgba(255,255,255,0.00) 302deg,
-      rgba(255,255,255,0.05) 332deg,
+      rgba(255,255,255,0.045) 332deg,
       rgba(255,255,255,0.00) 360deg
     );
+
   opacity: var(--beams-opacity);
-  filter: blur(1.05px);
+  filter: blur(1.0px);
   transform-origin: 50% 50%;
-  animation: wheelBeams 7.6s ease-in-out infinite;
+  animation: wheelBeams 7.8s ease-in-out infinite;
   will-change: transform, opacity;
 }
 
 @keyframes wheelBeams{
-  0%{ transform: translate(-50%, -50%) rotate(-1deg) scale(0.996); opacity: calc(var(--beams-opacity) - 0.07); }
-  50%{ transform: translate(-50%, -50%) rotate(1.2deg)  scale(1.010); opacity: calc(var(--beams-opacity) + 0.09); }
-  100%{ transform: translate(-50%, -50%) rotate(-1deg) scale(0.996); opacity: calc(var(--beams-opacity) - 0.07); }
+  0%  { transform: translate(-50%, -50%) rotate(-1deg) scale(0.995); opacity: calc(var(--beams-opacity) - 0.07); }
+  50% { transform: translate(-50%, -50%) rotate(1.1deg)  scale(1.01);  opacity: calc(var(--beams-opacity) + 0.09); }
+  100%{ transform: translate(-50%, -50%) rotate(-1deg) scale(0.995); opacity: calc(var(--beams-opacity) - 0.07); }
 }
 
 /* =========================
- * WRAPPER (stable + NO CROP)
+ * WRAPPER (stable)
  * ======================= */
 .wheel-wrapper{
   position: relative;
-
   width: var(--wheel-size);
-  height: var(--wheel-size);
-  max-width: 100%;
-  max-height: 100%;
-
   aspect-ratio: 1 / 1;
+  height: auto;
+  max-width: 100%;
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
@@ -503,15 +513,9 @@
   isolation: isolate;
   z-index: 2;
 
-  /* ✅ penting: biar glow/pointer tidak kepotong */
-  overflow: visible;
-
   transform: var(--gpu);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-
-  /* perf */
-  contain: layout paint style;
 }
 
 /* =========================
@@ -521,31 +525,30 @@
   position: absolute;
   top: var(--pointer-top);
   left: 50%;
-
   width: var(--pointer-w);
   height: var(--pointer-h);
 
   transform: translateX(-50%) var(--gpu);
-  transform-origin: 50% 18%;
+  transform-origin: 50% 16%;
   z-index: 40;
   pointer-events: none;
 
+  /* lebih “berat” dan rapi */
   filter:
-    drop-shadow(0 16px 28px rgba(0,0,0,0.62))
-    drop-shadow(0 0 16px rgba(59,224,123,0.10));
+    drop-shadow(0 16px 28px rgba(0,0,0,0.68))
+    drop-shadow(0 0 14px rgba(59,224,123,0.08));
 
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   will-change: transform, filter;
 }
-
 .pointer svg{ width:100%; height:100%; display:block; }
 
 .pointer.is-spin{ animation: pointerFloat 560ms ease-in-out infinite; }
 @keyframes pointerFloat{
-  0%  { transform: translateX(-50%) rotate(-1.0deg) translateY(0px) translateZ(0); }
-  50% { transform: translateX(-50%) rotate(1.6deg)  translateY(1px) translateZ(0); }
-  100%{ transform: translateX(-50%) rotate(-1.0deg) translateY(0px) translateZ(0); }
+  0%  { transform: translateX(-50%) rotate(-1.05deg) translateY(0px) translateZ(0); }
+  50% { transform: translateX(-50%) rotate(1.55deg)  translateY(1px) translateZ(0); }
+  100%{ transform: translateX(-50%) rotate(-1.05deg) translateY(0px) translateZ(0); }
 }
 
 .pointer.is-kick{ animation: pointerKick 120ms ease-out 1; }
@@ -556,21 +559,17 @@
 }
 
 /* =========================
- * OUTER FRAME — STABLE (NO CLIP)
+ * OUTER FRAME (minimal) — SVG sudah punya rim emas
  * ======================= */
 .wheel-outer{
   position: relative;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-
   padding: var(--rim-pad);
   z-index: 2;
   isolation: isolate;
-
-  /* ✅ jangan clip (glow + pointer safe) */
-  overflow: visible;
-
+  overflow: visible; /* jangan clip shadow */
   background: transparent;
 
   box-shadow: var(--wheel-shadow), var(--gold-glow), var(--green-glow);
@@ -581,7 +580,7 @@
   will-change: transform, box-shadow;
 }
 
-/* thin inner frame ring */
+/* thin inner frame ring (lebih tajam & elegan) */
 .wheel-outer::after{
   content:"";
   position:absolute;
@@ -591,14 +590,14 @@
   z-index: 3;
 
   box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.08),
-    inset 0 10px 22px rgba(255,255,255,0.04),
-    inset 0 -16px 24px rgba(0,0,0,0.26);
-  opacity: 0.92;
+    inset 0 0 0 1px rgba(255,255,255,0.075),
+    inset 0 9px 20px rgba(255,255,255,0.035),
+    inset 0 -16px 26px rgba(0,0,0,0.30);
+  opacity: 0.96;
 }
 
 /* =========================
- * WHEEL INNER — SVG HOST (NO CROP CHAIN)
+ * WHEEL INNER — SVG HOST (no conic bg)
  * ======================= */
 .wheel-inner{
   position: relative;
@@ -606,18 +605,16 @@
   height: 100%;
   border-radius: 50%;
   isolation: isolate;
-
-  /* ✅ ini yang sering bikin “kepotong”: HIDDEN
-     wheel SVG kamu punya stroke/glow tebal -> harus visible */
-  overflow: visible;
+  overflow: hidden;
 
   background: transparent;
   border: 1px solid rgba(255,255,255,0.10);
 
+  /* depth lebih realistis */
   box-shadow:
-    inset 0 0 0 1px rgba(0,0,0,0.20),
-    inset 0 20px 40px rgba(0,0,0,0.26),
-    inset 0 -18px 28px rgba(255,255,255,0.04);
+    inset 0 0 0 1px rgba(0,0,0,0.22),
+    inset 0 18px 36px rgba(0,0,0,0.30),
+    inset 0 -16px 26px rgba(255,255,255,0.035);
 
   transform: var(--gpu);
   backface-visibility: hidden;
@@ -633,12 +630,10 @@
   height: 100%;
   display: block;
   pointer-events: none;
-
-  /* ✅ pastikan SVG/filter tidak ke-clip di element host */
   overflow: visible;
 }
 
-/* Subtle gloss + vignette (super halus, di atas SVG) */
+/* Subtle gloss + vignette (center cutout tetap bersih) */
 .wheel-inner::before{
   content:"";
   position:absolute;
@@ -648,16 +643,29 @@
   z-index: 10;
 
   background:
-    radial-gradient(circle at 36% 22%, rgba(255,255,255,0.10), transparent 52%),
-    radial-gradient(circle at 50% 60%, rgba(0,0,0,0.18), transparent 64%),
-    radial-gradient(circle at 50% 50%, rgba(0,0,0,0.12), transparent 74%);
-
+    radial-gradient(circle at 36% 22%, rgba(255,255,255,0.095), transparent 54%),
+    radial-gradient(circle at 50% 58%, rgba(0,0,0,0.105), transparent 66%),
+    radial-gradient(circle at 50% 50%, rgba(0,0,0,0.095), transparent 80%);
   opacity: 0.52;
+
   transform: scale(var(--inner-safe-scale)) translateZ(0);
   transform-origin: 50% 50%;
+
+  -webkit-mask: radial-gradient(circle at 50% 50%,
+    rgba(0,0,0,0.00) 0%,
+    rgba(0,0,0,0.00) calc((var(--hub-cut) - var(--hub-feather)) * 100%),
+    rgba(0,0,0,1.00) calc((var(--hub-cut) + var(--hub-feather)) * 100%),
+    rgba(0,0,0,1.00) 100%
+  );
+          mask: radial-gradient(circle at 50% 50%,
+    rgba(0,0,0,0.00) 0%,
+    rgba(0,0,0,0.00) calc((var(--hub-cut) - var(--hub-feather)) * 100%),
+    rgba(0,0,0,1.00) calc((var(--hub-cut) + var(--hub-feather)) * 100%),
+    rgba(0,0,0,1.00) 100%
+  );
 }
 
-/* CORE FX — elegan */
+/* CORE FX — elegan, crisp, center bersih */
 .wheel-corefx{
   position:absolute;
   inset:0;
@@ -667,7 +675,9 @@
 
   transform-origin: 50% 50%;
   opacity: var(--corefx-opacity);
-  filter: blur(0.55px);
+
+  /* lebih tajam (HD) */
+  filter: blur(0.42px);
   mix-blend-mode: screen;
 
   will-change: transform, opacity;
@@ -675,27 +685,31 @@
   background:
     conic-gradient(from 0deg,
       rgba(255,255,255,0.00) 0deg,
-      rgba(255,255,255,0.10) 28deg,
-      rgba(59,224,123,0.12) 58deg,
+      rgba(255,255,255,0.095) 28deg,
+      rgba(59,224,123,0.105) 58deg,
       rgba(255,255,255,0.00) 110deg,
-      rgba(243,178,74,0.10) 150deg,
+      rgba(243,178,74,0.090) 150deg,
       rgba(255,255,255,0.00) 230deg,
-      rgba(59,224,123,0.10) 300deg,
+      rgba(59,224,123,0.090) 300deg,
       rgba(255,255,255,0.00) 360deg
     );
 
   -webkit-mask: radial-gradient(circle at 50% 50%,
-    rgba(0,0,0,1) 0%,
-    rgba(0,0,0,1) 34%,
-    rgba(0,0,0,0.78) 46%,
-    rgba(0,0,0,0.00) 60%,
+    rgba(0,0,0,0.00) 0%,
+    rgba(0,0,0,0.00) calc((var(--hub-cut) + 0.020) * 100%),
+    rgba(0,0,0,0.92) calc((var(--hub-cut) + 0.105) * 100%),
+    rgba(0,0,0,1.00) 46%,
+    rgba(0,0,0,0.78) 58%,
+    rgba(0,0,0,0.00) 68%,
     rgba(0,0,0,0.00) 100%
   );
           mask: radial-gradient(circle at 50% 50%,
-    rgba(0,0,0,1) 0%,
-    rgba(0,0,0,1) 34%,
-    rgba(0,0,0,0.78) 46%,
-    rgba(0,0,0,0.00) 60%,
+    rgba(0,0,0,0.00) 0%,
+    rgba(0,0,0,0.00) calc((var(--hub-cut) + 0.020) * 100%),
+    rgba(0,0,0,0.92) calc((var(--hub-cut) + 0.105) * 100%),
+    rgba(0,0,0,1.00) 46%,
+    rgba(0,0,0,0.78) 58%,
+    rgba(0,0,0,0.00) 68%,
     rgba(0,0,0,0.00) 100%
   );
 
@@ -707,11 +721,10 @@
   to  { transform: translateZ(0) scale(var(--inner-safe-scale)) rotate(360deg); }
 }
 
-/* Spin animation (legacy) — kalau kamu rotate .wheel-inner */
+/* Spin animation (legacy) — hanya kalau kamu memang rotate .wheel-inner */
 .wheel-inner.spinning{
   animation: spin-wheel var(--spin-dur) cubic-bezier(0.15, 0, 0.15, 1) forwards;
 }
-
 @keyframes spin-wheel{
   from { transform: rotate(var(--from-rotation, 0deg)) translateZ(0); }
   to   { transform: rotate(var(--rotation)) translateZ(0); }
@@ -720,7 +733,7 @@
 /* during spin: corefx naik sedikit */
 .wheel-inner.spinning .wheel-corefx{
   opacity: var(--corefx-opacity-spin);
-  animation-duration: 2.2s;
+  animation-duration: 2.15s;
 }
 
 /* legacy text */
@@ -735,9 +748,8 @@
   left:50%;
   transform: translate(-50%, -50%) translateZ(0);
 
-  /* ✅ lebih adaptif (mobile kecil tidak bulky, desktop tetap mantap) */
-  width: clamp(54px, 12.2vw, 80px);
-  height: clamp(54px, 12.2vw, 80px);
+  width: var(--hub-size);
+  height: var(--hub-size);
 
   border-radius:50%;
   overflow:hidden;
@@ -746,7 +758,7 @@
 
   background:
     radial-gradient(circle at 32% 22%, rgba(255,255,255,0.38), transparent 48%),
-    radial-gradient(circle at 60% 78%, rgba(0,0,0,0.40), transparent 68%),
+    radial-gradient(circle at 60% 78%, rgba(0,0,0,0.42), transparent 68%),
     linear-gradient(180deg,
       #fff4d6 0%,
       #f7d27e 18%,
@@ -758,12 +770,12 @@
   border: 1px solid rgba(255, 232, 176, 0.22);
 
   box-shadow:
-    0 18px 44px rgba(0,0,0,0.56),
-    0 0 18px rgba(246,179,61,0.15),
-    0 0 22px rgba(59,224,123,0.05),
-    inset 0 0 0 1px rgba(0,0,0,0.14),
+    0 16px 42px rgba(0,0,0,0.60),
+    0 0 16px rgba(246,179,61,0.14),
+    0 0 18px rgba(59,224,123,0.05),
+    inset 0 0 0 1px rgba(0,0,0,0.16),
     inset 0 10px 16px rgba(255,255,255,0.05),
-    inset 0 -16px 18px rgba(0,0,0,0.20);
+    inset 0 -16px 18px rgba(0,0,0,0.22);
 
   backface-visibility:hidden;
   -webkit-backface-visibility:hidden;
@@ -781,17 +793,17 @@
 
   background:
     conic-gradient(from 12deg,
-      rgba(255,255,255,0.30),
+      rgba(255,255,255,0.28),
       rgba(0,0,0,0.00) 14%,
-      rgba(255,255,255,0.12) 26%,
+      rgba(255,255,255,0.11) 26%,
       rgba(0,0,0,0.00) 42%,
-      rgba(255,255,255,0.20) 58%,
+      rgba(255,255,255,0.18) 58%,
       rgba(0,0,0,0.00) 74%,
-      rgba(255,255,255,0.30) 100%
+      rgba(255,255,255,0.28) 100%
     );
 
-  opacity: 0.52;
-  filter: blur(0.25px);
+  opacity: 0.55;
+  filter: blur(0.24px);
   mix-blend-mode: screen;
 }
 
@@ -811,31 +823,31 @@
   background:
     conic-gradient(from -18deg,
       rgba(255,255,255,0.00) 0deg,
-      rgba(255,255,255,0.18) 18deg,
+      rgba(255,255,255,0.17) 18deg,
       rgba(0,0,0,0.10) 42deg,
-      rgba(255,255,255,0.16) 68deg,
+      rgba(255,255,255,0.15) 68deg,
       rgba(0,0,0,0.12) 98deg,
-      rgba(255,255,255,0.14) 128deg,
+      rgba(255,255,255,0.13) 128deg,
       rgba(0,0,0,0.14) 164deg,
-      rgba(255,255,255,0.16) 210deg,
+      rgba(255,255,255,0.15) 210deg,
       rgba(0,0,0,0.12) 252deg,
-      rgba(255,255,255,0.14) 292deg,
+      rgba(255,255,255,0.13) 292deg,
       rgba(0,0,0,0.10) 330deg,
       rgba(255,255,255,0.00) 360deg
     ),
-    radial-gradient(circle at 34% 28%, rgba(255,255,255,0.28), transparent 52%),
-    radial-gradient(circle at 60% 72%, rgba(0,0,0,0.38), transparent 66%),
+    radial-gradient(circle at 34% 28%, rgba(255,255,255,0.27), transparent 52%),
+    radial-gradient(circle at 60% 72%, rgba(0,0,0,0.40), transparent 66%),
     linear-gradient(180deg,
       rgba(255,244,214,0.96),
       rgba(246,179,61,0.92),
       rgba(138,74,22,0.92)
     );
 
-  border: 1px solid rgba(255,255,255,0.16);
+  border: 1px solid rgba(255,255,255,0.15);
   box-shadow:
-    inset 0 0 0 1px rgba(0,0,0,0.18),
+    inset 0 0 0 1px rgba(0,0,0,0.20),
     inset 0 10px 18px rgba(255,255,255,0.06),
-    inset 0 -16px 18px rgba(0,0,0,0.26);
+    inset 0 -16px 18px rgba(0,0,0,0.28);
 }
 
 /* moving specular sheen */
@@ -848,47 +860,45 @@
 
   opacity: 0.36;
   mix-blend-mode: screen;
-  filter: blur(0.35px);
+  filter: blur(0.32px);
   will-change: transform;
 
   background:
-    radial-gradient(circle at 28% 22%, rgba(255,255,255,0.40), transparent 48%),
+    radial-gradient(circle at 28% 22%, rgba(255,255,255,0.38), transparent 48%),
     conic-gradient(from 0deg,
       rgba(255,255,255,0.00) 0deg,
-      rgba(255,255,255,0.18) 28deg,
+      rgba(255,255,255,0.17) 28deg,
       rgba(255,255,255,0.00) 74deg,
-      rgba(255,255,255,0.10) 132deg,
+      rgba(255,255,255,0.095) 132deg,
       rgba(255,255,255,0.00) 220deg,
-      rgba(255,255,255,0.14) 276deg,
+      rgba(255,255,255,0.13) 276deg,
       rgba(255,255,255,0.00) 360deg
     );
 
-  animation: hubSheen 9.0s linear infinite;
+  animation: hubSheen 9.2s linear infinite;
 }
-
 @keyframes hubSheen{
   to { transform: rotate(360deg) translateZ(0); }
 }
 
 /* spin pulse (subtle) */
 .wheel-inner.spinning .wheel-center{
-  animation: hubPulse 1.55s ease-in-out infinite;
+  animation: hubPulse 1.6s ease-in-out infinite;
 }
 .wheel-inner.spinning .wheel-center .hub-sheen{
-  animation-duration: 1.25s;
+  animation-duration: 1.22s;
 }
-
 @keyframes hubPulse{
   0%{
-    filter: drop-shadow(0 0 8px rgba(246,179,61,0.10));
+    filter: drop-shadow(0 0 8px rgba(246,179,61,0.09));
     transform: translate(-50%,-50%) scale(1) translateZ(0);
   }
   50%{
-    filter: drop-shadow(0 0 14px rgba(246,179,61,0.14));
-    transform: translate(-50%,-50%) scale(1.018) translateZ(0);
+    filter: drop-shadow(0 0 14px rgba(246,179,61,0.13));
+    transform: translate(-50%,-50%) scale(1.02) translateZ(0);
   }
   100%{
-    filter: drop-shadow(0 0 8px rgba(246,179,61,0.10));
+    filter: drop-shadow(0 0 8px rgba(246,179,61,0.09));
     transform: translate(-50%,-50%) scale(1) translateZ(0);
   }
 }
@@ -903,17 +913,6 @@
   .wheel-inner.spinning,
   .wheel-inner.spinning .wheel-center{
     animation: none !important;
-  }
-}
-
-/* =========================
- * Extra: iOS Safari “jank” guard
- * ======================= */
-@supports (-webkit-touch-callout: none){
-  .wheel-wrapper,
-  .wheel-outer,
-  .wheel-inner{
-    -webkit-transform: translateZ(0);
   }
 }
 
@@ -2502,24 +2501,23 @@ function saveRotation(deg) {
   }
 
 /* =========================================================
- * 9) WHEEL SVG + LABELS — CASINO 1:1 (PREMIUM HD) — FIXED LAYOUT + NO CROP
- * - Fix utama: wheel tidak “ketiban” section bawah (via CSS), dan JS resize lebih stabil
- * - iOS Safari: VisualViewport aware (address bar naik-turun tidak bikin layout glitch)
- * - Anti rebuild spam: hanya redraw jika ukuran benar-benar berubah
- * - SVG anti-clip: root overflow visible + stroke besar diskalakan normal (no non-scaling on thick rings)
+ * 9) WHEEL SVG + LABELS — CASINO 1:1 (PREMIUM HD)
+ * - Full SVG wheel: multi gold rim, bevel rings, glossy highlight
+ * - Segments: clean green/ivory + vignette depth (3D)
+ * - Labels: NO textLength stretch, auto-fit by measuring width
+ * - Emboss text: stroke + shadow filter (crisp)
+ * - Smooth resize: rAF debounced + cleanup
  * ======================================================= */
 
 function setWheelBackground() {
   const wheel = document.getElementById("wheel");
   if (!wheel) return;
+  // pastikan tidak ada conic gradient lama
   wheel.style.setProperty("--wheel-bg", "transparent");
   wheel.style.background = "transparent";
 }
 
-/* =========================
- * drawWheelPrizes (STABLE)
- * ======================= */
-function drawWheelPrizes(force = false) {
+function drawWheelPrizes() {
   const wheel = document.getElementById("wheel");
   if (!wheel) return;
 
@@ -2529,128 +2527,65 @@ function drawWheelPrizes(force = false) {
     if (cs.position === "static") wheel.style.position = "relative";
   } catch (_) {}
 
-  setWheelBackground();
-
-  const prizes = (Array.isArray(PRIZES) && PRIZES.length) ? PRIZES : ["BONUS 10%"];
-
-  // ukur real size (lebih akurat dari clientWidth saat iOS viewport berubah)
-  const r = wheel.getBoundingClientRect();
-  const w = Math.max(0, Math.floor(r.width));
-  const h = Math.max(0, Math.floor(r.height));
-  const size = Math.min(w, h);
-  if (!size) return;
-
-  // state cache
-  const ST = window.__MT2_WHEEL_CASINO || (window.__MT2_WHEEL_CASINO = {});
-  const key = `${w}x${h}|n=${prizes.length}`;
-
-  if (!force && ST._lastKey === key) return;
-  ST._lastKey = key;
-
   // bersihin legacy
   wheel.querySelectorAll(".prize-text").forEach((el) => el.remove());
   const old = wheel.querySelector("svg.wheel-svg");
-  if (old) {
-    try { old.__wheel && old.__wheel.destroy && old.__wheel.destroy(); } catch(_){}
-    old.remove();
-  }
+  if (old) old.remove();
 
-  // Build SVG
-  const svg = buildWheelSVG_CASINO(prizes, {
-    // bisa kamu tuning kalau perlu:
-    innerRadius: 136,
-    uprightLabels: true,
-    animateBulbs: true
-  });
+  setWheelBackground();
 
-  // IMPORTANT: keep overlays above if you have (corefx, gloss, html hub, pointer, etc.)
+  const prizes = (Array.isArray(PRIZES) && PRIZES.length) ? PRIZES : ["BONUS 10%"];
+  const size = Math.min(wheel.clientWidth || 0, wheel.clientHeight || 0);
+  if (!size) return;
+
+  const svg = buildWheelSVG_CASINO(prizes);
+
+  // IMPORTANT: let corefx/center overlay remain above if you have it
   svg.style.cssText =
     "position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;" +
-    "transform:translateZ(0);will-change:transform;z-index:0;overflow:visible;";
+    "transform:translateZ(0);will-change:transform;z-index:0;";
 
+  // taruh paling bawah di dalam wheel
   wheel.insertBefore(svg, wheel.firstChild);
 }
 
-/* =========================
- * initWheelAutoResize (iOS SAFE)
- * ======================= */
 function initWheelAutoResize() {
   const wrap = document.getElementById("wheelWrap");
-  const wheel = document.getElementById("wheel");
-  if (!wrap || !wheel) return;
+  if (!wrap) return;
 
   const ST = window.__MT2_WHEEL_CASINO || (window.__MT2_WHEEL_CASINO = {});
-  ST._off = ST._off || [];
-
-  // cleanup old
   if (ST.ro) { try { ST.ro.disconnect(); } catch (_) {} ST.ro = null; }
   if (ST.raf) { try { cancelAnimationFrame(ST.raf); } catch (_) {} ST.raf = 0; }
-  if (ST._off && ST._off.length) {
-    for (const off of ST._off) { try { off(); } catch(_){ } }
-    ST._off.length = 0;
-  }
 
-  const schedule = (force = false) => {
+  const schedule = () => {
     if (ST.raf) return;
     ST.raf = requestAnimationFrame(() => {
       ST.raf = 0;
-      drawWheelPrizes(force);
+      drawWheelPrizes();
     });
   };
 
-  // ResizeObserver: observe wrap + wheel (kadang 1 doang miss di iOS)
   if (window.ResizeObserver) {
-    ST.ro = new ResizeObserver(() => schedule(false));
-    try { ST.ro.observe(wrap); } catch(_){}
-    try { ST.ro.observe(wheel); } catch(_){}
+    ST.ro = new ResizeObserver(() => schedule());
+    ST.ro.observe(wrap);
+  } else {
+    window.addEventListener("resize", schedule, { passive: true });
   }
 
-  // iOS Safari address bar / visual viewport changes
-  if (window.visualViewport) {
-    const vv = window.visualViewport;
-
-    let vvT = 0;
-    const onVV = () => {
-      // throttle micro-jitter
-      if (vvT) return;
-      vvT = requestAnimationFrame(() => {
-        vvT = 0;
-        schedule(false);
-      });
-    };
-
-    vv.addEventListener("resize", onVV, { passive: true });
-    vv.addEventListener("scroll", onVV, { passive: true });
-
-    ST._off.push(() => vv.removeEventListener("resize", onVV));
-    ST._off.push(() => vv.removeEventListener("scroll", onVV));
+  schedule();
   }
 
-  // window resize fallback
-  const onWin = () => schedule(false);
-  window.addEventListener("resize", onWin, { passive: true });
-  window.addEventListener("orientationchange", onWin, { passive: true });
-
-  ST._off.push(() => window.removeEventListener("resize", onWin));
-  ST._off.push(() => window.removeEventListener("orientationchange", onWin));
-
-  // first draw
-  schedule(true);
-
-  // expose destroy
-  ST.destroy = () => {
-    if (ST.ro) { try { ST.ro.disconnect(); } catch(_){} ST.ro = null; }
-    if (ST.raf) { try { cancelAnimationFrame(ST.raf); } catch(_){} ST.raf = 0; }
-    if (ST._off && ST._off.length) {
-      for (const off of ST._off) { try { off(); } catch(_){ } }
-      ST._off.length = 0;
-    }
-  };
-}
 
 /* =========================================================
- * SVG BUILDER — CASINO PREMIUM 1:1 (HD + REAL LIGHTING) — FULL REPLACE (v6.1)
- * FIX: anti-clip pada stroke tebal (hapus non-scaling di ring tebal + svg overflow visible)
+ * SVG BUILDER — CASINO PREMIUM 1:1 (HD + REAL LIGHTING) — FULL REPLACE (v6)
+ * ✅ REAL: static lighting (gloss/spec) TIDAK ikut muter → lebih “photographic”
+ * ✅ NO: outer drop shadow (anti “bayangan transparan luar”)
+ * ✅ MAX: bulbs glow lebih “incandescent casino” (socket + bloom bertingkat, anti mainan)
+ * ✅ NEW: svg.__wheel.flashBulbs(ms) (pulse elegan)
+ * ✅ NEW: svg.__wheel.setBulbMode(idle|spin|win) (sinkron UX)
+ * ✅ LABEL: default UPRIGHT (tampilan lurus ala casino), bisa override di setRotation()
+ * ✅ BONUS 10% seragam mengikuti style label lain
+ * ✅ Seam-safe wedges, UID-safe defs, n<2 aman
  * ======================================================= */
 
 function buildWheelSVG_CASINO(prizes, opt = {}) {
@@ -2664,13 +2599,10 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   const VB = 1000;
   const cx = 500, cy = 500;
 
-  // ✅ proportions
+  // ✅ proportions (modern casino)
+  const rOuter = 492;
   const rimW1  = 24;
   const rimW2  = 6;
-
-  // anti-clip padding (buat stroke + glow)
-  const SAFE_PAD = 26;               // ruang aman di tepi viewBox
-  const rOuter = 500 - SAFE_PAD;     // dulu 492, sekarang aman untuk semua kondisi
 
   const rSegOut = rOuter - (rimW1 + 14);
   const rSegIn = clampNumber(Number(opt.innerRadius ?? 136), 110, 178);
@@ -2690,7 +2622,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   // labels default (casino style: upright)
   const defaultUprightLabels = (opt.uprightLabels === false) ? false : true;
 
-  // ---- uid ----
+  // ---- uid (anti bentrok defs) ----
   const uid = _wheelUid();
   const ID = (x) => `${uid}_${x}`;
 
@@ -2705,25 +2637,26 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
     viewBox: `0 0 ${VB} ${VB}`,
     preserveAspectRatio: "xMidYMid meet",
     "aria-hidden": "true",
-    overflow: "visible",
     "shape-rendering": "geometricPrecision",
     "text-rendering": "geometricPrecision"
   });
 
   /* =========================
-   * DEFS
+   * DEFS — REAL LIGHTING + ANTI “MAINAN”
    * ======================= */
   const defs = E("defs");
   defs.innerHTML = `
     <style>
-      .wheel-svg { shape-rendering: geometricPrecision; text-rendering: geometricPrecision; overflow: visible; }
+      .wheel-svg { shape-rendering: geometricPrecision; text-rendering: geometricPrecision; }
 
+      /* ---------- BULB MOTION (subtle, real) ---------- */
       .wheel-bulbs{
         --chaseDur: ${Math.max(0.01, chaseDurMs / 1000).toFixed(3)}s;
         --chaseK: ${chaseStrength.toFixed(3)};
         --winDur: 0.92s;
       }
 
+      /* shimmer runner (lebih kecil, anti kartun) */
       .wheel-bulbs .bulb-hi{
         opacity: calc(0.10 * var(--chaseK));
         transform-box: fill-box;
@@ -2740,6 +2673,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
         100% { opacity: calc(0.10 * var(--chaseK)); transform: scale(0.998); }
       }
 
+      /* ---------- WIN FLASH (pulse elegan) ---------- */
       .wheel-bulbs.win-flash .bulb-hi{ opacity: 0; animation: none !important; }
 
       .wheel-bulbs.win-flash .bulb-halo,
@@ -2785,6 +2719,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       }
     </style>
 
+    <!-- segments -->
     <linearGradient id="${ID("segGreen")}" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#0c5a43"/>
       <stop offset="1" stop-color="#063b2b"/>
@@ -2795,6 +2730,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       <stop offset="1" stop-color="#e9eef3"/>
     </linearGradient>
 
+    <!-- gold rim (metal “tight”) -->
     <linearGradient id="${ID("rimGold")}" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0"    stop-color="#fff8e3"/>
       <stop offset="0.18" stop-color="#f8df9f"/>
@@ -2803,12 +2739,14 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       <stop offset="1"    stop-color="#7a3f13"/>
     </linearGradient>
 
+    <!-- rim specular highlight (STATIC layer) -->
     <radialGradient id="${ID("rimSpec")}" cx="34%" cy="18%" r="70%">
       <stop offset="0"    stop-color="#ffffff" stop-opacity="0.34"/>
       <stop offset="0.34" stop-color="#ffffff" stop-opacity="0.12"/>
       <stop offset="1"    stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
 
+    <!-- segment depth + gloss (STATIC layer) -->
     <radialGradient id="${ID("segVignette")}" cx="50%" cy="50%" r="74%">
       <stop offset="0"    stop-color="#000000" stop-opacity="0"/>
       <stop offset="0.78" stop-color="#000000" stop-opacity="0.10"/>
@@ -2821,18 +2759,21 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       <stop offset="1"    stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
 
+    <!-- donut mask (slices only) -->
     <mask id="${ID("maskDonut")}">
       <rect x="0" y="0" width="${VB}" height="${VB}" fill="black"/>
       <circle cx="${cx}" cy="${cy}" r="${rSegOut}" fill="white"/>
       <circle cx="${cx}" cy="${cy}" r="${rSegIn}" fill="black"/>
     </mask>
 
+    <!-- rim band mask (ONLY rim area; so spec doesn't touch labels) -->
     <mask id="${ID("maskRimBand")}">
       <rect x="0" y="0" width="${VB}" height="${VB}" fill="black"/>
-      <circle cx="${cx}" cy="${cy}" r="${rOuter + 6}" fill="white"/>
-      <circle cx="${cx}" cy="${cy}" r="${Math.max(1, rOuter - rimW1 - 12)}" fill="black"/>
+      <circle cx="${cx}" cy="${cy}" r="${rOuter + 2}" fill="white"/>
+      <circle cx="${cx}" cy="${cy}" r="${Math.max(1, rOuter - rimW1 - 10)}" fill="black"/>
     </mask>
 
+    <!-- INNER HUB WELL -->
     <radialGradient id="${ID("hubWell")}" cx="42%" cy="34%" r="78%">
       <stop offset="0"   stop-color="#145b45" stop-opacity="0.98"/>
       <stop offset="0.55" stop-color="#083626" stop-opacity="0.98"/>
@@ -2845,6 +2786,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       <stop offset="1"   stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
 
+    <!-- CENTER GOLD CAP -->
     <radialGradient id="${ID("hubGold")}" cx="34%" cy="28%" r="76%">
       <stop offset="0"   stop-color="#fff7de"/>
       <stop offset="0.22" stop-color="#f7d990"/>
@@ -2859,6 +2801,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       <stop offset="1"   stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
 
+    <!-- bulb fill (lens warm) -->
     <radialGradient id="${ID("bulbFill")}" cx="34%" cy="24%" r="76%">
       <stop offset="0"    stop-color="#ffffff" stop-opacity="1"/>
       <stop offset="0.22" stop-color="#fff7e6" stop-opacity="1"/>
@@ -2866,11 +2809,13 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       <stop offset="1"    stop-color="#a94f16" stop-opacity="1"/>
     </radialGradient>
 
+    <!-- text emboss (tighter, premium) -->
     <filter id="${ID("txtEmboss")}" x="-24%" y="-24%" width="148%" height="148%" color-interpolation-filters="sRGB">
       <feDropShadow dx="0" dy="3.2" stdDeviation="2.6" flood-color="#000000" flood-opacity="0.54"/>
       <feDropShadow dx="0" dy="0.9" stdDeviation="0.6" flood-color="#ffffff" flood-opacity="0.09"/>
     </filter>
 
+    <!-- ✅ BULB BLOOM (bertahap, anti “kabut”) -->
     <filter id="${ID("bulbGlow")}" x="-70%" y="-70%" width="240%" height="240%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="6.2" result="b0"/>
       <feColorMatrix in="b0" type="matrix" values="
@@ -2898,6 +2843,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       </feMerge>
     </filter>
 
+    <!-- ✅ BULB SPARK (crisp highlight) -->
     <filter id="${ID("bulbSpark")}" x="-80%" y="-80%" width="260%" height="260%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="1.9" result="s0"/>
       <feColorMatrix in="s0" type="matrix" values="
@@ -2911,6 +2857,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       </feMerge>
     </filter>
 
+    <!-- hub shadow (halus) -->
     <filter id="${ID("hubShadow")}" x="-26%" y="-26%" width="152%" height="152%" color-interpolation-filters="sRGB">
       <feDropShadow dx="0" dy="5.6" stdDeviation="5.2" flood-color="#000000" flood-opacity="0.22"/>
     </filter>
@@ -2918,7 +2865,8 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   svg.appendChild(defs);
 
   /* =========================
-   * LAYERS
+   * LAYERS (order = realism)
+   * base rotate → static seg light → labels rotate → static rim spec → bulbs rotate → hub rotate
    * ======================= */
   const gRotateBase   = E("g", { class: "wheel-rot wheel-rot-base" });
   const gStaticSeg    = E("g", { class: "wheel-static wheel-static-seg" });
@@ -2961,6 +2909,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       }
     },
 
+    /* ✅ panggil ini setelah result keluar */
     flashBulbs(ms = 900) {
       const dur = clampNumber(Number(ms || 0), 220, 2200);
       const el = gBulbWrap;
@@ -2980,6 +2929,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       });
     },
 
+    /* ✅ mode lampu: idle/spin/win (biar sinkron UX) */
     setBulbMode(mode = "idle") {
       const el = gBulbWrap;
       if (!el) return;
@@ -3002,7 +2952,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   };
 
   /* =========================
-   * SEGMENTS
+   * SEGMENTS (ROTATING BASE)
    * ======================= */
   const gSlices = E("g", { class: "wheel-slices" });
   gRotateBase.appendChild(gSlices);
@@ -3035,6 +2985,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       fill
     }));
 
+    // divider (lebih tegas, beda warna utk ivory)
     if (n > 1) {
       const p1 = polar(cx, cy, rSegIn + 10, a0);
       const p2 = polar(cx, cy, rSegOut - 10, a0);
@@ -3050,7 +3001,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
     }
 
     /* =========================
-     * LABELS (UPRIGHT)
+     * LABELS (ROTATE, default UPRIGHT)
      * ======================= */
     const label = safePrizes[i];
     const tp = polar(cx, cy, rText, mid);
@@ -3084,6 +3035,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       "paint-order": "stroke"
     });
 
+    // ✅ BONUS 10% SERAGAM (ikut aturan slice)
     if (isIvory) {
       text.setAttribute("fill", "#063b2b");
       text.setAttribute("stroke", "#ffffff");
@@ -3103,25 +3055,29 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   }
 
   /* =========================
-   * RIMS / BEVEL (thick strokes MUST scale -> no vector-effect)
+   * BEVEL / RIM METAL (ROTATING BASE)
    * ======================= */
 
+  // bevel edge outer (lebih subtle)
   gRotateBase.appendChild(E("circle", {
     cx, cy,
     r: (rSegOut + 3),
     fill: "none",
     stroke: "#ffffff",
     "stroke-opacity": "0.11",
-    "stroke-width": "6"
+    "stroke-width": "6",
+    "vector-effect": "non-scaling-stroke"
   }));
 
+  // inner rim depth ring (NO outer drop shadow)
   gRotateBase.appendChild(E("circle", {
     cx, cy,
     r: (rOuter - rimW1 + 4),
     fill: "none",
     stroke: "#000000",
     "stroke-opacity": "0.20",
-    "stroke-width": "10"
+    "stroke-width": "10",
+    "vector-effect": "non-scaling-stroke"
   }));
   gRotateBase.appendChild(E("circle", {
     cx, cy,
@@ -3129,38 +3085,49 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
     fill: "none",
     stroke: "#ffffff",
     "stroke-opacity": "0.08",
-    "stroke-width": "3"
+    "stroke-width": "3",
+    "vector-effect": "non-scaling-stroke"
   }));
 
+  // thin outer edge highlight
   gRotateBase.appendChild(E("circle", {
     cx, cy,
     r: (rOuter - 1),
     fill: "none",
     stroke: "#ffffff",
     "stroke-opacity": "0.14",
-    "stroke-width": "2"
+    "stroke-width": "2",
+    "vector-effect": "non-scaling-stroke"
   }));
 
+  // gold rim (metal base rotates)
   gRotateBase.appendChild(E("circle", {
     cx, cy,
     r: (rOuter - rimW1 / 2),
     fill: "none",
     stroke: `url(#${ID("rimGold")})`,
-    "stroke-width": String(rimW1)
+    "stroke-width": String(rimW1),
+    "vector-effect": "non-scaling-stroke"
   }));
 
+  // accent ring (thin)
   gRotateBase.appendChild(E("circle", {
     cx, cy,
     r: (rSegOut + 18),
     fill: "none",
     stroke: "#f6b33d",
     "stroke-opacity": "0.54",
-    "stroke-width": String(rimW2)
+    "stroke-width": String(rimW2),
+    "vector-effect": "non-scaling-stroke"
   }));
 
   /* =========================
-   * STATIC LIGHTING
+   * STATIC LIGHTING (REALISM)
+   * - gloss & vignette: stays fixed (photographic)
+   * - rim spec: stays fixed (reflection)
    * ======================= */
+
+  // donut depth overlays (STATIC, only donut mask → tidak ganggu label)
   gStaticSeg.appendChild(E("rect", {
     x: 0, y: 0, width: VB, height: VB,
     fill: `url(#${ID("segVignette")})`,
@@ -3172,17 +3139,19 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
     mask: `url(#${ID("maskDonut")})`
   }));
 
+  // rim spec highlight (STATIC, masked rim band, bulbs di atas)
   gStaticRim.appendChild(E("circle", {
     cx, cy,
     r: (rOuter - rimW1 / 2),
     fill: "none",
     stroke: `url(#${ID("rimSpec")})`,
     "stroke-width": String(rimW1 + 8),
-    mask: `url(#${ID("maskRimBand")})`
+    mask: `url(#${ID("maskRimBand")})`,
+    "vector-effect": "non-scaling-stroke"
   }));
 
   /* =========================
-   * BULBS
+   * RIM LIGHTS / BULBS (ROTATING, above static spec)
    * ======================= */
   const gBulbWrap = E("g", { class: "wheel-bulbs", opacity: "1" });
 
@@ -3199,6 +3168,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
     const a = (360 / bulbCount) * i;
     const p = polar(cx, cy, bulbOrbit, a);
 
+    // ✅ socket ring (trik casino: bikin bulb “terpasang”, anti mainan)
     gBulbBase.appendChild(E("circle", {
       cx: p.x.toFixed(2),
       cy: p.y.toFixed(2),
@@ -3217,6 +3187,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       "vector-effect": "non-scaling-stroke"
     }));
 
+    // halo (ditipiskan, lebih “incandescent”)
     gBulbBase.appendChild(E("circle", {
       class: "bulb-halo2",
       cx: p.x.toFixed(2),
@@ -3235,6 +3206,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       "fill-opacity": "0.46"
     }));
 
+    // base bulb lens
     gBulbBase.appendChild(E("circle", {
       class: "bulb-base",
       cx: p.x.toFixed(2),
@@ -3247,6 +3219,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       "vector-effect": "non-scaling-stroke"
     }));
 
+    // tiny spec dot
     gBulbBase.appendChild(E("circle", {
       cx: (p.x - bulbR * 0.22).toFixed(2),
       cy: (p.y - bulbR * 0.28).toFixed(2),
@@ -3255,6 +3228,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       "fill-opacity": "0.74"
     }));
 
+    // shimmer runner
     if (animateBulbs) {
       const hi = E("circle", {
         class: "bulb-hi",
@@ -3274,7 +3248,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   gRotateBulbs.appendChild(gBulbWrap);
 
   /* =========================
-   * OPTIONAL: SVG HUB
+   * OPTIONAL: SVG HUB (ROTATING TOP)
    * ======================= */
   if (includeHub) {
     const gHub = E("g", { class: "wheel-hub" });
@@ -3308,7 +3282,9 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
     gRotateTop.appendChild(gHub);
   }
 
+  // apply initial rotation (ensures upright default is active once user calls setRotation)
   svg.__wheel.setRotation(0, { uprightLabels: defaultUprightLabels });
+
   return svg;
 }
 
