@@ -2576,10 +2576,15 @@ function initWheelAutoResize() {
 }
 
 /* =========================================================
- * SVG BUILDER — CASINO PREMIUM (HD + LIGHTS RIM) — FINAL (BULBS GLOW v4)
- * ✅ HAPUS: rim sweep / rim light muter (biar gak terlihat “mainan”)
- * ✅ MAX: bulbs glow lebih “nyala” + bloom lembut modern
- * ✅ Tetap: gold rim premium (static), segments HD, seam-safe, uid-safe
+ * SVG BUILDER — CASINO PREMIUM 1:1 (HD + REAL LIGHTING) — FULL REPLACE (v6)
+ * ✅ REAL: static lighting (gloss/spec) TIDAK ikut muter → lebih “photographic”
+ * ✅ NO: outer drop shadow (anti “bayangan transparan luar”)
+ * ✅ MAX: bulbs glow lebih “incandescent casino” (socket + bloom bertingkat, anti mainan)
+ * ✅ NEW: svg.__wheel.flashBulbs(ms) (pulse elegan)
+ * ✅ NEW: svg.__wheel.setBulbMode(idle|spin|win) (sinkron UX)
+ * ✅ LABEL: default UPRIGHT (tampilan lurus ala casino), bisa override di setRotation()
+ * ✅ BONUS 10% seragam mengikuti style label lain
+ * ✅ Seam-safe wedges, UID-safe defs, n<2 aman
  * ======================================================= */
 
 function buildWheelSVG_CASINO(prizes, opt = {}) {
@@ -2599,15 +2604,10 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   const rimW2  = 6;
 
   const rSegOut = rOuter - (rimW1 + 14);
-
-  const rSegIn = clampNumber(
-    Number(opt.innerRadius ?? 136),
-    110,
-    178
-  );
+  const rSegIn = clampNumber(Number(opt.innerRadius ?? 136), 110, 178);
 
   const rText = Math.round((rSegIn + rSegOut) * 0.565);
-  const dividerW = 2.4;
+  const dividerW = 2.2;
 
   const includeHub = (typeof opt.includeHub === "boolean")
     ? opt.includeHub
@@ -2617,6 +2617,9 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   const animateBulbs = (opt.animateBulbs !== false);
   const chaseDurMs = clampNumber(Number(opt.bulbChaseDurMs ?? 2600), 1200, 7000);
   const chaseStrength = clampNumber(Number(opt.bulbChaseStrength ?? 1.05), 0.2, 1.8);
+
+  // labels default (casino style: upright)
+  const defaultUprightLabels = (opt.uprightLabels === false) ? false : true;
 
   // ---- uid (anti bentrok defs) ----
   const uid = _wheelUid();
@@ -2638,31 +2641,80 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   });
 
   /* =========================
-   * DEFS
+   * DEFS — REAL LIGHTING + ANTI “MAINAN”
    * ======================= */
   const defs = E("defs");
   defs.innerHTML = `
     <style>
       .wheel-svg { shape-rendering: geometricPrecision; text-rendering: geometricPrecision; }
 
-      /* --- Bulb shimmer (lebih elegan: bukan blink keras) --- */
-      .wheel-bulbs { --chaseDur: ${Math.max(0.01, chaseDurMs / 1000).toFixed(3)}s; --chaseK: ${chaseStrength.toFixed(3)}; }
+      /* ---------- BULB MOTION (subtle, real) ---------- */
+      .wheel-bulbs{
+        --chaseDur: ${Math.max(0.01, chaseDurMs / 1000).toFixed(3)}s;
+        --chaseK: ${chaseStrength.toFixed(3)};
+        --winDur: 0.92s;
+      }
+
+      /* shimmer runner (lebih kecil, anti kartun) */
       .wheel-bulbs .bulb-hi{
-        opacity: calc(0.18 * var(--chaseK));
+        opacity: calc(0.10 * var(--chaseK));
         transform-box: fill-box;
         transform-origin: center;
-        animation: bulbShimmer var(--chaseDur) cubic-bezier(0.22, 1, 0.36, 1) infinite;
+        animation: bulbShimmer var(--chaseDur) cubic-bezier(0.18, 1, 0.32, 1) infinite;
         animation-delay: var(--d, 0s);
         will-change: opacity, transform;
       }
+
       @keyframes bulbShimmer{
-        0%   { opacity: calc(0.16 * var(--chaseK)); transform: scale(0.98); }
-        10%  { opacity: calc(0.92 * var(--chaseK)); transform: scale(1.10); }
-        24%  { opacity: calc(0.34 * var(--chaseK)); transform: scale(1.02); }
-        100% { opacity: calc(0.16 * var(--chaseK)); transform: scale(0.98); }
+        0%   { opacity: calc(0.10 * var(--chaseK)); transform: scale(0.998); }
+        14%  { opacity: calc(0.42 * var(--chaseK)); transform: scale(1.020); }
+        32%  { opacity: calc(0.16 * var(--chaseK)); transform: scale(1.006); }
+        100% { opacity: calc(0.10 * var(--chaseK)); transform: scale(0.998); }
       }
+
+      /* ---------- WIN FLASH (pulse elegan) ---------- */
+      .wheel-bulbs.win-flash .bulb-hi{ opacity: 0; animation: none !important; }
+
+      .wheel-bulbs.win-flash .bulb-halo,
+      .wheel-bulbs.win-flash .bulb-halo2{
+        animation: winHalo var(--winDur) cubic-bezier(0.16, 1, 0.20, 1) both;
+        transform-box: fill-box;
+        transform-origin: center;
+        will-change: opacity, transform;
+      }
+
+      .wheel-bulbs.win-flash .bulb-base{
+        animation: winCore var(--winDur) cubic-bezier(0.16, 1, 0.20, 1) both;
+        transform-box: fill-box;
+        transform-origin: center;
+        will-change: opacity, transform;
+      }
+
+      @keyframes winHalo{
+        0%   { opacity: 0.38; transform: scale(1.00); }
+        12%  { opacity: 0.72; transform: scale(1.05); }
+        28%  { opacity: 0.26; transform: scale(0.998); }
+        44%  { opacity: 0.68; transform: scale(1.055); }
+        64%  { opacity: 0.28; transform: scale(0.998); }
+        78%  { opacity: 0.62; transform: scale(1.045); }
+        100% { opacity: 0.38; transform: scale(1.00); }
+      }
+
+      @keyframes winCore{
+        0%   { opacity: 1.00; transform: scale(1.00); }
+        12%  { opacity: 1.00; transform: scale(1.028); }
+        28%  { opacity: 0.78; transform: scale(0.998); }
+        44%  { opacity: 1.00; transform: scale(1.036); }
+        64%  { opacity: 0.82; transform: scale(0.998); }
+        78%  { opacity: 1.00; transform: scale(1.024); }
+        100% { opacity: 1.00; transform: scale(1.00); }
+      }
+
       @media (prefers-reduced-motion: reduce){
-        .wheel-bulbs .bulb-hi{ animation:none; opacity:0.28; transform:none; }
+        .wheel-bulbs .bulb-hi{ animation:none; opacity:0.18; transform:none; }
+        .wheel-bulbs.win-flash .bulb-halo,
+        .wheel-bulbs.win-flash .bulb-halo2,
+        .wheel-bulbs.win-flash .bulb-base{ animation:none !important; }
       }
     </style>
 
@@ -2677,33 +2729,33 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       <stop offset="1" stop-color="#e9eef3"/>
     </linearGradient>
 
-    <!-- gold rim -->
+    <!-- gold rim (metal “tight”) -->
     <linearGradient id="${ID("rimGold")}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#fff4d6"/>
-      <stop offset="0.22" stop-color="#f6d586"/>
-      <stop offset="0.50" stop-color="#f6b33d"/>
-      <stop offset="0.76" stop-color="#c46b1c"/>
-      <stop offset="1" stop-color="#7a3f13"/>
+      <stop offset="0"    stop-color="#fff8e3"/>
+      <stop offset="0.18" stop-color="#f8df9f"/>
+      <stop offset="0.52" stop-color="#f4b543"/>
+      <stop offset="0.78" stop-color="#c66d1e"/>
+      <stop offset="1"    stop-color="#7a3f13"/>
     </linearGradient>
 
-    <!-- rim specular highlight (static, premium) -->
-    <radialGradient id="${ID("rimSpec")}" cx="34%" cy="20%" r="72%">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.42"/>
-      <stop offset="0.44" stop-color="#ffffff" stop-opacity="0.12"/>
-      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    <!-- rim specular highlight (STATIC layer) -->
+    <radialGradient id="${ID("rimSpec")}" cx="34%" cy="18%" r="70%">
+      <stop offset="0"    stop-color="#ffffff" stop-opacity="0.34"/>
+      <stop offset="0.34" stop-color="#ffffff" stop-opacity="0.12"/>
+      <stop offset="1"    stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
 
-    <!-- segment depth + gloss -->
-    <radialGradient id="${ID("segVignette")}" cx="50%" cy="50%" r="72%">
-      <stop offset="0" stop-color="#000000" stop-opacity="0"/>
-      <stop offset="0.72" stop-color="#000000" stop-opacity="0.14"/>
-      <stop offset="1" stop-color="#000000" stop-opacity="0.38"/>
+    <!-- segment depth + gloss (STATIC layer) -->
+    <radialGradient id="${ID("segVignette")}" cx="50%" cy="50%" r="74%">
+      <stop offset="0"    stop-color="#000000" stop-opacity="0"/>
+      <stop offset="0.78" stop-color="#000000" stop-opacity="0.10"/>
+      <stop offset="1"    stop-color="#000000" stop-opacity="0.26"/>
     </radialGradient>
 
-    <radialGradient id="${ID("segGloss")}" cx="36%" cy="18%" r="74%">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.18"/>
-      <stop offset="0.46" stop-color="#ffffff" stop-opacity="0.06"/>
-      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    <radialGradient id="${ID("segGloss")}" cx="36%" cy="16%" r="74%">
+      <stop offset="0"    stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="0.44" stop-color="#ffffff" stop-opacity="0.05"/>
+      <stop offset="1"    stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
 
     <!-- donut mask (slices only) -->
@@ -2713,91 +2765,140 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       <circle cx="${cx}" cy="${cy}" r="${rSegIn}" fill="black"/>
     </mask>
 
+    <!-- rim band mask (ONLY rim area; so spec doesn't touch labels) -->
+    <mask id="${ID("maskRimBand")}">
+      <rect x="0" y="0" width="${VB}" height="${VB}" fill="black"/>
+      <circle cx="${cx}" cy="${cy}" r="${rOuter + 2}" fill="white"/>
+      <circle cx="${cx}" cy="${cy}" r="${Math.max(1, rOuter - rimW1 - 10)}" fill="black"/>
+    </mask>
+
     <!-- INNER HUB WELL -->
     <radialGradient id="${ID("hubWell")}" cx="42%" cy="34%" r="78%">
-      <stop offset="0" stop-color="#145b45" stop-opacity="0.98"/>
+      <stop offset="0"   stop-color="#145b45" stop-opacity="0.98"/>
       <stop offset="0.55" stop-color="#083626" stop-opacity="0.98"/>
-      <stop offset="1" stop-color="#03130d" stop-opacity="0.98"/>
+      <stop offset="1"   stop-color="#03130d" stop-opacity="0.98"/>
     </radialGradient>
 
     <radialGradient id="${ID("hubWellSpec")}" cx="36%" cy="22%" r="78%">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.20"/>
-      <stop offset="0.55" stop-color="#ffffff" stop-opacity="0.06"/>
-      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="0"   stop-color="#ffffff" stop-opacity="0.16"/>
+      <stop offset="0.55" stop-color="#ffffff" stop-opacity="0.05"/>
+      <stop offset="1"   stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
 
     <!-- CENTER GOLD CAP -->
     <radialGradient id="${ID("hubGold")}" cx="34%" cy="28%" r="76%">
-      <stop offset="0" stop-color="#fff7de"/>
+      <stop offset="0"   stop-color="#fff7de"/>
       <stop offset="0.22" stop-color="#f7d990"/>
       <stop offset="0.55" stop-color="#f3b24a"/>
       <stop offset="0.80" stop-color="#c26a1c"/>
-      <stop offset="1" stop-color="#7a3f13"/>
+      <stop offset="1"   stop-color="#7a3f13"/>
     </radialGradient>
 
     <radialGradient id="${ID("hubGoldSpec")}" cx="30%" cy="18%" r="70%">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.55"/>
-      <stop offset="0.40" stop-color="#ffffff" stop-opacity="0.16"/>
-      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="0"   stop-color="#ffffff" stop-opacity="0.52"/>
+      <stop offset="0.40" stop-color="#ffffff" stop-opacity="0.14"/>
+      <stop offset="1"   stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
 
-    <!-- bulb fill (lebih bright, biar glow “hidup”) -->
-    <radialGradient id="${ID("bulbFill")}" cx="35%" cy="28%" r="72%">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="1"/>
-      <stop offset="0.30" stop-color="#fff7e4" stop-opacity="1"/>
-      <stop offset="0.62" stop-color="#ffd27a" stop-opacity="1"/>
-      <stop offset="1" stop-color="#b75b18" stop-opacity="1"/>
+    <!-- bulb fill (lens warm) -->
+    <radialGradient id="${ID("bulbFill")}" cx="34%" cy="24%" r="76%">
+      <stop offset="0"    stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="0.22" stop-color="#fff7e6" stop-opacity="1"/>
+      <stop offset="0.58" stop-color="#ffd784" stop-opacity="1"/>
+      <stop offset="1"    stop-color="#a94f16" stop-opacity="1"/>
     </radialGradient>
 
-    <!-- text emboss -->
-    <filter id="${ID("txtEmboss")}" x="-40%" y="-40%" width="180%" height="180%">
-      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.55"/>
-      <feDropShadow dx="0" dy="1.5" stdDeviation="1.1" flood-color="#ffffff" flood-opacity="0.10"/>
+    <!-- text emboss (tighter, premium) -->
+    <filter id="${ID("txtEmboss")}" x="-24%" y="-24%" width="148%" height="148%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="3.2" stdDeviation="2.6" flood-color="#000000" flood-opacity="0.54"/>
+      <feDropShadow dx="0" dy="0.9" stdDeviation="0.6" flood-color="#ffffff" flood-opacity="0.09"/>
     </filter>
 
-    <!-- rim shadow -->
-    <filter id="${ID("rimShadow")}" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#000000" flood-opacity="0.42"/>
+    <!-- ✅ BULB BLOOM (bertahap, anti “kabut”) -->
+    <filter id="${ID("bulbGlow")}" x="-70%" y="-70%" width="240%" height="240%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6.2" result="b0"/>
+      <feColorMatrix in="b0" type="matrix" values="
+        1 0 0 0 0.06
+        0 1 0 0 0.04
+        0 0 1 0 -0.03
+        0 0 0 0.28 0" result="b1"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3.4" result="b2"/>
+      <feColorMatrix in="b2" type="matrix" values="
+        1 0 0 0 0.02
+        0 1 0 0 0.02
+        0 0 1 0 0
+        0 0 0 0.44 0" result="b3"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.6" result="b4"/>
+      <feColorMatrix in="b4" type="matrix" values="
+        1 0 0 0 0
+        0 1 0 0 0
+        0 0 1 0 0
+        0 0 0 0.62 0" result="b5"/>
+      <feMerge>
+        <feMergeNode in="b1"/>
+        <feMergeNode in="b3"/>
+        <feMergeNode in="b5"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
     </filter>
 
-    <!-- ✅ BULB BLOOM (lebih kuat, tetap soft modern) -->
-    <filter id="${ID("bulbGlow")}" x="-120%" y="-120%" width="340%" height="340%">
-      <feDropShadow dx="0" dy="0" stdDeviation="7.0" flood-color="#ffcf63" flood-opacity="0.55"/>
-      <feDropShadow dx="0" dy="0" stdDeviation="3.2" flood-color="#ffffff" flood-opacity="0.26"/>
-      <feDropShadow dx="0" dy="0" stdDeviation="1.2" flood-color="#fff2c8" flood-opacity="0.20"/>
+    <!-- ✅ BULB SPARK (crisp highlight) -->
+    <filter id="${ID("bulbSpark")}" x="-80%" y="-80%" width="260%" height="260%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.9" result="s0"/>
+      <feColorMatrix in="s0" type="matrix" values="
+        1 0 0 0 0
+        0 1 0 0 0
+        0 0 1 0 0
+        0 0 0 0.62 0" result="s1"/>
+      <feMerge>
+        <feMergeNode in="s1"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
     </filter>
 
-    <!-- ✅ BULB SPARK (runner highlight lebih “nyala” tapi lembut) -->
-    <filter id="${ID("bulbSpark")}" x="-160%" y="-160%" width="420%" height="420%">
-      <feDropShadow dx="0" dy="0" stdDeviation="10.2" flood-color="#ffd77a" flood-opacity="0.72"/>
-      <feDropShadow dx="0" dy="0" stdDeviation="4.0"  flood-color="#ffffff" flood-opacity="0.36"/>
-    </filter>
-
-    <!-- hub shadow -->
-    <filter id="${ID("hubShadow")}" x="-38%" y="-38%" width="176%" height="176%">
-      <feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#000000" flood-opacity="0.26"/>
+    <!-- hub shadow (halus) -->
+    <filter id="${ID("hubShadow")}" x="-26%" y="-26%" width="152%" height="152%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="5.6" stdDeviation="5.2" flood-color="#000000" flood-opacity="0.22"/>
     </filter>
   `;
   svg.appendChild(defs);
 
   /* =========================
-   * ROOT GROUPS (spin + labels)
+   * LAYERS (order = realism)
+   * base rotate → static seg light → labels rotate → static rim spec → bulbs rotate → hub rotate
    * ======================= */
-  const gSpin = E("g", { class: "wheel-spin" });
-  const gLabels = E("g", { class: "wheel-labels" });
-  svg.appendChild(gSpin);
-  svg.appendChild(gLabels);
+  const gRotateBase   = E("g", { class: "wheel-rot wheel-rot-base" });
+  const gStaticSeg    = E("g", { class: "wheel-static wheel-static-seg" });
+  const gRotateLabels = E("g", { class: "wheel-rot wheel-rot-labels" });
+  const gStaticRim    = E("g", { class: "wheel-static wheel-static-rim" });
+  const gRotateBulbs  = E("g", { class: "wheel-rot wheel-rot-bulbs" });
+  const gRotateTop    = E("g", { class: "wheel-rot wheel-rot-top" });
+
+  svg.appendChild(gRotateBase);
+  svg.appendChild(gStaticSeg);
+  svg.appendChild(gRotateLabels);
+  svg.appendChild(gStaticRim);
+  svg.appendChild(gRotateBulbs);
+  svg.appendChild(gRotateTop);
 
   const _labelNodes = [];
+  let _bulbFlashTimer = 0;
+
+  // expose wheel API
   svg.__wheel = {
     uid,
     cx, cy,
+    uprightLabels: defaultUprightLabels,
+
     setRotation(deg, opt2 = {}) {
       const d = Number(deg || 0);
-      const upright = !!opt2.uprightLabels;
+      const upright = (typeof opt2.uprightLabels === "boolean") ? opt2.uprightLabels : !!svg.__wheel.uprightLabels;
 
-      gSpin.setAttribute("transform", `rotate(${d} ${cx} ${cy})`);
-      gLabels.setAttribute("transform", `rotate(${d} ${cx} ${cy})`);
+      const tr = `rotate(${d} ${cx} ${cy})`;
+      gRotateBase.setAttribute("transform", tr);
+      gRotateLabels.setAttribute("transform", tr);
+      gRotateBulbs.setAttribute("transform", tr);
+      gRotateTop.setAttribute("transform", tr);
 
       if (upright) {
         const inv = -d;
@@ -2805,27 +2906,55 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       } else {
         for (const it of _labelNodes) it.el.removeAttribute("transform");
       }
+    },
+
+    /* ✅ panggil ini setelah result keluar */
+    flashBulbs(ms = 900) {
+      const dur = clampNumber(Number(ms || 0), 220, 2200);
+      const el = gBulbWrap;
+      if (!el) return;
+
+      try { el.style.setProperty("--winDur", `${(dur / 1000).toFixed(3)}s`); } catch(_){}
+
+      if (_bulbFlashTimer) { try { clearTimeout(_bulbFlashTimer); } catch(_){ } _bulbFlashTimer = 0; }
+
+      el.classList.remove("win-flash");
+      requestAnimationFrame(() => {
+        el.classList.add("win-flash");
+        _bulbFlashTimer = setTimeout(() => {
+          el.classList.remove("win-flash");
+          _bulbFlashTimer = 0;
+        }, dur + 80);
+      });
+    },
+
+    /* ✅ mode lampu: idle/spin/win (biar sinkron UX) */
+    setBulbMode(mode = "idle") {
+      const el = gBulbWrap;
+      if (!el) return;
+
+      if (mode === "spin") {
+        el.style.setProperty("--chaseK", "1.10");
+        el.style.setProperty("--chaseDur", "1.85s");
+      } else if (mode === "win") {
+        el.style.setProperty("--chaseK", "1.18");
+        el.style.setProperty("--chaseDur", "1.25s");
+      } else {
+        el.style.setProperty("--chaseK", "0.92");
+        el.style.setProperty("--chaseDur", "2.75s");
+      }
+    },
+
+    destroy() {
+      if (_bulbFlashTimer) { try { clearTimeout(_bulbFlashTimer); } catch(_){ } _bulbFlashTimer = 0; }
     }
   };
 
   /* =========================
-   * OUTER SHADOW WEIGHT
-   * ======================= */
-  gSpin.appendChild(E("circle", {
-    cx, cy,
-    r: (rOuter - 2),
-    fill: "none",
-    stroke: "#000000",
-    "stroke-opacity": "0.18",
-    "stroke-width": "10",
-    filter: `url(#${ID("rimShadow")})`
-  }));
-
-  /* =========================
-   * SEGMENTS
+   * SEGMENTS (ROTATING BASE)
    * ======================= */
   const gSlices = E("g", { class: "wheel-slices" });
-  gSpin.appendChild(gSlices);
+  gRotateBase.appendChild(gSlices);
 
   const mctx = getMeasureCtx();
   const segForMeasure = Math.min(seg, 179.999);
@@ -2855,6 +2984,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       fill
     }));
 
+    // divider (lebih tegas, beda warna utk ivory)
     if (n > 1) {
       const p1 = polar(cx, cy, rSegIn + 10, a0);
       const p2 = polar(cx, cy, rSegOut - 10, a0);
@@ -2862,28 +2992,29 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       gSlices.appendChild(E("line", {
         x1: p1.x.toFixed(2), y1: p1.y.toFixed(2),
         x2: p2.x.toFixed(2), y2: p2.y.toFixed(2),
-        stroke: "#ffffff",
-        "stroke-opacity": isIvory ? "0.08" : "0.10",
+        stroke: isIvory ? "#063b2b" : "#ffffff",
+        "stroke-opacity": isIvory ? "0.14" : "0.12",
         "stroke-width": String(dividerW),
         "vector-effect": "non-scaling-stroke"
       }));
     }
 
-    // label
+    /* =========================
+     * LABELS (ROTATE, default UPRIGHT)
+     * ======================= */
     const label = safePrizes[i];
     const tp = polar(cx, cy, rText, mid);
 
     const isBonus = /bonus/i.test(label);
-    const baseFont = isBonus ? 38 : 50;
-
-    const fontWeight = isBonus ? 1000 : 900;
-    const letterSpacing = isBonus ? 1.6 : 1.1;
+    const baseFont = isBonus ? 42 : 50;
+    const fontWeight = 900;
+    const letterSpacing = 1.1;
 
     let fontSize = baseFont;
     if (mctx) {
       fontSize = fitFontSizeByWidth(mctx, label, maxLabelW, {
         base: baseFont,
-        min: isBonus ? 32 : 38,
+        min: isBonus ? 34 : 38,
         weight: fontWeight,
         family: "system-ui, -apple-system, Segoe UI, Roboto, Arial",
         letterSpacingPx: letterSpacing
@@ -2903,71 +3034,73 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       "paint-order": "stroke"
     });
 
-    if (isBonus) {
-      text.setAttribute("fill", "#f6b33d");
-      text.setAttribute("stroke", "#ffffff");
-      text.setAttribute("stroke-opacity", "0.26");
-      text.setAttribute("stroke-width", "1.2");
-    } else if (isIvory) {
+    // ✅ BONUS 10% SERAGAM (ikut aturan slice)
+    if (isIvory) {
       text.setAttribute("fill", "#063b2b");
       text.setAttribute("stroke", "#ffffff");
-      text.setAttribute("stroke-opacity", "0.20");
+      text.setAttribute("stroke-opacity", "0.18");
       text.setAttribute("stroke-width", "1.0");
     } else {
       text.setAttribute("fill", "#ffffff");
       text.setAttribute("fill-opacity", "0.96");
       text.setAttribute("stroke", "#000000");
-      text.setAttribute("stroke-opacity", "0.18");
+      text.setAttribute("stroke-opacity", "0.16");
       text.setAttribute("stroke-width", "1.0");
     }
 
     text.textContent = label;
-    gLabels.appendChild(text);
+    gRotateLabels.appendChild(text);
     _labelNodes.push({ el: text, x: tp.x.toFixed(2), y: tp.y.toFixed(2) });
   }
 
   /* =========================
-   * DEPTH OVERLAYS (masked donut)
+   * BEVEL / RIM METAL (ROTATING BASE)
    * ======================= */
-  gSpin.appendChild(E("rect", {
-    x: 0, y: 0, width: VB, height: VB,
-    fill: `url(#${ID("segVignette")})`,
-    mask: `url(#${ID("maskDonut")})`
-  }));
 
-  gSpin.appendChild(E("rect", {
-    x: 0, y: 0, width: VB, height: VB,
-    fill: `url(#${ID("segGloss")})`,
-    mask: `url(#${ID("maskDonut")})`
-  }));
-
-  /* =========================
-   * BEVEL EDGES (OUTER)
-   * ======================= */
-  gSpin.appendChild(E("circle", {
+  // bevel edge outer (lebih subtle)
+  gRotateBase.appendChild(E("circle", {
     cx, cy,
     r: (rSegOut + 3),
     fill: "none",
     stroke: "#ffffff",
-    "stroke-opacity": "0.14",
+    "stroke-opacity": "0.11",
     "stroke-width": "6",
     "vector-effect": "non-scaling-stroke"
   }));
 
-  /* =========================
-   * GOLD RIM (static premium)
-   * ======================= */
-  gSpin.appendChild(E("circle", {
+  // inner rim depth ring (NO outer drop shadow)
+  gRotateBase.appendChild(E("circle", {
+    cx, cy,
+    r: (rOuter - rimW1 + 4),
+    fill: "none",
+    stroke: "#000000",
+    "stroke-opacity": "0.20",
+    "stroke-width": "10",
+    "vector-effect": "non-scaling-stroke"
+  }));
+  gRotateBase.appendChild(E("circle", {
+    cx, cy,
+    r: (rOuter - rimW1 + 5),
+    fill: "none",
+    stroke: "#ffffff",
+    "stroke-opacity": "0.08",
+    "stroke-width": "3",
+    "vector-effect": "non-scaling-stroke"
+  }));
+
+  // thin outer edge highlight
+  gRotateBase.appendChild(E("circle", {
     cx, cy,
     r: (rOuter - 1),
     fill: "none",
     stroke: "#ffffff",
-    "stroke-opacity": "0.16",
+    "stroke-opacity": "0.14",
     "stroke-width": "2",
     "vector-effect": "non-scaling-stroke"
   }));
 
-  gSpin.appendChild(E("circle", {
+  // gold rim (metal base rotates)
+  gRotateBase.appendChild(E("circle", {
     cx, cy,
     r: (rOuter - rimW1 / 2),
     fill: "none",
@@ -2976,27 +3109,48 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
     "vector-effect": "non-scaling-stroke"
   }));
 
-  gSpin.appendChild(E("circle", {
-    cx, cy,
-    r: (rOuter - rimW1 / 2),
-    fill: "none",
-    stroke: `url(#${ID("rimSpec")})`,
-    "stroke-width": String(rimW1 + 6),
-    "vector-effect": "non-scaling-stroke"
-  }));
-
-  gSpin.appendChild(E("circle", {
+  // accent ring (thin)
+  gRotateBase.appendChild(E("circle", {
     cx, cy,
     r: (rSegOut + 18),
     fill: "none",
     stroke: "#f6b33d",
-    "stroke-opacity": "0.58",
+    "stroke-opacity": "0.54",
     "stroke-width": String(rimW2),
     "vector-effect": "non-scaling-stroke"
   }));
 
   /* =========================
-   * RIM LIGHTS / BULBS (MAX GLOW)
+   * STATIC LIGHTING (REALISM)
+   * - gloss & vignette: stays fixed (photographic)
+   * - rim spec: stays fixed (reflection)
+   * ======================= */
+
+  // donut depth overlays (STATIC, only donut mask → tidak ganggu label)
+  gStaticSeg.appendChild(E("rect", {
+    x: 0, y: 0, width: VB, height: VB,
+    fill: `url(#${ID("segVignette")})`,
+    mask: `url(#${ID("maskDonut")})`
+  }));
+  gStaticSeg.appendChild(E("rect", {
+    x: 0, y: 0, width: VB, height: VB,
+    fill: `url(#${ID("segGloss")})`,
+    mask: `url(#${ID("maskDonut")})`
+  }));
+
+  // rim spec highlight (STATIC, masked rim band, bulbs di atas)
+  gStaticRim.appendChild(E("circle", {
+    cx, cy,
+    r: (rOuter - rimW1 / 2),
+    fill: "none",
+    stroke: `url(#${ID("rimSpec")})`,
+    "stroke-width": String(rimW1 + 8),
+    mask: `url(#${ID("maskRimBand")})`,
+    "vector-effect": "non-scaling-stroke"
+  }));
+
+  /* =========================
+   * RIM LIGHTS / BULBS (ROTATING, above static spec)
    * ======================= */
   const gBulbWrap = E("g", { class: "wheel-bulbs", opacity: "1" });
 
@@ -3005,7 +3159,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   const bulbOrbit = rOuter - (rimW1 * 0.55);
 
   const gBulbBase = E("g", { class: "bulb-layer base", filter: `url(#${ID("bulbGlow")})` });
-  const gBulbHi = E("g", { class: "bulb-layer hi", filter: `url(#${ID("bulbSpark")})` });
+  const gBulbHi   = E("g", { class: "bulb-layer hi", filter: `url(#${ID("bulbSpark")})` });
 
   const chaseStepS = (chaseDurMs / 1000) / bulbCount;
 
@@ -3013,16 +3167,45 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
     const a = (360 / bulbCount) * i;
     const p = polar(cx, cy, bulbOrbit, a);
 
-    // halo plate (tanpa filter per bulb; glow group yang urus bloom)
+    // ✅ socket ring (trik casino: bikin bulb “terpasang”, anti mainan)
     gBulbBase.appendChild(E("circle", {
       cx: p.x.toFixed(2),
       cy: p.y.toFixed(2),
-      r: String(bulbR * 1.55),
-      fill: "#ffd67a",
-      "fill-opacity": "0.16"
+      r: String(bulbR * 1.18),
+      fill: "#2b1608",
+      "fill-opacity": "0.55"
+    }));
+    gBulbBase.appendChild(E("circle", {
+      cx: p.x.toFixed(2),
+      cy: p.y.toFixed(2),
+      r: String(bulbR * 1.18),
+      fill: "none",
+      stroke: "#ffffff",
+      "stroke-opacity": "0.08",
+      "stroke-width": "1.0",
+      "vector-effect": "non-scaling-stroke"
     }));
 
-    // base bulb
+    // halo (ditipiskan, lebih “incandescent”)
+    gBulbBase.appendChild(E("circle", {
+      class: "bulb-halo2",
+      cx: p.x.toFixed(2),
+      cy: p.y.toFixed(2),
+      r: String(bulbR * 2.05),
+      fill: "#ffe39a",
+      "fill-opacity": "0.10"
+    }));
+
+    gBulbBase.appendChild(E("circle", {
+      class: "bulb-halo",
+      cx: p.x.toFixed(2),
+      cy: p.y.toFixed(2),
+      r: String(bulbR * 1.38),
+      fill: "#ffd67a",
+      "fill-opacity": "0.46"
+    }));
+
+    // base bulb lens
     gBulbBase.appendChild(E("circle", {
       class: "bulb-base",
       cx: p.x.toFixed(2),
@@ -3030,20 +3213,21 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       r: String(bulbR),
       fill: `url(#${ID("bulbFill")})`,
       stroke: "#ffffff",
-      "stroke-opacity": "0.22",
-      "stroke-width": "1.2"
+      "stroke-opacity": "0.18",
+      "stroke-width": "1.1",
+      "vector-effect": "non-scaling-stroke"
     }));
 
     // tiny spec dot
     gBulbBase.appendChild(E("circle", {
       cx: (p.x - bulbR * 0.22).toFixed(2),
       cy: (p.y - bulbR * 0.28).toFixed(2),
-      r: String(Math.max(1.7, bulbR * 0.26)),
+      r: String(Math.max(1.8, bulbR * 0.28)),
       fill: "#ffffff",
-      "fill-opacity": "0.66"
+      "fill-opacity": "0.74"
     }));
 
-    // shimmer runner (soft)
+    // shimmer runner
     if (animateBulbs) {
       const hi = E("circle", {
         class: "bulb-hi",
@@ -3060,10 +3244,10 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
 
   gBulbWrap.appendChild(gBulbBase);
   if (animateBulbs) gBulbWrap.appendChild(gBulbHi);
-  gSpin.appendChild(gBulbWrap);
+  gRotateBulbs.appendChild(gBulbWrap);
 
   /* =========================
-   * OPTIONAL: SVG HUB
+   * OPTIONAL: SVG HUB (ROTATING TOP)
    * ======================= */
   if (includeHub) {
     const gHub = E("g", { class: "wheel-hub" });
@@ -3089,13 +3273,16 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
       r: Math.max(1, capR - 2),
       fill: "none",
       stroke: "#ffffff",
-      "stroke-opacity": "0.18",
+      "stroke-opacity": "0.16",
       "stroke-width": "2",
       "vector-effect": "non-scaling-stroke"
     }));
 
-    gSpin.appendChild(gHub);
+    gRotateTop.appendChild(gHub);
   }
+
+  // apply initial rotation (ensures upright default is active once user calls setRotation)
+  svg.__wheel.setRotation(0, { uprightLabels: defaultUprightLabels });
 
   return svg;
 }
