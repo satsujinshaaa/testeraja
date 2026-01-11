@@ -5150,14 +5150,12 @@ function detectPerfTier(mode) {
   }
 
 /* =========================================================
- * 18) DOWNLOAD + SHARE RESULT (PNG) — FINAL (FULL REPLACE v2)
- * ✅ Fix: lastResult ReferenceError (safe getter)
- * ✅ Fix: fallback dataUrl beneran kepakai (tidak stub kosong)
- * ✅ Fix: revokeObjectURL terlalu cepat (lebih aman)
- * ✅ Improve: iOS popup/blank tab lebih aman (pre-open)
- * ✅ Improve: Share/Clipboard error handling lebih jelas
- * ✅ NEW: Auto-resize “Reward Modal” supaya lebih kecil & responsif di mobile
- * ✅ Improve: PNG base width adaptif (mobile lebih ringan, tetap HD)
+ * 18) DOWNLOAD + SHARE RESULT (PNG) — FINAL (FULL REPLACE v3)
+ * ✅ Force: Play URL/domain SELALU ikut saat share (text + navigator.share url)
+ * ✅ Add: Domain tampil di PNG (biar repost gambar tetap ada alamat main)
+ * ✅ Add: Fallback Share Menu (WA/Telegram/X/FB/LINE/Email/Copy Link)
+ * ✅ Keep: lastResult safe getter, iOS pre-open, blob/dataUrl fallback, revoke safe
+ * ✅ Keep: Reward modal auto-resize responsif
  * ======================================================= */
 
 /* -------------------------
@@ -5169,13 +5167,8 @@ function __toast(msg, type) {
 function __kick() { try { if (typeof kickAudio === "function") kickAudio(true); } catch (_) {} }
 
 function __getLastResult() {
-  try {
-    if (typeof lastResult !== "undefined" && lastResult) return lastResult;
-  } catch (_) {}
-  // fallback: kalau kamu simpan di window
-  try {
-    if (typeof window !== "undefined" && window.lastResult) return window.lastResult;
-  } catch (_) {}
+  try { if (typeof lastResult !== "undefined" && lastResult) return lastResult; } catch (_) {}
+  try { if (typeof window !== "undefined" && window.lastResult) return window.lastResult; } catch (_) {}
   return null;
 }
 
@@ -5186,9 +5179,7 @@ function __isIOS() {
   } catch (_) { return false; }
 }
 function __isMobileLike() {
-  try {
-    if (typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches) return true;
-  } catch (_) {}
+  try { if (typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches) return true; } catch (_) {}
   try {
     const ua = String(navigator.userAgent || "");
     return /Android|iPhone|iPad|iPod/i.test(ua);
@@ -5202,8 +5193,40 @@ function __pad2(n) {
 }
 
 /* -------------------------
+ * PLAY URL (domain bermain) — selalu ada
+ * priority:
+ * 1) CONFIG.PLAY_URL
+ * 2) CONFIG.CLAIM_URL
+ * 3) current page (origin + pathname)
+ * ------------------------- */
+function __getPlayUrl() {
+  let u = "";
+  try {
+    if (typeof CONFIG === "object" && CONFIG) {
+      if (CONFIG.PLAY_URL) u = String(CONFIG.PLAY_URL || "");
+      else if (CONFIG.CLAIM_URL) u = String(CONFIG.CLAIM_URL || "");
+    }
+  } catch (_) {}
+  if (!u) {
+    try { u = String(location.origin + location.pathname); } catch (_) { u = ""; }
+  }
+  // normalize (buang whitespace)
+  u = String(u || "").trim();
+  return u;
+}
+
+function __shortUrl(u) {
+  try {
+    const url = new URL(String(u || ""), location.href);
+    // pendek & enak dibaca: origin + pathname
+    return (url.origin + url.pathname).replace(/\/+$/, "");
+  } catch (_) {
+    return String(u || "").replace(/\/+$/, "");
+  }
+}
+
+/* -------------------------
  * RESPONSIVE: shrink Reward Modal on mobile
- * (aman: hanya apply ke container yang punya downloadBtn/shareBtn)
  * ------------------------- */
 (function setupRewardModalResponsiveSizing() {
   let raf = 0;
@@ -5214,7 +5237,6 @@ function __pad2(n) {
     const btn = dBtn || sBtn;
     if (!btn) return null;
 
-    // cari ancestor yang paling mungkin modal/dialog
     const root =
       btn.closest('[role="dialog"]') ||
       btn.closest(".modal") ||
@@ -5241,25 +5263,19 @@ function __pad2(n) {
       root.querySelector(".modal-content, .dialog-content, .content, .panel, .card") ||
       root;
 
-    // jangan ganggu kalau panel memang bukan modal content
     try {
-      // width + height (lebih kecil di mobile)
       panel.style.width = mobile ? "min(420px, 92vw)" : "min(520px, 92vw)";
       panel.style.maxHeight = mobile ? "min(74vh, 640px)" : "min(78vh, 720px)";
       panel.style.overflow = "auto";
       panel.style.boxSizing = "border-box";
-
-      // padding halus (kalau CSS kamu tidak ngunci)
       if (!panel.style.padding) panel.style.padding = mobile ? "14px 14px 16px" : "18px 18px 20px";
       if (!panel.style.borderRadius) panel.style.borderRadius = "18px";
     } catch (_) {}
 
-    // scale preview image (kalau ada)
     try {
       const imgs = root.querySelectorAll("img");
       for (let i = 0; i < imgs.length; i++) {
         const img = imgs[i];
-        // jangan ganggu icon kecil
         const w = img.naturalWidth || img.width || 0;
         if (w && w < 120) continue;
 
@@ -5280,9 +5296,150 @@ function __pad2(n) {
     window.addEventListener("resize", schedule, { passive: true });
     window.addEventListener("orientationchange", schedule, { passive: true });
   } catch (_) {}
-  // initial
   schedule();
 })();
+
+/* -------------------------
+ * FALLBACK SHARE MENU (platform links)
+ * ------------------------- */
+const __SHARE_MENU = { el: null };
+
+function __ensureShareMenu() {
+  if (__SHARE_MENU.el) return __SHARE_MENU.el;
+
+  const wrap = document.createElement("div");
+  wrap.id = "mt2ShareMenu";
+  wrap.style.cssText = [
+    "position:fixed; inset:0; z-index:2147483000;",
+    "display:none; align-items:flex-end; justify-content:center;",
+    "background:rgba(0,0,0,0.62);",
+    "padding:16px;"
+  ].join("");
+
+  const panel = document.createElement("div");
+  panel.style.cssText = [
+    "width:min(520px, 96vw);",
+    "border-radius:18px;",
+    "background:linear-gradient(135deg, rgba(6,18,14,0.96), rgba(7,30,22,0.96));",
+    "border:1px solid rgba(34,197,94,0.30);",
+    "box-shadow:0 22px 80px rgba(0,0,0,0.55);",
+    "padding:14px 14px 12px;",
+    "margin-bottom: max(8px, env(safe-area-inset-bottom));"
+  ].join("");
+
+  const title = document.createElement("div");
+  title.textContent = "Bagikan hasil";
+  title.style.cssText = "font:900 16px system-ui,-apple-system,Segoe UI,Roboto,Arial; color:rgba(255,255,255,0.92); margin:4px 6px 10px;";
+
+  const grid = document.createElement("div");
+  grid.style.cssText = "display:grid; grid-template-columns:1fr 1fr; gap:10px;";
+
+  function mkBtn(label) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.style.cssText = [
+      "appearance:none; border:1px solid rgba(255,255,255,0.12);",
+      "background:rgba(255,255,255,0.06);",
+      "color:rgba(255,255,255,0.92);",
+      "border-radius:14px; padding:12px 10px;",
+      "font:800 14px system-ui,-apple-system,Segoe UI,Roboto,Arial;",
+      "cursor:pointer;"
+    ].join("");
+    b.onpointerdown = () => { b.style.transform = "scale(0.98)"; };
+    b.onpointerup = () => { b.style.transform = "scale(1)"; };
+    b.onpointercancel = () => { b.style.transform = "scale(1)"; };
+    return b;
+  }
+
+  const closeRow = document.createElement("div");
+  closeRow.style.cssText = "display:flex; gap:10px; margin-top:10px;";
+
+  const closeBtn = mkBtn("Tutup");
+  closeBtn.style.cssText += "flex:1; background:rgba(255,255,255,0.04);";
+  closeBtn.addEventListener("click", () => __hideShareMenu());
+
+  const copyBtn = mkBtn("Copy Link");
+  copyBtn.style.cssText += "flex:1; border-color:rgba(34,197,94,0.35);";
+
+  closeRow.appendChild(copyBtn);
+  closeRow.appendChild(closeBtn);
+
+  panel.appendChild(title);
+  panel.appendChild(grid);
+  panel.appendChild(closeRow);
+
+  wrap.appendChild(panel);
+
+  wrap.addEventListener("click", (e) => {
+    if (e.target === wrap) __hideShareMenu();
+  });
+
+  document.body.appendChild(wrap);
+
+  __SHARE_MENU.el = wrap;
+  __SHARE_MENU.grid = grid;
+  __SHARE_MENU.copyBtn = copyBtn;
+
+  return wrap;
+}
+
+function __showShareMenu(payload) {
+  const el = __ensureShareMenu();
+  const grid = __SHARE_MENU.grid;
+  grid.innerHTML = "";
+
+  const url = String(payload.url || "");
+  const text = String(payload.text || "");
+  const title = String(payload.title || "");
+  const encText = encodeURIComponent(text);
+  const encUrl = encodeURIComponent(url);
+
+  const targets = [
+    ["WhatsApp", `https://wa.me/?text=${encText}`],
+    ["Telegram", `https://t.me/share/url?url=${encUrl}&text=${encText}`],
+    ["X / Twitter", `https://twitter.com/intent/tweet?text=${encText}`],
+    ["Facebook", `https://www.facebook.com/sharer/sharer.php?u=${encUrl}`],
+    ["LINE", `https://social-plugins.line.me/lineit/share?url=${encUrl}`],
+    ["Email", `mailto:?subject=${encodeURIComponent(title)}&body=${encText}`],
+  ];
+
+  for (let i = 0; i < targets.length; i++) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = targets[i][0];
+    btn.style.cssText = [
+      "appearance:none; border:1px solid rgba(255,255,255,0.12);",
+      "background:rgba(255,255,255,0.06);",
+      "color:rgba(255,255,255,0.92);",
+      "border-radius:14px; padding:12px 10px;",
+      "font:800 14px system-ui,-apple-system,Segoe UI,Roboto,Arial;",
+      "cursor:pointer;"
+    ].join("");
+    btn.addEventListener("click", () => {
+      try { window.open(targets[i][1], "_blank", "noopener,noreferrer"); } catch (_) {}
+      __hideShareMenu();
+    });
+    grid.appendChild(btn);
+  }
+
+  __SHARE_MENU.copyBtn.onclick = async () => {
+    try {
+      const clip = url ? url : text;
+      if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(clip);
+      __toast("Link disalin", "success");
+    } catch (_) {
+      __toast("Gagal menyalin link", "error");
+    }
+    __hideShareMenu();
+  };
+
+  el.style.display = "flex";
+}
+
+function __hideShareMenu() {
+  try { if (__SHARE_MENU.el) __SHARE_MENU.el.style.display = "none"; } catch (_) {}
+}
 
 /* -------------------------
  * PUBLIC API
@@ -5295,7 +5452,6 @@ function downloadResultPng() {
   const r = rSafe;
   const ts = r.ts || Date.now();
 
-  // iOS: pre-open tab supaya tidak keblok (gesture aman)
   const preOpen = __isIOS();
   let preTab = null;
   if (preOpen) {
@@ -5306,33 +5462,20 @@ function downloadResultPng() {
     .then(({ blob, fileName, dataUrl }) => {
       const name = fileName || buildFileName(r.userId, ts);
 
-      // prefer blob
       if (blob instanceof Blob) {
         try {
           const url = URL.createObjectURL(blob);
-
-          // download normal
-          try {
-            triggerDownload(url, name);
-          } catch (_) {}
-
-          // iOS fallback: arahkan tab yang sudah dibuka
-          if (preTab && !preTab.closed) {
-            try { preTab.location.href = url; } catch (_) {}
-          }
-
-          // revoke lebih lama biar aman
+          try { triggerDownload(url, name); } catch (_) {}
+          if (preTab && !preTab.closed) { try { preTab.location.href = url; } catch (_) {} }
           setTimeout(() => { try { URL.revokeObjectURL(url); } catch (_) {} }, 60000);
           __toast("File hasil berhasil dibuat", "success");
           return;
         } catch (_) {}
       }
 
-      // fallback: dataUrl
       if (typeof dataUrl === "string" && dataUrl.startsWith("data:image/")) {
-        try {
-          triggerDownload(dataUrl, name);
-        } catch (_) {
+        try { triggerDownload(dataUrl, name); }
+        catch (_) {
           try {
             if (preTab && !preTab.closed) preTab.location.href = dataUrl;
             else window.open(dataUrl, "_blank", "noopener,noreferrer");
@@ -5342,7 +5485,6 @@ function downloadResultPng() {
         return;
       }
 
-      // fallback terakhir
       __toast("Gagal membuat gambar.", "error");
       try { if (preTab && !preTab.closed) preTab.close(); } catch (_) {}
     })
@@ -5352,7 +5494,7 @@ function downloadResultPng() {
     });
 }
 
-/* ✅ Tambahan: Share via Web Share API */
+/* ✅ Share via Web Share API + ALWAYS include play link */
 async function shareResultPng() {
   const rSafe = __getLastResult();
   if (!rSafe) { __toast("Hasil belum tersedia. Silakan spin terlebih dahulu.", "error"); return; }
@@ -5360,6 +5502,9 @@ async function shareResultPng() {
 
   const r = rSafe;
   const ts = r.ts || Date.now();
+
+  const playUrl = __getPlayUrl();
+  const playShort = __shortUrl(playUrl);
 
   const timeStr = new Date(ts).toLocaleString("id-ID", {
     day: "2-digit", month: "short", year: "numeric",
@@ -5370,22 +5515,19 @@ async function shareResultPng() {
   const prize = String(r.prizeLabel || "BONUS 10%");
   const shareTitle = "Hasil Spin — MADETOTO2";
 
-  const claimUrl =
-    (typeof CONFIG === "object" && CONFIG && CONFIG.CLAIM_URL) ? String(CONFIG.CLAIM_URL) : "";
-
+  // Link domain wajib ada di text
   const shareText =
     `🎉 ${shareTitle}\n` +
     `Hadiah: ${prize}\n` +
     `User ID: ${safeUser}\n` +
     `Waktu: ${timeStr}\n` +
-    (claimUrl ? `Klaim: ${claimUrl}` : "");
+    `Mainkan di: ${playUrl}`;
 
-  // iOS/Android: jika ingin “lebih enteng” saat share, generate ukuran sedikit lebih kecil
   let blob = null, dataUrl = "";
   let fileName = buildFileName(r.userId, ts);
 
   try {
-    const res = await makeRewardPngBlob(r, ts, { intent: "share" });
+    const res = await makeRewardPngBlob(r, ts, { intent: "share", playUrl });
     blob = res.blob || null;
     dataUrl = res.dataUrl || "";
     fileName = res.fileName || fileName;
@@ -5393,19 +5535,17 @@ async function shareResultPng() {
     blob = null;
   }
 
-  // 1) Web Share API + files (terbaik)
+  // 1) Web Share API + files + url (terbaik)
   if (blob && typeof navigator !== "undefined" && typeof navigator.share === "function") {
     try {
       const file = new File([blob], fileName || "MADETOTO2-REWARD.png", { type: "image/png", lastModified: ts });
       const canShareFiles = !!(navigator.canShare && navigator.canShare({ files: [file] }));
       if (canShareFiles) {
-        await navigator.share({ title: shareTitle, text: shareText, files: [file] });
+        await navigator.share({ title: shareTitle, text: shareText, url: playUrl, files: [file] });
         __toast("Menu bagikan dibuka", "success");
         return;
       }
-
-      // share ada tapi files tidak didukung -> share text
-      await navigator.share({ title: shareTitle, text: shareText });
+      await navigator.share({ title: shareTitle, text: shareText, url: playUrl });
       __toast("Menu bagikan dibuka", "success");
       return;
     } catch (err) {
@@ -5413,14 +5553,13 @@ async function shareResultPng() {
         __toast("Bagikan dibatalkan", "error");
         return;
       }
-      // lanjut fallback
     }
   }
 
-  // 2) Web Share API text-only (kalau ada)
+  // 2) Web Share API text-only + url
   if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
     try {
-      await navigator.share({ title: shareTitle, text: shareText });
+      await navigator.share({ title: shareTitle, text: shareText, url: playUrl });
       __toast("Menu bagikan dibuka", "success");
       return;
     } catch (err) {
@@ -5431,40 +5570,41 @@ async function shareResultPng() {
     }
   }
 
-  // 3) Copy image ke clipboard (kalau support)
+  // 3) Copy image ke clipboard (kalau support) + (best-effort) copy text setelahnya
   if (blob && typeof navigator !== "undefined" && navigator.clipboard && typeof window !== "undefined" && window.ClipboardItem) {
     try {
       await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-      __toast("Gambar disalin. Tinggal paste ke sosmed.", "success");
-      try { await navigator.clipboard.writeText(shareText); } catch (_) {}
-      return;
-    } catch (_) {
-      // lanjut fallback
-    }
-  }
-
-  // 4) Copy text (paling kompatibel)
-  if (typeof navigator !== "undefined" && navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-    try {
-      await navigator.clipboard.writeText(shareText);
-      __toast("Teks hasil disalin. Tinggal paste ke sosmed.", "success");
+      try { if (navigator.clipboard.writeText) await navigator.clipboard.writeText(shareText); } catch (_) {}
+      __toast("Gambar disalin. Tinggal paste ke sosmed. (Link ada di teks)", "success");
       return;
     } catch (_) {}
   }
 
-  // 5) Fallback terakhir: buka gambar di tab baru
-  //    (pakai blob URL kalau ada, kalau tidak pakai dataUrl)
+  // 4) Copy text (paling kompatibel) — sudah mengandung link domain
+  if (typeof navigator !== "undefined" && navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+    try {
+      await navigator.clipboard.writeText(shareText);
+      __toast("Teks + link disalin. Tinggal paste ke sosmed.", "success");
+      // tampilkan menu share cepat biar “ke mana pun”
+      __showShareMenu({ title: shareTitle, text: shareText, url: playUrl });
+      return;
+    } catch (_) {}
+  }
+
+  // 5) Fallback terakhir: tampilkan menu share + buka gambar di tab baru
   try {
+    __showShareMenu({ title: shareTitle, text: shareText, url: playUrl });
+
     if (blob) {
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank", "noopener,noreferrer");
       setTimeout(() => { try { URL.revokeObjectURL(url); } catch (_) {} }, 60000);
-      __toast("Gambar dibuka di tab baru untuk dibagikan.", "success");
+      __toast("Gambar dibuka di tab baru. Link ada di menu bagikan.", "success");
       return;
     }
     if (dataUrl && typeof dataUrl === "string" && dataUrl.startsWith("data:image/")) {
       window.open(dataUrl, "_blank", "noopener,noreferrer");
-      __toast("Gambar dibuka di tab baru untuk dibagikan.", "success");
+      __toast("Gambar dibuka di tab baru. Link ada di menu bagikan.", "success");
       return;
     }
   } catch (_) {}
@@ -5493,7 +5633,6 @@ async function shareResultPng() {
 
 /* -------------------------
  * CORE: generate PNG blob (shared by download/share)
- * - mobile lebih ringan (baseW turun, dpr cap)
  * ------------------------- */
 function makeRewardPngBlob(r, ts, opt) {
   return new Promise((resolve, reject) => {
@@ -5503,18 +5642,16 @@ function makeRewardPngBlob(r, ts, opt) {
       const intent = (opt && opt.intent) ? String(opt.intent) : "download";
 
       const mobile = __isMobileLike();
-
-      // base width adaptif (mobile lebih kecil -> file lebih ringan & cepat)
-      // desktop tetap 1080 biar tajam
       const baseW = mobile ? (intent === "share" ? 900 : 960) : 1080;
 
-      // DPR cap: share biasanya lebih sensitif (file size), download boleh agak lebih tinggi
       const rawDpr = (typeof window !== "undefined" && window.devicePixelRatio) ? window.devicePixelRatio : 1;
       const dprCap = mobile ? (intent === "share" ? 1.6 : 1.9) : 2;
       const dpr = Math.max(1, Math.min(dprCap, rawDpr || 1));
 
-      // --- Measure layout first
-      const lay = calcRewardPngLayout(t, stamp, { baseW });
+      const playUrl = (opt && opt.playUrl) ? String(opt.playUrl) : __getPlayUrl();
+      const playShort = __shortUrl(playUrl);
+
+      const lay = calcRewardPngLayout(t, stamp, { baseW, playShort });
 
       const canvas = document.createElement("canvas");
       canvas.width = Math.floor(lay.baseW * dpr);
@@ -5524,7 +5661,6 @@ function makeRewardPngBlob(r, ts, opt) {
       if (!ctx) { reject(new Error("no_ctx")); return; }
       ctx.scale(dpr, dpr);
 
-      // --- Background
       const g = ctx.createLinearGradient(0, 0, lay.baseW, lay.baseH);
       g.addColorStop(0, "#06130f");
       g.addColorStop(0.55, "#071e16");
@@ -5532,12 +5668,10 @@ function makeRewardPngBlob(r, ts, opt) {
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, lay.baseW, lay.baseH);
 
-      // Orbs (adapt to height)
       drawOrb(ctx, Math.min(260, lay.baseW * 0.24), 220, 260, "rgba(34,197,94,0.14)");
       drawOrb(ctx, lay.baseW - Math.min(220, lay.baseW * 0.20), 320, 220, "rgba(255,255,255,0.07)");
       drawOrb(ctx, lay.baseW - Math.min(260, lay.baseW * 0.24), lay.baseH - 260, 300, "rgba(20,184,166,0.10)");
 
-      // --- Card
       roundRect(ctx, lay.cardX, lay.cardY, lay.cardW, lay.cardH, 34);
 
       const cg = ctx.createLinearGradient(lay.cardX, lay.cardY, lay.cardX + lay.cardW, lay.cardY + lay.cardH);
@@ -5550,7 +5684,6 @@ function makeRewardPngBlob(r, ts, opt) {
       ctx.strokeStyle = "rgba(34,197,94,0.55)";
       ctx.stroke();
 
-      // --- Header
       ctx.fillStyle = "rgba(255,255,255,0.95)";
       ctx.font = "900 44px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillText("MADETOTO2", lay.innerX, lay.brandY);
@@ -5559,7 +5692,6 @@ function makeRewardPngBlob(r, ts, opt) {
       ctx.font = "700 24px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillText("HASIL SPIN REWARD", lay.innerX, lay.subY);
 
-      // --- Prize
       ctx.fillStyle = "#bbf7d0";
       ctx.font = `1000 ${lay.prize.fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
 
@@ -5572,7 +5704,6 @@ function makeRewardPngBlob(r, ts, opt) {
       }
       ctx.restore();
 
-      // Divider
       ctx.strokeStyle = "rgba(255,255,255,0.10)";
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -5580,7 +5711,6 @@ function makeRewardPngBlob(r, ts, opt) {
       ctx.lineTo(lay.innerX + lay.innerW, lay.dividerY);
       ctx.stroke();
 
-      // --- Labels
       ctx.fillStyle = "rgba(255,255,255,0.70)";
       ctx.font = "800 22px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace";
       ctx.fillText("USER ID", lay.innerX, lay.userLabelY);
@@ -5596,7 +5726,6 @@ function makeRewardPngBlob(r, ts, opt) {
       });
       ctx.fillText(timeStr, lay.innerX, lay.timeValueY);
 
-      // --- Note box
       roundRect(ctx, lay.noteX, lay.noteY, lay.noteW, lay.noteH, 22);
       ctx.fillStyle = "rgba(0,0,0,0.30)";
       ctx.fill();
@@ -5610,22 +5739,19 @@ function makeRewardPngBlob(r, ts, opt) {
         ctx.fillText(lay.noteLines[i], lay.noteTextX, lay.noteTextY + i * lay.noteLineH);
       }
 
-      // --- Footer
+      // footer (domain tampil)
       ctx.fillStyle = "rgba(255,255,255,0.55)";
       ctx.font = "700 18px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      ctx.fillText("Spin & Win • MADETOTO2", lay.innerX, lay.footerY);
+      ctx.fillText(`Mainkan: ${playShort}`, lay.innerX, lay.footerY);
 
       const fileName = buildFileName(t.userId, stamp);
 
-      // output
-      // NOTE: untuk kompatibilitas + gesture, kita selalu siapkan dataUrl fallback
       let dataUrl = "";
       try { dataUrl = canvas.toDataURL("image/png"); } catch (_) { dataUrl = ""; }
 
       if (canvas.toBlob) {
         canvas.toBlob((b) => {
           if (b) { resolve({ blob: b, fileName, dataUrl }); return; }
-          // fallback to dataUrl -> blob
           try {
             const b2 = dataUrl ? dataUrlToBlob(dataUrl) : null;
             resolve({ blob: b2, fileName, dataUrl });
@@ -5707,7 +5833,7 @@ function roundRect(ctx, x, y, w, h, r) {
 }
 
 /* -------------------------
- * LAYOUT (MEASURE) — tetap akurat, tapi baseW bisa adaptif
+ * LAYOUT (MEASURE)
  * ------------------------- */
 const __MEASURE = { ctx: null };
 function getMeasureCtx() {
@@ -5724,9 +5850,9 @@ function getMeasureCtx() {
 
 function calcRewardPngLayout(r, ts, opt) {
   const baseW = (opt && opt.baseW) ? Math.max(720, Math.min(1080, Number(opt.baseW) || 1080)) : 1080;
+  const playShort = (opt && opt.playShort) ? String(opt.playShort || "") : "";
 
-  // card geometry (sedikit adaptif biar proporsional di baseW kecil)
-  const pad = Math.round(baseW * 0.061); // ~66 saat 1080
+  const pad = Math.round(baseW * 0.061);
   const cardX = pad;
   const cardY = 120;
   const cardW = baseW - pad * 2;
@@ -5734,11 +5860,9 @@ function calcRewardPngLayout(r, ts, opt) {
   const innerX = cardX + 44;
   const innerW = cardW - 88;
 
-  // header
   const brandY = cardY + 90;
   const subY = cardY + 140;
 
-  // prize
   const prizeStartY = cardY + 255;
   const prizeText = String(r.prizeLabel || "BONUS 10%");
 
@@ -5756,8 +5880,12 @@ function calcRewardPngLayout(r, ts, opt) {
     const noteTextX = noteX + 26;
     const noteTextY = noteY + 44;
     const noteLineH = 28;
-    const noteLines = ["Silakan klaim melalui Live Chat", "dan sertakan USER ID + hasil unduh ini."];
-    const noteH = 110;
+
+    const noteLines = playShort
+      ? [`Mainkan di: ${playShort}`, "Klaim via Live Chat + sertakan", "USER ID + gambar ini."]
+      : ["Silakan klaim melalui Live Chat", "dan sertakan USER ID + hasil unduh ini."];
+
+    const noteH = playShort ? 132 : 110;
     const footerY = noteY + noteH + 58;
     const cardH = (footerY + 40) - cardY;
     const baseH = cardY + cardH + 110;
@@ -5788,7 +5916,6 @@ function calcRewardPngLayout(r, ts, opt) {
 
   const prizeBlockH = Math.ceil((prize.lines.length - 1) * prize.lineH + prize.fontSize * 1.12);
   const prizeBottom = prizeStartY + prizeBlockH;
-
   const dividerY = Math.ceil(prizeBottom + 14);
 
   const userLabelY = dividerY + 70;
@@ -5801,7 +5928,6 @@ function calcRewardPngLayout(r, ts, opt) {
   const noteX = innerX;
   const noteW = innerW;
 
-  const noteText = "Silakan klaim melalui Live Chat dan sertakan USER ID + hasil unduh ini.";
   const noteFont = "800 22px system-ui, -apple-system, Segoe UI, Roboto, Arial";
   const noteLineH = 28;
 
@@ -5809,6 +5935,10 @@ function calcRewardPngLayout(r, ts, opt) {
   const noteInnerPadX = 26;
   const noteInnerPadY = 22;
   const noteMaxW = noteW - noteInnerPadX * 2;
+
+  const noteText = playShort
+    ? `Mainkan di: ${playShort} • Klaim via Live Chat dan sertakan USER ID + gambar ini.`
+    : "Silakan klaim melalui Live Chat dan sertakan USER ID + hasil unduh ini.";
 
   const noteLines = wrapLinesByWords(mctx, noteText, noteMaxW, 3);
   const noteH = Math.max(68, noteInnerPadY * 2 + noteLines.length * noteLineH + 2);
