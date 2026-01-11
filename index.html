@@ -3002,8 +3002,331 @@ function initFxParticlesCanvas() {
 }
 
 /* =========================================================
- * 7) AUDIO (clean start on first gesture)
+ * 7) AUDIO — MOBILE SMOOTH (WebAudio SFX + smart limiter)
  * ======================================================= */
+
+/** --- Global state (pastikan tidak bentrok) --- */
+let audioPrimed = false;
+let bgStarted = false;
+
+let tickPool = [];       // fallback only
+let historyPool = [];    // fallback only
+let tickPoolIdx = 0;
+let historyPoolIdx = 0;
+
+let historySfxAt = 0;
+let pointerKickT = 0;
+let toastTimer = 0;
+
+/** --- WebAudio engine (SFX only) --- */
+const SFX = (() => {
+  const st = {
+    supported: false,
+    ctx: null,
+    master: null,
+    sfxGain: null,
+    bgGain: null,
+    buffers: Object.create(null),
+    loading: null,
+    unlocked: false,
+    lastTickAtMs: 0,
+    lastHistAtMs: 0,
+    activeTickVoices: 0,
+    toastOnce: false,
+    mediaSrcNode: null,
+    lowEnd: false,
+  };
+
+  function _isLowEndDevice() {
+    try {
+      const dm = navigator.deviceMemory || 0;
+      const hc = navigator.hardwareConcurrency || 0;
+      const saveData = !!(navigator.connection && navigator.connection.saveData);
+      return saveData || (dm && dm <= 2) || (hc && hc <= 4);
+    } catch (_) { return false; }
+  }
+
+  function _ensureCtx() {
+    if (st.ctx) return true;
+
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return false;
+
+    try {
+      st.ctx = new AC({ latencyHint: "interactive" });
+      st.master = st.ctx.createGain();
+      st.sfxGain = st.ctx.createGain();
+      st.bgGain = st.ctx.createGain();
+
+      // master routing
+      st.sfxGain.connect(st.master);
+      st.bgGain.connect(st.master);
+      st.master.connect(st.ctx.destination);
+
+      st.supported = true;
+      st.lowEnd = _isLowEndDevice();
+
+      // initial gain (akan diset ulang saat setupAudio)
+      st.master.gain.value = 1.0;
+      st.sfxGain.gain.value = 1.0;
+      st.bgGain.gain.value = 1.0;
+
+      return true;
+    } catch (_) {
+      st.ctx = null;
+      return false;
+    }
+  }
+
+  async function _resume() {
+    if (!_ensureCtx()) return false;
+    try {
+      if (st.ctx.state !== "running") await st.ctx.resume();
+      return st.ctx.state === "running";
+    } catch (_) { return false; }
+  }
+
+  async function _unlockOnce() {
+    if (st.unlocked) return true;
+    const ok = await _resume();
+    if (!ok) return false;
+
+    // iOS-friendly unlock: play ultra-short silent buffer
+    try {
+      const sr = st.ctx.sampleRate || 48000;
+      const b = st.ctx.createBuffer(1, Math.max(1, Math.floor(sr * 0.01)), sr);
+      const src = st.ctx.createBufferSource();
+      src.buffer = b;
+      const g = st.ctx.createGain();
+      g.gain.value = 0.00001;
+
+      src.connect(g);
+      g.connect(st.master);
+      src.start(st.ctx.currentTime);
+      src.stop(st.ctx.currentTime + 0.01);
+
+      st.unlocked = true;
+      return true;
+    } catch (_) {
+      // kalau gagal, tetap anggap unlocked best-effort
+      st.unlocked = true;
+      return true;
+    }
+  }
+
+  async function _fetchDecode(url) {
+    const res = await fetch(url, { cache: "force-cache", mode: "cors" }).catch(() => null);
+    if (!res || !res.ok) throw new Error("fetch_failed");
+    const ab = await res.arrayBuffer();
+    // decodeAudioData iOS kadang perlu promise/CB fallback
+    return await new Promise((resolve, reject) => {
+      try {
+        st.ctx.decodeAudioData(
+          ab.slice(0),
+          (buf) => resolve(buf),
+          () => reject(new Error("decode_failed"))
+        );
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  function prepare({ tickUrl, histUrl, spinUrl, winUrl, vol }) {
+    // Boleh dipanggil sebelum gesture, tapi ctx dibuat best-effort.
+    _ensureCtx();
+    if (!st.supported) return;
+
+    // gain sync dari CONFIG
+    const v = vol || {};
+    const vTick = Number(v.tick ?? 1);
+    const vHist = Number(v.history ?? 1);
+    const vSpin = Number(v.spin ?? 1);
+    const vWin  = Number(v.win ?? 1);
+    const vBg   = Number(v.bg ?? 1);
+
+    // Master / group gain (bg gain dipakai kalau kamu mau routing bg via webaudio)
+    st.sfxGain.gain.value = 1.0;
+    st.bgGain.gain.value = 1.0;
+
+    // Simpan “per-sfx base volume” (dipakai saat play)
+    st._baseVol = {
+      tick:  Math.max(0, Math.min(1, vTick)),
+      history: Math.max(0, Math.min(1, vHist)),
+      spin:  Math.max(0, Math.min(1, vSpin)),
+      win:   Math.max(0, Math.min(1, vWin)),
+      bg:    Math.max(0, Math.min(1, vBg)),
+    };
+
+    const jobs = [];
+    const map = [
+      ["tick", tickUrl],
+      ["history", histUrl],
+      ["spin", spinUrl],
+      ["win", winUrl],
+    ];
+
+    st.loading = (async () => {
+      // jangan decode kalau ctx belum ada
+      if (!st.ctx) return;
+
+      for (const [key, url] of map) {
+        if (!url || typeof url !== "string") continue;
+        // cache hit
+        if (st.buffers[key]) continue;
+        jobs.push(
+          _fetchDecode(url)
+            .then((buf) => { st.buffers[key] = buf; })
+            .catch(() => { /* fallback akan dipakai */ })
+        );
+      }
+
+      // paralel tapi ringan
+      await Promise.allSettled(jobs);
+    })();
+
+    // kembalikan promise biar opsional ditunggu
+    return st.loading;
+  }
+
+  function _playBuffer(key, {
+    vol = 1,
+    rate = 1,
+    detune = 0,
+    maxVoices = 999,
+    voiceKey = "",
+  } = {}) {
+    if (!st.supported || !st.ctx || st.ctx.state !== "running") return false;
+
+    const buf = st.buffers[key];
+    if (!buf) return false;
+
+    // polyphony limiter khusus tick (biar nggak “pecah”)
+    if (voiceKey === "tick") {
+      if (st.activeTickVoices >= maxVoices) return false;
+      st.activeTickVoices++;
+    }
+
+    try {
+      const src = st.ctx.createBufferSource();
+      src.buffer = buf;
+      src.playbackRate.value = Math.max(0.5, Math.min(1.7, rate));
+      if (detune) src.detune.value = detune;
+
+      const g = st.ctx.createGain();
+      const base = st._baseVol?.[key] ?? 1;
+      g.gain.value = Math.max(0, Math.min(1, base * vol));
+
+      // route to SFX bus
+      src.connect(g);
+      g.connect(st.sfxGain);
+
+      const t0 = st.ctx.currentTime;
+      src.start(t0);
+
+      // cleanup
+      src.onended = () => {
+        try { src.disconnect(); } catch (_) {}
+        try { g.disconnect(); } catch (_) {}
+        if (voiceKey === "tick") st.activeTickVoices = Math.max(0, st.activeTickVoices - 1);
+      };
+
+      return true;
+    } catch (_) {
+      if (voiceKey === "tick") st.activeTickVoices = Math.max(0, st.activeTickVoices - 1);
+      return false;
+    }
+  }
+
+  function tick(intensity = 1) {
+    const now = Date.now();
+
+    // smart throttle:
+    // - lowEnd: lebih longgar supaya tidak “pecah”
+    // - high: tetap cepat tapi jangan terlalu rapat (mobile decoding/CPU)
+    const minGap = st.lowEnd ? 55 : 38; // ms
+    if (now - st.lastTickAtMs < minGap) return true; // skip silently
+    st.lastTickAtMs = now;
+
+    // tick feel: sedikit variasi rate (natural, tapi tidak bikin fals)
+    const rate = 1 + (Math.random() * 0.06 - 0.03);
+    const detune = (Math.random() * 14 - 7); // cents
+
+    // intensity juga ngaruh volume
+    const vol = Math.max(0.10, Math.min(1, 0.45 + 0.55 * intensity));
+
+    // max voices: lowEnd 2, high 3 (lebih dari itu biasanya jadi “berisik”)
+    const maxVoices = st.lowEnd ? 2 : 3;
+
+    return _playBuffer("tick", { vol, rate, detune, maxVoices, voiceKey: "tick" });
+  }
+
+  function history() {
+    const now = Date.now();
+    const gap = st.lowEnd ? 850 : 700;
+    if (now - st.lastHistAtMs < gap) return true;
+    st.lastHistAtMs = now;
+    return _playBuffer("history", { vol: 1.0, rate: 1.0, detune: 0 });
+  }
+
+  function spin() {
+    return _playBuffer("spin", { vol: 1.0, rate: 1.0 });
+  }
+
+  function win() {
+    return _playBuffer("win", { vol: 1.0, rate: 1.0 });
+  }
+
+  async function onFirstGesture() {
+    // wajib dipanggil dari user gesture (click/touch/pointerdown)
+    if (!st.supported) _ensureCtx();
+    if (!st.supported) return false;
+
+    await _resume();
+    await _unlockOnce();
+
+    // tunggu decoding best-effort (biar SFX langsung nempel)
+    try { if (st.loading) await Promise.race([st.loading, new Promise(r => setTimeout(r, 900))]); } catch (_) {}
+
+    return true;
+  }
+
+  function routeBgElement(bgEl) {
+    // OPTIONAL: kalau kamu mau bgMusic lewat AudioContext bus (lebih konsisten)
+    // Tapi kalau ada masalah di device tertentu, kamu bisa komentar fungsi ini.
+    if (!st.supported || !st.ctx || !bgEl) return;
+    if (st.mediaSrcNode) return;
+
+    try {
+      st.mediaSrcNode = st.ctx.createMediaElementSource(bgEl);
+      st.mediaSrcNode.connect(st.bgGain);
+    } catch (_) {
+      // iOS bisa throw kalau element sudah pernah di-route di context lain
+      st.mediaSrcNode = null;
+    }
+  }
+
+  function setBgVolume(v) {
+    if (!st.supported) return;
+    const val = Math.max(0, Math.min(1, Number(v || 0)));
+    // bgGain hanya efektif kalau bg di-route via routeBgElement()
+    try { if (st.bgGain) st.bgGain.gain.value = val; } catch (_) {}
+  }
+
+  return {
+    st,
+    prepare,
+    onFirstGesture,
+    tick,
+    history,
+    spin,
+    win,
+    routeBgElement,
+    setBgVolume,
+  };
+})();
+
+/** --- Setup audio elements + fallback pools --- */
 function setupAudio() {
   const bgMusic = document.getElementById("bgMusic");
   const spinSound = document.getElementById("spinSound");
@@ -3013,18 +3336,44 @@ function setupAudio() {
 
   if (!bgMusic || !spinSound || !tickSound || !winSound || !historySound) return;
 
+  // src
   bgMusic.src = CONFIG.AUDIO.bg;
   spinSound.src = CONFIG.AUDIO.spin;
   winSound.src = CONFIG.AUDIO.win;
   tickSound.src = CONFIG.AUDIO.tick;
   historySound.src = CONFIG.AUDIO.history;
 
+  // volumes (HTML fallback)
   bgMusic.volume = CONFIG.AUDIO.vol.bg;
   spinSound.volume = CONFIG.AUDIO.vol.spin;
   winSound.volume = CONFIG.AUDIO.vol.win;
   tickSound.volume = CONFIG.AUDIO.vol.tick;
   historySound.volume = CONFIG.AUDIO.vol.history;
 
+  // iOS/Android: hint
+  try {
+    bgMusic.preload = "auto";
+    bgMusic.loop = true;
+    bgMusic.playsInline = true;
+    // beberapa browser butuh atribut, tapi via JS ini aman
+    bgMusic.setAttribute("playsinline", "");
+  } catch (_) {}
+
+  // WebAudio SFX prepare (decode buffer)
+  SFX.prepare({
+    tickUrl: CONFIG.AUDIO.tick,
+    histUrl: CONFIG.AUDIO.history,
+    spinUrl: CONFIG.AUDIO.spin,
+    winUrl: CONFIG.AUDIO.win,
+    vol: CONFIG.AUDIO.vol,
+  });
+
+  // OPTIONAL route bg via AudioContext bus (lebih konsisten volume)
+  // Aman karena hanya connect sekali.
+  SFX.routeBgElement(bgMusic);
+  SFX.setBgVolume(CONFIG.AUDIO.vol.bg);
+
+  // Fallback pools (dipakai jika WebAudio gagal / belum ready)
   tickPool = [];
   for (let i = 0; i < 6; i++) {
     const a = new Audio(tickSound.src);
@@ -3043,6 +3392,7 @@ function setupAudio() {
 }
 
 function primeAudioPool(pool) {
+  if (!pool || !pool.length) return;
   pool.forEach((a) => {
     try {
       const prevMuted = a.muted;
@@ -3056,31 +3406,50 @@ function primeAudioPool(pool) {
   });
 }
 
-function kickAudio(withBgStart = false) {
+/** --- Call this on user gesture (click/touch) --- */
+async function kickAudio(withBgStart = false) {
+  // prime once
   if (!audioPrimed) {
     audioPrimed = true;
+
+    // WebAudio unlock (best effort)
+    try { await SFX.onFirstGesture(); } catch (_) {}
+
+    // fallback prime (best effort)
     primeAudioPool(tickPool);
     primeAudioPool(historyPool);
   }
+
   if (!withBgStart) return;
 
   if (!bgStarted) {
     bgStarted = true;
     const bgMusic = document.getElementById("bgMusic");
+
+    // ensure WebAudio context running (agar route bg stabil)
+    try { await SFX.onFirstGesture(); } catch (_) {}
+
     if (bgMusic && bgMusic.paused) {
       bgMusic.play().then(() => {
-        // optional: tiny confirmation (tidak ganggu)
-        showToast("Audio aktif", "success", 1400);
-      }).catch(() => {});
+        if (!SFX.st.toastOnce) {
+          SFX.st.toastOnce = true;
+          // toast sekali saja (anti spam)
+          showToast("Audio aktif", "success", 1200);
+        }
+      }).catch(() => {
+        // kalau autoplay ditolak, jangan spam toast
+      });
     }
   }
 }
 
+/* =========================================================
+ * Pointer kick (tetap, tapi lebih aman)
+ * ======================================================= */
 function pointerKick(intensity = 1) {
   if (!pointerEl) return;
   if (pointerKickT) clearTimeout(pointerKickT);
 
-  // micro random for realism
   const deg = (-8 - Math.random() * 6) * intensity; // -8..-14
   pointerEl.style.setProperty("--kick-deg", deg.toFixed(2) + "deg");
 
@@ -3088,11 +3457,25 @@ function pointerKick(intensity = 1) {
   void pointerEl.offsetWidth;
   pointerEl.classList.add("is-kick");
 
-  pointerKickT = setTimeout(() => pointerEl && pointerEl.classList.remove("is-kick"), 140);
+  pointerKickT = setTimeout(() => {
+    if (pointerEl) pointerEl.classList.remove("is-kick");
+  }, 140);
 }
 
+/* =========================================================
+ * SFX play — WebAudio first, fallback second
+ * ======================================================= */
 function playTick(intensity = 1) {
   pointerKick(intensity);
+
+  // WebAudio (smooth)
+  if (SFX.st.supported && SFX.st.ctx && SFX.st.ctx.state === "running") {
+    const ok = SFX.tick(intensity);
+    if (ok) return;
+  }
+
+  // fallback pool (guard)
+  if (!tickPool || !tickPool.length) return;
   try {
     const a = tickPool[tickPoolIdx++ % tickPool.length];
     a.currentTime = 0;
@@ -3102,8 +3485,18 @@ function playTick(intensity = 1) {
 
 function playHistorySfx() {
   const now = Date.now();
-  if (now - historySfxAt < 700) return;
+  const gap = SFX.st.lowEnd ? 850 : 700;
+  if (now - (historySfxAt || 0) < gap) return;
   historySfxAt = now;
+
+  // WebAudio first
+  if (SFX.st.supported && SFX.st.ctx && SFX.st.ctx.state === "running") {
+    const ok = SFX.history();
+    if (ok) return;
+  }
+
+  // fallback pool
+  if (!historyPool || !historyPool.length) return;
   try {
     const a = historyPool[historyPoolIdx++ % historyPool.length];
     a.currentTime = 0;
@@ -3111,8 +3504,25 @@ function playHistorySfx() {
   } catch (_) {}
 }
 
+/* Optional helpers (kalau kamu mau panggil saat spin/win) */
+function playSpinSfx() {
+  if (SFX.st.supported && SFX.st.ctx && SFX.st.ctx.state === "running") {
+    if (SFX.spin()) return;
+  }
+  const el = document.getElementById("spinSound");
+  if (el) { try { el.currentTime = 0; el.play().catch(() => {}); } catch (_) {} }
+}
+
+function playWinSfx() {
+  if (SFX.st.supported && SFX.st.ctx && SFX.st.ctx.state === "running") {
+    if (SFX.win()) return;
+  }
+  const el = document.getElementById("winSound");
+  if (el) { try { el.currentTime = 0; el.play().catch(() => {}); } catch (_) {} }
+}
+
 /* =========================================================
- * 8) BUTTON FX + TOAST
+ * 8) BUTTON FX + TOAST (tetap, tapi timer per-button lebih stabil)
  * ======================================================= */
 function pressFX(btn, ev) {
   if (!btn) return;
@@ -3132,7 +3542,9 @@ function pressFX(btn, ev) {
   void btn.offsetWidth;
   btn.classList.add("fx");
 
-  setTimeout(() => btn.classList.remove("fx"), 560);
+  // per-button timer (anti race)
+  if (btn._fxTimer) clearTimeout(btn._fxTimer);
+  btn._fxTimer = setTimeout(() => btn.classList.remove("fx"), 560);
 
   try { if (navigator.vibrate && !isReducedMotion()) navigator.vibrate(12); } catch (_) {}
 }
