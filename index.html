@@ -5199,29 +5199,68 @@ function __pad2(n) {
  * 2) CONFIG.CLAIM_URL
  * 3) current page (origin + pathname)
  * ------------------------- */
-function __getPlayUrl() {
-  let u = "";
+function __normalizeUrl(u) {
   try {
-    if (typeof CONFIG === "object" && CONFIG) {
-      if (CONFIG.PLAY_URL) u = String(CONFIG.PLAY_URL || "");
-      else if (CONFIG.CLAIM_URL) u = String(CONFIG.CLAIM_URL || "");
-    }
-  } catch (_) {}
-  if (!u) {
-    try { u = String(location.origin + location.pathname); } catch (_) { u = ""; }
+    const url = new URL(String(u || "").trim(), location.href);
+    // buang hash biar rapih
+    url.hash = "";
+    return url.toString();
+  } catch (_) {
+    return String(u || "").trim();
   }
-  u = String(u || "").trim();
-  return u;
 }
 
-function __shortUrl(u) {
+function __getMetaUrl() {
   try {
-    const url = new URL(String(u || ""), location.href);
-    // pendek & enak dibaca: origin + pathname
-    return (url.origin + url.pathname).replace(/\/+$/, "");
-  } catch (_) {
-    return String(u || "").replace(/\/+$/, "");
+    // 1) canonical
+    const canon = document.querySelector('link[rel="canonical"][href]');
+    if (canon && canon.href) return canon.href;
+
+    // 2) og:url
+    const og = document.querySelector('meta[property="og:url"][content]');
+    if (og && og.content) return og.content;
+  } catch (_) {}
+  return "";
+}
+
+function __getPlayUrl() {
+  // PRIORITY:
+  // A) runtime override (optional) -> window.MT2_PLAY_URL
+  // B) localStorage override (optional) -> mt2:play_url
+  // C) canonical / og:url (kalau kamu set)
+  // D) lokasi halaman sekarang (pasti sesuai domain deploy yang sedang dipakai)
+
+  let u = "";
+
+  // A) runtime override
+  try {
+    if (typeof window !== "undefined" && window.MT2_PLAY_URL) u = String(window.MT2_PLAY_URL || "");
+  } catch (_) {}
+
+  // B) localStorage override
+  if (!u) {
+    try { u = String(localStorage.getItem("mt2:play_url") || ""); } catch (_) {}
   }
+
+  // C) canonical/og:url
+  if (!u) {
+    try { u = __getMetaUrl(); } catch (_) { u = ""; }
+  }
+
+  // D) current location (AUTO domain deploy)
+  if (!u) {
+    try { u = String(location.href || ""); } catch (_) { u = ""; }
+  }
+
+  return __normalizeUrl(u);
+}
+
+/* optional helper kalau suatu saat mau set manual tanpa edit code */
+function __setPlayUrlOverride(url) {
+  const v = __normalizeUrl(url);
+  try { localStorage.setItem("mt2:play_url", v); } catch (_) {}
+  try { window.MT2_PLAY_URL = v; } catch (_) {}
+  return v;
 }
 
 /* -------------------------
