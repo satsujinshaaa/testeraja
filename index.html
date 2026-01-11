@@ -5210,7 +5210,6 @@ function __getPlayUrl() {
   if (!u) {
     try { u = String(location.origin + location.pathname); } catch (_) { u = ""; }
   }
-  // normalize (buang whitespace)
   u = String(u || "").trim();
   return u;
 }
@@ -5494,7 +5493,7 @@ function downloadResultPng() {
     });
 }
 
-/* ✅ SHARE (UNIVERSAL) — iOS WA fix: prioritize TEXT+LINK */
+/* ✅ Share via Web Share API + ALWAYS include play link */
 async function shareResultPng() {
   const rSafe = __getLastResult();
   if (!rSafe) { __toast("Hasil belum tersedia. Silakan spin terlebih dahulu.", "error"); return; }
@@ -5504,87 +5503,40 @@ async function shareResultPng() {
   const ts = r.ts || Date.now();
 
   const playUrl = __getPlayUrl();
+  const prize = String(r.prizeLabel || "BONUS 10%");
+  const safeUser = String(r.userId || "-");
   const timeStr = new Date(ts).toLocaleString("id-ID", {
     day: "2-digit", month: "short", year: "numeric",
     hour: "2-digit", minute: "2-digit", second: "2-digit"
   });
 
-  const prize = String(r.prizeLabel || "BONUS 10%");
-  const safeUser = String(r.userId || "-");
-
-  // ✅ Kata-kata sederhana + ajakan main + link wajib ada
   const shareTitle = "MADETOTO2 — Hasil Spin";
-  const shareText =
+
+  // ✅ TEXT untuk Web Share (TANPA URL) agar WA tidak dobel
+  const shareTextNoUrl =
     `🎉 MADETOTO2\n` +
     `Hadiah: ${prize}\n` +
     `User ID: ${safeUser}\n` +
     `Waktu: ${timeStr}\n` +
-    `Mainkan di: ${playUrl}`;
+    `Ayo coba spin!`;
 
-  // ========= 0) iOS strategy (WA iOS sering buang caption kalau share pakai files)
-  // Jadi untuk iOS: share TEXT+LINK dulu agar pasti kebawa
+  // ✅ TEXT untuk Clipboard/fallback (PAKAI URL) agar tetap kebawa
+  const shareTextWithUrl =
+    shareTextNoUrl + `\nMainkan di: ${playUrl}`;
+
+  // iOS: WA sering buang caption kalau share files -> prioritaskan text+url
   const isIOS = __isIOS();
-  if (isIOS) {
-    // 0A) Web Share API (text+url)
-    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-      try {
-        await navigator.share({ title: shareTitle, text: shareText, url: playUrl });
-        __toast("Teks + link dibagikan (pasti ikut di WhatsApp iOS).", "success");
-        return;
-      } catch (err) {
-        if (err && (err.name === "AbortError" || String(err.message || "").includes("AbortError"))) {
-          __toast("Bagikan dibatalkan", "error");
-          return;
-        }
-        // lanjut fallback
-      }
-    }
 
-    // 0B) Clipboard fallback (tetap ada link)
+  // 1) Web Share API (text + url) — paling konsisten & tidak dobel link
+  if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
     try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(shareText);
-        __toast("Teks + link disalin. Tinggal paste ke sosmed.", "success");
-        return;
-      }
-    } catch (_) {}
-
-    // 0C) Last fallback: buka WA share link (text + link)
-    try {
-      const wa = "https://wa.me/?text=" + encodeURIComponent(shareText);
-      window.open(wa, "_blank", "noopener,noreferrer");
-      __toast("Buka WhatsApp untuk bagikan teks + link.", "success");
+      await navigator.share({
+        title: shareTitle,
+        text: shareTextNoUrl,
+        url: playUrl
+      });
+      __toast("Menu bagikan dibuka", "success");
       return;
-    } catch (_) {}
-
-    __toast("Browser tidak mendukung fitur bagikan.", "error");
-    return;
-  }
-
-  // ========= 1) non-iOS: boleh coba share file + text + url (best effort)
-  let blob = null, dataUrl = "";
-  let fileName = buildFileName(r.userId, ts);
-
-  try {
-    const res = await makeRewardPngBlob(r, ts, { intent: "share", playUrl });
-    blob = res.blob || null;
-    dataUrl = res.dataUrl || "";
-    fileName = res.fileName || fileName;
-  } catch (_) {
-    blob = null;
-  }
-
-  // 1A) Share file + text + url (kalau didukung)
-  if (blob && typeof navigator !== "undefined" && typeof navigator.share === "function") {
-    try {
-      const file = new File([blob], fileName || "MADETOTO2-REWARD.png", { type: "image/png", lastModified: ts });
-      const canShareFiles = !!(navigator.canShare && navigator.canShare({ files: [file] }));
-
-      if (canShareFiles) {
-        await navigator.share({ title: shareTitle, text: shareText, url: playUrl, files: [file] });
-        __toast("Menu bagikan dibuka", "success");
-        return;
-      }
     } catch (err) {
       if (err && (err.name === "AbortError" || String(err.message || "").includes("AbortError"))) {
         __toast("Bagikan dibatalkan", "error");
@@ -5594,43 +5546,21 @@ async function shareResultPng() {
     }
   }
 
-  // 1B) Share text + url (lebih kompatibel)
-  if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-    try {
-      await navigator.share({ title: shareTitle, text: shareText, url: playUrl });
-      __toast("Menu bagikan dibuka (teks + link).", "success");
-      return;
-    } catch (err) {
-      if (err && (err.name === "AbortError" || String(err.message || "").includes("AbortError"))) {
-        __toast("Bagikan dibatalkan", "error");
-        return;
-      }
-    }
-  }
-
-  // 1C) Clipboard: copy text+link
+  // 2) Clipboard fallback (pasti ada URL)
   try {
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(shareText);
+      await navigator.clipboard.writeText(shareTextWithUrl);
       __toast("Teks + link disalin. Tinggal paste ke sosmed.", "success");
       return;
     }
   } catch (_) {}
 
-  // 1D) fallback terakhir: buka gambar (kalau user mau share manual)
+  // 3) Last fallback: WhatsApp share link
   try {
-    if (blob) {
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank", "noopener,noreferrer");
-      setTimeout(() => { try { URL.revokeObjectURL(url); } catch (_) {} }, 60000);
-      __toast("Gambar dibuka di tab baru. Link ada di teks (copy/paste).", "success");
-      return;
-    }
-    if (dataUrl && typeof dataUrl === "string" && dataUrl.startsWith("data:image/")) {
-      window.open(dataUrl, "_blank", "noopener,noreferrer");
-      __toast("Gambar dibuka di tab baru. Link ada di teks (copy/paste).", "success");
-      return;
-    }
+    const wa = "https://wa.me/?text=" + encodeURIComponent(shareTextWithUrl);
+    window.open(wa, "_blank", "noopener,noreferrer");
+    __toast("Buka WhatsApp untuk bagikan.", "success");
+    return;
   } catch (_) {}
 
   __toast("Browser tidak mendukung fitur bagikan.", "error");
