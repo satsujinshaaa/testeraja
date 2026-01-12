@@ -2833,27 +2833,16 @@ document.addEventListener("DOMContentLoaded", () => {
 /* =========================================================
  * 5) WHEEL ROTATION PERSIST — POWER (stable + crisp)
  * ======================================================= */
-function applyWheelRotation(deg) {
-  // support #wheelInner dan #wheel (biar aman di semua versi DOM kamu)
-  const wheel = document.getElementById("wheelInner") || document.getElementById("wheel");
-  if (!wheel) return;
-
-  wheel.classList.remove("spinning");
-
-  const v = Number(deg || 0);
-  const vv = Number.isFinite(v) ? v : 0;
-
-  // micro clamp biar transform string stabil (hindari jitter float panjang)
-  const snapped = Math.round(vv * 1000) / 1000;
-
-  wheel.style.transform = `rotate(${snapped}deg) translateZ(0)`;
-}
-
-function saveRotation(deg) {
-  const v = Number(deg || 0);
-  currentRotation = Number.isFinite(v) ? v : 0;
-  lsSet(LS.ROTATION, String(currentRotation));
-}
+    function applyWheelRotation(deg){
+      const wheel = document.getElementById("wheel");
+      if (!wheel) return;
+      wheel.classList.remove("spinning");
+      wheel.style.transform = `rotate(${Number(deg || 0)}deg) translateZ(0)`;
+    }
+    function saveRotation(deg){
+      currentRotation = Number(deg || 0);
+      lsSet(LS.ROTATION, String(currentRotation));
+    }
 
 /* =========================================================
  * 6) FX CANVAS (auto low-end + pause on hidden)
@@ -3003,154 +2992,137 @@ function initFxParticlesCanvas() {
 /* =========================================================
  * 7) AUDIO (clean start on first gesture)
  * ======================================================= */
-function setupAudio() {
-  const bgMusic = document.getElementById("bgMusic");
-  const spinSound = document.getElementById("spinSound");
-  const tickSound = document.getElementById("tickSound");
-  const winSound = document.getElementById("winSound");
-  const historySound = document.getElementById("historySound");
+    function setupAudio() {
+      const bgMusic = document.getElementById("bgMusic");
+      const spinSound = document.getElementById("spinSound");
+      const tickSound = document.getElementById("tickSound");
+      const winSound = document.getElementById("winSound");
+      const historySound = document.getElementById("historySound");
 
-  if (!bgMusic || !spinSound || !tickSound || !winSound || !historySound) return;
+      bgMusic.src = CONFIG.AUDIO.bg;
+      spinSound.src = CONFIG.AUDIO.spin;
+      winSound.src = CONFIG.AUDIO.win;
+      tickSound.src = CONFIG.AUDIO.tick;
+      historySound.src = CONFIG.AUDIO.history;
 
-  bgMusic.src = CONFIG.AUDIO.bg;
-  spinSound.src = CONFIG.AUDIO.spin;
-  winSound.src = CONFIG.AUDIO.win;
-  tickSound.src = CONFIG.AUDIO.tick;
-  historySound.src = CONFIG.AUDIO.history;
+      bgMusic.volume = CONFIG.AUDIO.vol.bg;
+      spinSound.volume = CONFIG.AUDIO.vol.spin;
+      winSound.volume = CONFIG.AUDIO.vol.win;
+      tickSound.volume = CONFIG.AUDIO.vol.tick;
+      historySound.volume = CONFIG.AUDIO.vol.history;
 
-  bgMusic.volume = CONFIG.AUDIO.vol.bg;
-  spinSound.volume = CONFIG.AUDIO.vol.spin;
-  winSound.volume = CONFIG.AUDIO.vol.win;
-  tickSound.volume = CONFIG.AUDIO.vol.tick;
-  historySound.volume = CONFIG.AUDIO.vol.history;
+      tickPool = [];
+      for (let i = 0; i < 6; i++) {
+        const a = new Audio(tickSound.src);
+        a.volume = tickSound.volume;
+        a.preload = "auto";
+        tickPool.push(a);
+      }
 
-  tickPool = [];
-  for (let i = 0; i < 6; i++) {
-    const a = new Audio(tickSound.src);
-    a.volume = tickSound.volume;
-    a.preload = "auto";
-    tickPool.push(a);
-  }
-
-  historyPool = [];
-  for (let i = 0; i < 4; i++) {
-    const a = new Audio(historySound.src);
-    a.volume = historySound.volume;
-    a.preload = "auto";
-    historyPool.push(a);
-  }
-}
-
-function primeAudioPool(pool) {
-  pool.forEach((a) => {
-    try {
-      const prevMuted = a.muted;
-      a.muted = true;
-      a.play().then(() => {
-        a.pause();
-        a.currentTime = 0;
-        a.muted = prevMuted;
-      }).catch(() => { a.muted = prevMuted; });
-    } catch (_) {}
-  });
-}
-
-function kickAudio(withBgStart = false) {
-  if (!audioPrimed) {
-    audioPrimed = true;
-    primeAudioPool(tickPool);
-    primeAudioPool(historyPool);
-  }
-  if (!withBgStart) return;
-
-  if (!bgStarted) {
-    bgStarted = true;
-    const bgMusic = document.getElementById("bgMusic");
-    if (bgMusic && bgMusic.paused) {
-      bgMusic.play().then(() => {
-        // optional: tiny confirmation (tidak ganggu)
-        showToast("Audio aktif", "success", 1400);
-      }).catch(() => {});
+      historyPool = [];
+      for (let i = 0; i < 4; i++) {
+        const a = new Audio(historySound.src);
+        a.volume = historySound.volume;
+        a.preload = "auto";
+        historyPool.push(a);
+      }
     }
-  }
-}
 
-function pointerKick(intensity = 1) {
-  if (!pointerEl) return;
-  if (pointerKickT) clearTimeout(pointerKickT);
+    function primeAudioPool(pool){
+      pool.forEach(a=>{
+        try{
+          const prevMuted = a.muted;
+          a.muted = true;
+          a.play().then(()=>{
+            a.pause();
+            a.currentTime = 0;
+            a.muted = prevMuted;
+          }).catch(()=>{ a.muted = prevMuted; });
+        } catch(_){}
+      });
+    }
 
-  // micro random for realism
-  const deg = (-8 - Math.random() * 6) * intensity; // -8..-14
-  pointerEl.style.setProperty("--kick-deg", deg.toFixed(2) + "deg");
+    function kickAudio(withBgStart = false) {
+      if (!audioPrimed) { audioPrimed = true; primeAudioPool(tickPool); primeAudioPool(historyPool); }
+      if (!withBgStart) return;
 
-  pointerEl.classList.remove("is-kick");
-  void pointerEl.offsetWidth;
-  pointerEl.classList.add("is-kick");
+      if (!bgStarted) {
+        bgStarted = true;
+        const bgMusic = document.getElementById("bgMusic");
+        if (bgMusic && bgMusic.paused) {
+          bgMusic.play().then(()=> {
+            // optional: tiny confirmation (tidak ganggu)
+            showToast("Audio aktif", "success", 1400);
+          }).catch(()=>{});
+        }
+      }
+    }
 
-  pointerKickT = setTimeout(() => pointerEl && pointerEl.classList.remove("is-kick"), 140);
-}
+    function pointerKick(intensity = 1) {
+      if (!pointerEl) return;
+      if (pointerKickT) clearTimeout(pointerKickT);
 
-function playTick(intensity = 1) {
-  pointerKick(intensity);
-  try {
-    const a = tickPool[tickPoolIdx++ % tickPool.length];
-    a.currentTime = 0;
-    a.play().catch(() => {});
-  } catch (_) {}
-}
+      // micro random for realism
+      const deg = (-8 - Math.random()*6) * intensity; // -8..-14
+      pointerEl.style.setProperty("--kick-deg", deg.toFixed(2) + "deg");
 
-function playHistorySfx() {
-  const now = Date.now();
-  if (now - historySfxAt < 700) return;
-  historySfxAt = now;
-  try {
-    const a = historyPool[historyPoolIdx++ % historyPool.length];
-    a.currentTime = 0;
-    a.play().catch(() => {});
-  } catch (_) {}
-}
+      pointerEl.classList.remove("is-kick");
+      void pointerEl.offsetWidth;
+      pointerEl.classList.add("is-kick");
+      pointerKickT = setTimeout(()=> pointerEl && pointerEl.classList.remove("is-kick"), 140);
+    }
+
+    function playTick(intensity = 1) {
+      pointerKick(intensity);
+      try {
+        const a = tickPool[tickPoolIdx++ % tickPool.length];
+        a.currentTime = 0;
+        a.play().catch(() => {});
+      } catch (_) {}
+    }
+
+    function playHistorySfx() {
+      const now = Date.now();
+      if (now - historySfxAt < 700) return;
+      historySfxAt = now;
+      try {
+        const a = historyPool[historyPoolIdx++ % historyPool.length];
+        a.currentTime = 0;
+        a.play().catch(() => {});
+      } catch (_) {}
+    }
 
 /* =========================================================
  * 8) BUTTON FX + TOAST
  * ======================================================= */
-function pressFX(btn, ev) {
-  if (!btn) return;
+    function pressFX(btn, ev) {
+      if (!btn) return;
+      const rect = btn.getBoundingClientRect();
+      let x = rect.width / 2, y = rect.height / 2;
+      if (ev && ev.clientX != null && ev.clientY != null) { x = ev.clientX - rect.left; y = ev.clientY - rect.top; }
+      btn.style.setProperty("--fx-x", x + "px");
+      btn.style.setProperty("--fx-y", y + "px");
+      btn.classList.remove("fx");
+      void btn.offsetWidth;
+      btn.classList.add("fx");
+      setTimeout(() => btn.classList.remove("fx"), 560);
+      try { if (navigator.vibrate && !isReducedMotion()) navigator.vibrate(12); } catch (_) {}
+    }
 
-  const rect = btn.getBoundingClientRect();
-  let x = rect.width / 2, y = rect.height / 2;
+    function showToast(message, type = "info", ms = 2400) {
+      const toast = document.getElementById("toast");
+      const msg = document.getElementById("toastMsg");
 
-  if (ev && ev.clientX != null && ev.clientY != null) {
-    x = ev.clientX - rect.left;
-    y = ev.clientY - rect.top;
-  }
+      toast.classList.remove("error", "success");
+      if (type === "error") toast.classList.add("error");
+      if (type === "success") toast.classList.add("success");
 
-  btn.style.setProperty("--fx-x", x + "px");
-  btn.style.setProperty("--fx-y", y + "px");
+      msg.textContent = String(message || "");
+      toast.classList.add("show");
 
-  btn.classList.remove("fx");
-  void btn.offsetWidth;
-  btn.classList.add("fx");
-
-  setTimeout(() => btn.classList.remove("fx"), 560);
-
-  try { if (navigator.vibrate && !isReducedMotion()) navigator.vibrate(12); } catch (_) {}
-}
-
-function showToast(message, type = "info", ms = 2400) {
-  const toast = document.getElementById("toast");
-  const msg = document.getElementById("toastMsg");
-  if (!toast || !msg) return;
-
-  toast.classList.remove("error", "success");
-  if (type === "error") toast.classList.add("error");
-  if (type === "success") toast.classList.add("success");
-
-  msg.textContent = String(message || "");
-  toast.classList.add("show");
-
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove("show"), ms);
-}
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), ms);
+    }
 
 /* =========================================================
  * 9) WHEEL SVG + LABELS — CASINO 1:1 (PREMIUM HD) — POWER UP v12.2 (FULL REPLACE)
@@ -5017,136 +4989,133 @@ function detectPerfTier(mode) {
   /* =========================================================
    * 17) SPIN (LOCK RESULT BONUS 10%)
    * ======================================================= */
-  function startSpin() {
-    kickAudio(true);
+    function startSpin() {
+      kickAudio(true);
 
-    const reduceMotion = isReducedMotion();
+      const reduceMotion = isReducedMotion();
 
-    const userIdInput = document.getElementById("userIdInput");
-    const rawUserId = userIdInput.value.trim();
-    const userId = normalizeUserIdInput(rawUserId);
+      const userIdInput = document.getElementById("userIdInput");
+      const rawUserId = userIdInput.value.trim();
+      const userId = normalizeUserIdInput(rawUserId);
 
-    if (!userId) {
-      showToast("Masukkan User ID terlebih dahulu!", "error");
-      userIdInput.focus({ preventScroll: true });
-      return;
-    }
+      if (!userId) {
+        showToast("Masukkan User ID terlebih dahulu!", "error");
+        userIdInput.focus({ preventScroll: true });
+        return;
+      }
+      if (hasSpun) { showToast("Anda sudah melakukan spin! Kesempatan hanya 1x.", "error"); return; }
+      if (isSpin) return;
 
-    if (hasSpun) { showToast("Anda sudah melakukan spin! Kesempatan hanya 1x.", "error"); return; }
-    if (isSpin) return;
+      isSpin = true;
+      pauseHistory("spin");
 
-    isSpin = true;
-    pauseHistory("spin");
-
-    // new spin token cancels old tick timers
-    spinToken++;
-    clearTickTimers();
-
-    if (pointerEl) pointerEl.classList.add("is-spin");
-
-    const spinBtn = document.getElementById("spinBtn");
-    spinBtn.disabled = true;
-    spinBtn.textContent = "SPINNING…";
-
-    const spinSound = document.getElementById("spinSound");
-    try { spinSound.currentTime = 0; spinSound.play().catch(() => {}); } catch (_) {}
-
-    const prizeIndex = (BONUS_INDEX >= 0 ? BONUS_INDEX : 0);
-
-    const wheel = document.getElementById("wheel");
-    const n = PRIZES.length;
-    const segmentAngle = 360 / n;
-
-    const segmentCenter = (prizeIndex * segmentAngle) + (segmentAngle / 2);
-    const base = ((currentRotation % 360) + 360) % 360;
-    const desiredMod = (360 - segmentCenter + 360) % 360;
-
-    const fullSpins = 360 * (8 + Math.floor(Math.random() * 4));
-    const jitter = (Math.random() - 0.5) * (segmentAngle * 0.55);
-    const delta = (desiredMod - base + 360) % 360;
-
-    const totalRotation = currentRotation + fullSpins + delta + jitter;
-    const rotationDelta = totalRotation - currentRotation;
-    const durationMs = reduceMotion ? 350 : CONFIG.SPIN_DURATION_MS;
-
-    wheel.style.setProperty("--spin-dur", durationMs + "ms");
-
-    // Pre-pause modal to avoid any flicker start when removing spin pause
-    pauseHistory("modal");
-
-    let ended = false;
-    const localToken = spinToken;
-
-    const onEnd = () => {
-      if (ended) return;
-      ended = true;
-
-      // cancel remaining tick timers immediately
+      // new spin token cancels old tick timers
+      spinToken++;
       clearTickTimers();
 
-      wheel.classList.remove("spinning");
-      applyWheelRotation(totalRotation);
-      saveRotation(totalRotation);
+      if (pointerEl) pointerEl.classList.add("is-spin");
 
-      try { spinSound.pause(); spinSound.currentTime = 0; } catch (_) {}
+      const spinBtn = document.getElementById("spinBtn");
+      spinBtn.disabled = true;
+      spinBtn.textContent = "SPINNING…";
 
-      const winSound = document.getElementById("winSound");
-      try { winSound.currentTime = 0; winSound.play().catch(() => {}); } catch (_) {}
+      const spinSound = document.getElementById("spinSound");
+      try { spinSound.currentTime = 0; spinSound.play().catch(() => {}); } catch (_) {}
 
-      if (pointerEl) pointerEl.classList.remove("is-spin");
+      const prizeIndex = (BONUS_INDEX >= 0 ? BONUS_INDEX : 0);
 
-      hasSpun = true;
-      spinAt = Date.now();
+      const wheel = document.getElementById("wheel");
+      const n = PRIZES.length;
+      const segmentAngle = 360 / n;
 
-      lsSet(LS.HAS_SPUN, "true");
-      lsSet(LS.SPIN_AT, String(spinAt));
-      lsSet(LS.LAST_USER_ID, userId);
+      const segmentCenter = (prizeIndex * segmentAngle) + (segmentAngle / 2);
+      const base = ((currentRotation % 360) + 360) % 360;
+      const desiredMod = (360 - segmentCenter + 360) % 360;
 
-      savedUserId = userId;
+      const fullSpins = 360 * (8 + Math.floor(Math.random() * 4));
+      const jitter = (Math.random() - 0.5) * (segmentAngle * 0.55);
+      const delta = (desiredMod - base + 360) % 360;
 
-      lastResult = { userId, prizeLabel: BONUS_LABEL, prizeDisplay: CONFIG.PRIZE_DISPLAY_MAP[BONUS_LABEL], ts: spinAt };
+      const totalRotation = currentRotation + fullSpins + delta + jitter;
+      const rotationDelta = totalRotation - currentRotation;
+      const durationMs = reduceMotion ? 350 : CONFIG.SPIN_DURATION_MS;
 
-      document.getElementById("prizeAmount").textContent = BONUS_LABEL;
-      document.getElementById("modalUserId").textContent = userId;
-      document.getElementById("modalTime").textContent = new Date(spinAt).toLocaleString("id-ID", {
-        day: "2-digit", month: "short", year: "numeric",
-        hour: "2-digit", minute: "2-digit", second: "2-digit"
-      });
+      wheel.style.setProperty("--spin-dur", durationMs + "ms");
 
-      pushWinnerEntry({
-        id: makeEntryId("user"),
-        isUser: true,
-        fullId: userId,
-        displayId: userId,
-        prizeKey: BONUS_LABEL,
-        prize: CONFIG.PRIZE_DISPLAY_MAP[BONUS_LABEL],
-        ts: spinAt,
-        isNew: true
-      });
+      // Pre-pause modal to avoid any flicker start when removing spin pause
+      pauseHistory("modal");
 
-      updateUI();
-      celebrateWin();
+      let ended = false;
+      const localToken = spinToken;
 
-      // remove spin pause while modal pause is already active (no flicker)
-      resumeHistory("spin");
+      const onEnd = () => {
+        if (ended) return;
+        ended = true;
 
-      // open modal (modal pause already active; openModal will keep it)
-      openModal();
+        // cancel remaining tick timers immediately
+        clearTickTimers();
 
-      isSpin = false;
-    };
+        wheel.classList.remove("spinning");
+        applyWheelRotation(totalRotation);
+        saveRotation(totalRotation);
 
-    if (reduceMotion) { onEnd(); return; }
+        try { spinSound.pause(); spinSound.currentTime = 0; } catch (_) {}
 
-    scheduleTicks(rotationDelta, segmentAngle, durationMs, localToken);
+        const winSound = document.getElementById("winSound");
+        try { winSound.currentTime = 0; winSound.play().catch(() => {}); } catch (_) {}
 
-    wheel.style.setProperty("--from-rotation", currentRotation + "deg");
-    wheel.style.setProperty("--rotation", totalRotation + "deg");
-    wheel.classList.add("spinning");
+        if (pointerEl) pointerEl.classList.remove("is-spin");
 
-    wheel.addEventListener("animationend", onEnd, { once: true });
-    setTimeout(() => { if (localToken === spinToken) onEnd(); }, durationMs + 260);
-  }
+        hasSpun = true;
+        spinAt = Date.now();
+        lsSet(LS.HAS_SPUN, "true");
+        lsSet(LS.SPIN_AT, String(spinAt));
+        lsSet(LS.LAST_USER_ID, userId);
+        savedUserId = userId;
+
+        lastResult = { userId, prizeLabel: BONUS_LABEL, prizeDisplay: CONFIG.PRIZE_DISPLAY_MAP[BONUS_LABEL], ts: spinAt };
+
+        document.getElementById("prizeAmount").textContent = BONUS_LABEL;
+        document.getElementById("modalUserId").textContent = userId;
+        document.getElementById("modalTime").textContent = new Date(spinAt).toLocaleString("id-ID", {
+          day: "2-digit", month: "short", year: "numeric",
+          hour: "2-digit", minute: "2-digit", second: "2-digit"
+        });
+
+        pushWinnerEntry({
+          id: makeEntryId("user"),
+          isUser: true,
+          fullId: userId,
+          displayId: userId,
+          prizeKey: BONUS_LABEL,
+          prize: CONFIG.PRIZE_DISPLAY_MAP[BONUS_LABEL],
+          ts: spinAt,
+          isNew: true
+        });
+
+        updateUI();
+        celebrateWin();
+
+        // remove spin pause while modal pause is already active (no flicker)
+        resumeHistory("spin");
+
+        // open modal (modal pause already active; openModal will keep it)
+        openModal();
+
+        isSpin = false;
+      };
+
+      if (reduceMotion) { onEnd(); return; }
+
+      scheduleTicks(rotationDelta, segmentAngle, durationMs, localToken);
+
+      wheel.style.setProperty("--from-rotation", currentRotation + "deg");
+      wheel.style.setProperty("--rotation", totalRotation + "deg");
+      wheel.classList.add("spinning");
+
+      wheel.addEventListener("animationend", onEnd, { once: true });
+      setTimeout(() => { if (localToken === spinToken) onEnd(); }, durationMs + 260);
+    }
 
 /* =========================================================
  * 18) DOWNLOAD + SHARE RESULT (PNG) — FINAL (FULL REPLACE v3)
