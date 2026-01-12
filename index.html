@@ -3123,16 +3123,17 @@ function initFxParticlesCanvas() {
     }
 
 /* =========================================================
- * 9) WHEEL SVG + LABELS — CASINO 1:1 (PREMIUM HD) — POWER UP v12.2 (FULL REPLACE)
+ * 9) WHEEL SVG + LABELS — CASINO 1:1 (PREMIUM HD) — POWER UP v12.2a (FULL REPLACE)
  * Fokus: SUPER SMOOTH MOBILE + ✅ HILANGKAN “bayangan putih / blur” DI BELAKANG WHEEL
  *
- * v12.2 changes:
- * ✅ Anti white-blur: SVG di-CLIP ke lingkaran wheel (tidak ada glow/filter bleed keluar)
- * ✅ Bulbs bloom selalu di-band-limit (tidak “kabut putih” melebar)
- * ✅ Rebuild: rAF + settle + idle (tidak rebut input)
- * ✅ RO + VV + orientation + visibility + pageshow + IO (anti rebuild spam, hemat)
- * ✅ Noise auto OFF mobile + tier low/med (tetap seperti v12)
+ * FIX utama:
+ * ✅ BUG FATAL: rSegIn clamp salah (hi < lo) → selalu 20. Sekarang clamp dinamis dan aman.
+ * ✅ Scheduler coalesced (anti spam) + lebih hemat saat offscreen/hidden.
+ * ✅ Clip host + clip internal diperkuat (anti filter bleed / halo putih).
+ * ✅ Cleanup observer/listener/interval lebih ketat.
  * ======================================================= */
+
+const __MT2_WHEEL_KEY__ = "__MT2_WHEEL_CASINO";
 
 /* =========================
  * Background safety
@@ -3146,17 +3147,22 @@ function setWheelBackground() {
 
 /* =========================
  * HARD CLIP host (anti blur bleed)
- * - memastikan SVG glow/filter tidak “keluar” jadi halo putih mengganggu
  * ======================= */
 function ensureWheelClipHost(wheelEl){
   if (!wheelEl || wheelEl.__mt2ClipHostDone) return;
   wheelEl.__mt2ClipHostDone = true;
+
   try {
     const cs = getComputedStyle(wheelEl);
     if (cs.borderRadius === "0px" || cs.borderRadius === "0") wheelEl.style.borderRadius = "50%";
     if (cs.overflow !== "hidden") wheelEl.style.overflow = "hidden";
+    // bantu anti “bleed” filter di beberapa browser
     wheelEl.style.backgroundClip = "padding-box";
+    wheelEl.style.isolation = "isolate";
     wheelEl.style.transform = wheelEl.style.transform || "translateZ(0)";
+    wheelEl.style.backfaceVisibility = "hidden";
+    // contain paint membantu jaga efek blur tidak “nyebar”
+    wheelEl.style.contain = wheelEl.style.contain || "layout paint style";
   } catch (_) {}
 }
 
@@ -3182,7 +3188,7 @@ function _getPrizesSafe() {
 
 /* =========================
  * Rotation bridge (STATIC lighting support)
- * - FIX: tidak overwrite transform #wheel (fallback jadi pending)
+ * - tidak overwrite transform #wheel
  * ======================= */
 function setWheelRotationSVG(deg, opt = {}) {
   const wheel = document.getElementById("wheel");
@@ -3202,7 +3208,16 @@ function setWheelRotationSVG(deg, opt = {}) {
     api.setRotation(d, opt);
     return true;
   }
+
+  // kalau api belum ada (mis. belum build), biarkan pending
   return false;
+}
+
+/* =========================
+ * Internal state helper
+ * ======================= */
+function __mt2WheelState() {
+  return window[__MT2_WHEEL_KEY__] || (window[__MT2_WHEEL_KEY__] = {});
 }
 
 /* =========================
@@ -3212,18 +3227,20 @@ function drawWheelPrizes() {
   const wheel = document.getElementById("wheel");
   if (!wheel) return;
 
+  // hemat: jangan rebuild saat tab hidden
   if (document.hidden) return;
 
-  // skip jika tidak terlihat (anti rebuild saat scroll)
+  const wrap = document.getElementById("wheelWrap") || wheel;
+
+  // hemat: kalau size belum valid / offscreen kecil
+  let rect;
   try {
-    const r = wheel.getBoundingClientRect();
-    if (r.width < 10 || r.height < 10) return;
+    rect = wrap.getBoundingClientRect();
+    if (rect.width < 10 || rect.height < 10) return;
   } catch (_) {}
 
   ensureWheelClipHost(wheel);
   setWheelBackground();
-
-  const wrap = document.getElementById("wheelWrap") || wheel;
 
   // pastikan position tidak static sekali saja
   try {
@@ -3241,7 +3258,7 @@ function drawWheelPrizes() {
   const size = Math.max(0, Math.min(w, h));
   if (!size || size < 160) return;
 
-  const ST = window.__MT2_WHEEL_CASINO || (window.__MT2_WHEEL_CASINO = {});
+  const ST = __mt2WheelState();
   if (ST._drawing) return;
 
   const perfMode = "auto";
@@ -3262,8 +3279,8 @@ function drawWheelPrizes() {
 
     // Bulbs
     animateBulbs: !rm && tierNow !== "low",
-    bulbBandMask: true,               // ✅ selalu band-limit (anti “kabut putih”)
-    bulbGlowFilter: tierNow !== "low", // low: tanpa filter blur besar
+    bulbBandMask: true,
+    bulbGlowFilter: tierNow !== "low",
 
     // Noise mahal → OFF mobile & low/med
     noise: (!isMobileUA && tierNow === "high" && !rm)
@@ -3287,8 +3304,10 @@ function drawWheelPrizes() {
 
   ST._drawing = true;
   try {
-    wheel.querySelectorAll(".prize-text").forEach((el) => el.remove());
+    // bersih label html lama (kalau ada)
+    try { wheel.querySelectorAll(".prize-text").forEach((el) => el.remove()); } catch (_) {}
 
+    // remove svg lama
     const old = wheel.querySelector("svg.wheel-svg");
     if (old) {
       try { old.__wheel && old.__wheel.destroy && old.__wheel.destroy(); } catch (_) {}
@@ -3297,16 +3316,18 @@ function drawWheelPrizes() {
 
     const svg = buildWheelSVG_CASINO(prizes, opt);
 
-    // ✅ overflow hidden + clip internal = anti blur keluar
+    // anti bleed: svg tetap di dalam host yang overflow hidden + clip internal
     svg.style.cssText =
       "position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;" +
-      "transform:translateZ(0);will-change:transform;z-index:0;overflow:hidden;";
+      "transform:translateZ(0);will-change:transform;z-index:0;overflow:hidden;" +
+      "backface-visibility:hidden;";
 
     wheel.insertBefore(svg, wheel.firstChild);
 
     wheel.__mt2WheelSvg = svg;
     wheel.__mt2WheelApi = svg.__wheel;
 
+    // apply pending rotation (kalau ada)
     const pending = Number(wheel.__mt2PendingRotation);
     let cur = Number.isFinite(pending) ? pending : NaN;
 
@@ -3316,50 +3337,57 @@ function drawWheelPrizes() {
     if (Number.isFinite(cur)) {
       try { setWheelRotationSVG(cur, { force: true }); } catch (_) {}
     }
-  } catch (e) {
+  } catch (_) {
     try { ST._lastKey = ""; } catch (_) {}
   } finally {
     ST._drawing = false;
   }
 
-  // fonts ready → rebuild sekali (idle)
+  // fonts ready → rebuild sekali (idle) (biasanya bikin text width lebih akurat)
   if (document.fonts && typeof document.fonts.ready?.then === "function") {
-    if (!ST._fontsHooked) {
-      ST._fontsHooked = true;
+    const ST2 = __mt2WheelState();
+    if (!ST2._fontsHooked) {
+      ST2._fontsHooked = true;
       document.fonts.ready.then(() => {
-        try { ST._lastKey = ""; safeScheduleWheelBuild("fonts"); } catch (_) {}
+        try { ST2._lastKey = ""; safeScheduleWheelBuild("fonts"); } catch (_) {}
       }).catch(() => {});
     }
   }
 }
 
 /* =========================
- * Idle-friendly scheduler (shared)
+ * Idle-friendly scheduler (coalesced)
  * ======================= */
 function safeScheduleWheelBuild(reason = "unknown") {
-  const ST = window.__MT2_WHEEL_CASINO || (window.__MT2_WHEEL_CASINO = {});
+  const ST = __mt2WheelState();
+  ST._lastWhy = String(reason || "unknown");
+
   if (ST._sched) return;
   ST._sched = 1;
 
-  const settle = (reason === "vvScroll") ? 160 : (reason === "orientation") ? 220 : 80;
+  const settle =
+    (reason === "vvScroll") ? 160 :
+    (reason === "orientation") ? 220 :
+    (reason === "pageshow") ? 120 :
+    80;
+
+  const raf = (typeof requestAnimationFrame === "function")
+    ? requestAnimationFrame
+    : (fn) => setTimeout(fn, 16);
 
   const run = () => {
     ST._sched = 0;
     try { drawWheelPrizes(); } catch (_) {}
   };
 
-  const raf = (typeof requestAnimationFrame === "function") ? requestAnimationFrame : (fn) => setTimeout(fn, 16);
-
   raf(() => {
     if (ST._settleT) { try { clearTimeout(ST._settleT); } catch (_) {} }
     ST._settleT = setTimeout(() => {
       ST._settleT = 0;
 
+      // iOS sering tidak punya requestIdleCallback → fallback aman
       if (typeof requestIdleCallback === "function") {
-        try {
-          requestIdleCallback(run, { timeout: 260 });
-          return;
-        } catch (_) {}
+        try { requestIdleCallback(run, { timeout: 260 }); return; } catch (_) {}
       }
       run();
     }, settle);
@@ -3367,14 +3395,14 @@ function safeScheduleWheelBuild(reason = "unknown") {
 }
 
 /* =========================
- * Auto resize watcher (RO + VV + DPR/scale) — smooth & conservative
+ * Auto resize watcher (RO + VV + DPR/scale)
  * ======================= */
 function initWheelAutoResize() {
   const wheel = document.getElementById("wheel");
   if (!wheel) return;
 
   const wrap = document.getElementById("wheelWrap") || wheel;
-  const ST = window.__MT2_WHEEL_CASINO || (window.__MT2_WHEEL_CASINO = {});
+  const ST = __mt2WheelState();
 
   // cleanup lama
   if (ST.ro) { try { ST.ro.disconnect(); } catch (_) {} ST.ro = null; }
@@ -3397,7 +3425,7 @@ function initWheelAutoResize() {
     safeScheduleWheelBuild(why || "resize");
   };
 
-  // IO: kalau wheel keluar viewport, stop rebuild spam (mobile hemat)
+  // IO: kalau wheel keluar viewport, stop rebuild spam
   if ("IntersectionObserver" in window) {
     ST.io = new IntersectionObserver((entries) => {
       const e = entries && entries[0];
@@ -3420,6 +3448,7 @@ function initWheelAutoResize() {
   // VisualViewport (iOS/Android)
   if (window.visualViewport && typeof window.visualViewport.addEventListener === "function") {
     const vv = window.visualViewport;
+
     const onVVResize = () => schedule("vvResize");
 
     let vvScrollT = 0;
@@ -3441,7 +3470,7 @@ function initWheelAutoResize() {
     };
   }
 
-  // DPR/scale poll — jarang (hemat)
+  // DPR/scale poll — jarang (lebih hemat)
   ST.pollT = setInterval(() => {
     if (document.hidden) return;
     if (ST._inView === false) return;
@@ -3454,19 +3483,19 @@ function initWheelAutoResize() {
       ST._vvScale = sc;
       schedule("poll");
     }
-  }, 900);
+  }, 1100);
 
-  // pageshow (BFCache iOS) → rebuild
+  // pageshow (BFCache iOS)
   const onPageShow = () => schedule("pageshow");
   window.addEventListener("pageshow", onPageShow, { passive: true });
   ST.pageOff = () => window.removeEventListener("pageshow", onPageShow);
 
-  // visibilitychange: balik dari background → rebuild halus
+  // visibilitychange
   const onVis = () => { if (!document.hidden) schedule("visible"); };
   document.addEventListener("visibilitychange", onVis, { passive: true });
   ST.visOff = () => document.removeEventListener("visibilitychange", onVis);
 
-  // orientationchange (mobile)
+  // orientationchange
   const onOr = () => schedule("orientation");
   window.addEventListener("orientationchange", onOr, { passive: true });
   ST.orOff = () => window.removeEventListener("orientationchange", onOr);
@@ -3489,8 +3518,8 @@ function initWheelAutoResize() {
 }
 
 /* =========================================================
- * SVG BUILDER — CASINO PREMIUM 1:1 — FULL REPLACE (v12.2)
- * HOTFIX: ✅ internal clip wheel circle (anti blur behind)
+ * SVG BUILDER — CASINO PREMIUM 1:1 — FULL REPLACE (v12.2a)
+ * HOTFIX: ✅ rSegIn clamp benar + clip internal anti blur
  * ======================================================= */
 function buildWheelSVG_CASINO(prizes, opt = {}) {
   const list = Array.isArray(prizes) ? prizes : [];
@@ -3508,7 +3537,11 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   const rimW2  = 10;
 
   const rSegOut = rOuter - (rimW1 + 10);
-  const rSegIn  = clampNumber(Number(opt.innerRadius ?? 350), 20, 10);
+
+  // ✅ FIX FATAL: clamp inner radius harus masuk akal dan < rSegOut
+  const rSegInMin = 210;
+  const rSegInMax = Math.max(rSegInMin + 20, Math.min(440, rSegOut - 30));
+  const rSegIn  = clampNumber(Number(opt.innerRadius ?? 350), rSegInMin, rSegInMax);
 
   const rText = Math.round((rSegIn + rSegOut) * 0.565);
   const dividerW = 2.2;
@@ -3526,16 +3559,12 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   const reduceMotion = matchReduceMotion();
   const animateBulbs = (opt.animateBulbs !== false) && !reduceMotion;
 
-  // band-limit bloom/run (anti haze putih)
   const useBulbBandMask = (opt.bulbBandMask !== false);
-
-  // glow filter besar → matikan di low
   const useBulbGlowFilter = (opt.bulbGlowFilter !== false) && !isLow;
 
   const chaseDurMs = clampNumber(Number(opt.bulbChaseDurMs ?? (isLow ? 2800 : isMed ? 2350 : 2050)), 1200, 9000);
   const chaseStrength = clampNumber(Number(opt.bulbChaseStrength ?? (isLow ? 0.95 : isMed ? 1.05 : 1.16)), 0.35, 1.60);
 
-  // microNoise mahal saat rotate → default: off low/med
   const enableNoise = (opt.noise === true) || (opt.noise !== false && !isLow && !isMed);
 
   const uid = _wheelUid();
@@ -3546,8 +3575,6 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
     for (const k in attrs) el.setAttribute(k, String(attrs[k]));
     return el;
   };
-
-  const PAD = 0;
 
   const svg = E("svg", {
     class: "wheel-svg",
@@ -3828,10 +3855,9 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   svg.appendChild(gClipAll);
 
   // LAYER ORDER
-  const gRotateBase   = E("g", { class: "wheel-rot wheel-rot-base" });
-  const gStaticSeg    = E("g", { class: "wheel-static wheel-static-seg" });
-
-  const gRotateLabels = E("g", { class: "wheel-rot wheel-rot-labels" });
+  const gRotateBase    = E("g", { class: "wheel-rot wheel-rot-base" });
+  const gStaticSeg     = E("g", { class: "wheel-static wheel-static-seg" });
+  const gRotateLabels  = E("g", { class: "wheel-rot wheel-rot-labels" });
   const gLabelsUpright = E("g", { class: "wheel-labels-upright" });
   gRotateLabels.appendChild(gLabelsUpright);
 
@@ -3854,7 +3880,7 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
   gBulbWrap.setAttribute("data-anim", animateBulbs ? "1" : "0");
 
   const bulbCount = clampNumber(
-    Number(opt.bulbCount ?? (isLow ? 26 : isMed ? 32 : Math.max(34, Math.min(52, n * 5)))),
+    Number(opt.bulbCount ?? (isLow ? 24 : isMed ? 30 : Math.max(34, Math.min(52, n * 5)))),
     24,
     56
   );
@@ -4282,7 +4308,9 @@ function buildWheelSVG_CASINO(prizes, opt = {}) {
 function clampNumber(v, lo, hi){
   const x = Number(v);
   if (!Number.isFinite(x)) return lo;
-  return Math.max(lo, Math.min(hi, x));
+  const a = Number(lo), b = Number(hi);
+  const mn = Math.min(a, b), mx = Math.max(a, b);
+  return Math.max(mn, Math.min(mx, x));
 }
 
 function polar(cx, cy, r, deg) {
