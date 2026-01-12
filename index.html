@@ -464,64 +464,102 @@ header::after{
  * 5) WHEEL — CASINO PREMIUM (RESPONSIVE + CLEAN)
  * ====================================================================== */
 
-/* Local tokens */
+/* ======================================================================
+ * WHEEL + POINTER — CLEAN SMOOTH (ANTI FREEZE / ANTI GLITCH) — FULL REPLACE
+ * Fokus:
+ * ✅ FIX clamp() hub kebalik (biang responsif rusak)
+ * ✅ Pointer anim dipindah ke SVG (anti transform inline nimpah)
+ * ✅ Kick tidak mematikan float (spin+kick bisa bareng)
+ * ✅ CoreFX aman di mobile (matikan blend+mask berat)
+ * ✅ Kurangi layer/will-change berlebihan (anti flicker iOS)
+ * ====================================================================== */
+
+/* =========================
+ * 0) TOKENS
+ * ======================= */
 .wheel-container{
   /* sizing */
   --wheel-size: min(480px, 92vw, 56svh);
   --rim-pad: clamp(6px, 1.6vw, 12px);
 
   /* perf */
-  --gpu: translateZ(0);
+  --gpu3d: translate3d(0,0,0);
   --inner-safe-scale: 1;
 
   /* shadow */
   --wheel-shadow: 0 26px 72px rgba(0,0,0,0.62);
 
   /* corefx */
-  --corefx-opacity: 0.24;
-  --corefx-opacity-spin: 0.40;
+  --corefx-opacity: 0.22;
+  --corefx-opacity-spin: 0.38;
 
-  /* sync */
+  /* spin sync */
   --spin-dur: 6000ms;
 
   /* hub & pointer */
-  --hub-size: clamp(50px, calc(var(--wheel-size) * 0.10), 10px);
-
+  --hub-size: clamp(64px, calc(var(--wheel-size) * 0.20), 138px); /* ✅ FIX */
   --pointer-w: clamp(36px, calc(var(--wheel-size) * 0.115), 56px);
   --pointer-h: clamp(50px, calc(var(--wheel-size) * 0.155), 78px);
 
-  /* pointer top base + offsetY (tuner) */
+  /* pointer placement */
   --pointer-top: clamp(-26px, calc(var(--wheel-size) * -0.060), -16px);
   --pointer-drop: 18px;
 
-  /* cutout */
+  /* cutout (mask) — feather diperkecil biar gak “ring aneh” */
   --hub-cut: 0.245;
-  --hub-feather: 0.060;
+  --hub-feather: 0.018; /* ✅ FIX: 0.015–0.025 aman */
 
-  /* ✅ HALO / AURA OUTSIDE WHEEL (DIMATIKAN) */
+  /* halo luar default OFF */
   --wheel-halo: 0;
 
+  /* container queries (guard) */
+  /* Safari lama bisa ignore ini, tetap aman */
   container-type: inline-size;
 }
 
 @supports (height: 100dvh){
   .wheel-container{ --wheel-size: min(480px, 92vw, 56dvh); }
 }
-@container (min-width: 420px){
-  .wheel-container{
-    --hub-size: clamp(78px, calc(var(--wheel-size) * 0.225), 142px);
-    --pointer-top: clamp(-24px, calc(var(--wheel-size) * -0.056), -14px);
-    --hub-cut: 0.252;
+
+/* Container-query guard (kalau browser support) */
+@supports (container-type: inline-size){
+  @container (min-width: 420px){
+    .wheel-container{
+      --hub-size: clamp(78px, calc(var(--wheel-size) * 0.225), 142px);
+      --pointer-top: clamp(-24px, calc(var(--wheel-size) * -0.056), -14px);
+      --hub-cut: 0.252;
+    }
   }
-}
-@container (max-width: 360px){
-  .wheel-container{
-    --hub-size: clamp(70px, calc(var(--wheel-size) * 0.205), 120px);
-    --pointer-top: clamp(-22px, calc(var(--wheel-size) * -0.052), -12px);
-    --hub-cut: 0.238;
+  @container (max-width: 360px){
+    .wheel-container{
+      --hub-size: clamp(70px, calc(var(--wheel-size) * 0.205), 120px);
+      --pointer-top: clamp(-22px, calc(var(--wheel-size) * -0.052), -12px);
+      --hub-cut: 0.238;
+    }
   }
 }
 
+/* Fallback kalau container query gak support */
+@supports not (container-type: inline-size){
+  @media (min-width: 420px){
+    .wheel-container{
+      --hub-size: clamp(78px, calc(var(--wheel-size) * 0.225), 142px);
+      --pointer-top: clamp(-24px, calc(var(--wheel-size) * -0.056), -14px);
+      --hub-cut: 0.252;
+    }
+  }
+  @media (max-width: 360px){
+    .wheel-container{
+      --hub-size: clamp(70px, calc(var(--wheel-size) * 0.205), 120px);
+      --pointer-top: clamp(-22px, calc(var(--wheel-size) * -0.052), -12px);
+      --hub-cut: 0.238;
+    }
+  }
+}
+
+/* =========================
+ * 1) LAYOUT HOST
+ * ======================= */
 .wheel-container{
   position: relative;
   display: flex;
@@ -534,7 +572,6 @@ header::after{
   padding-bottom: clamp(22px, 6vw, 46px);
 }
 
-/* Wrapper */
 .wheel-wrapper{
   position: relative;
   width: var(--wheel-size);
@@ -546,17 +583,21 @@ header::after{
   touch-action: manipulation;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 
   background: transparent;
   isolation: isolate;
   z-index: 2;
 
-  transform: var(--gpu);
+  transform: var(--gpu3d);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
 
-/* Pointer */
+/* =========================
+ * 2) POINTER — ANTI FREEZE
+ * Animasi dipindah ke SVG biar aman dari transform inline di .pointer
+ * ======================= */
 .pointer{
   position: absolute;
   top: var(--pointer-top);
@@ -566,7 +607,7 @@ header::after{
 
   --pointer-offsetY: var(--pointer-drop);
 
-  transform: translateX(-50%) translateY(var(--pointer-offsetY)) var(--gpu);
+  transform: translate3d(-50%, var(--pointer-offsetY), 0);
   transform-origin: 50% 16%;
   z-index: 40;
   pointer-events: none;
@@ -577,42 +618,45 @@ header::after{
 
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  will-change: transform;
 }
-.pointer svg{ width:100%; height:100%; display:block; }
 
-.pointer.is-spin{ animation: pointerFloat 560ms ease-in-out infinite; }
+.pointer svg{
+  width:100%;
+  height:100%;
+  display:block;
+
+  transform-origin: 50% 16%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform; /* hanya ini yang wajib */
+}
+
+.pointer.is-spin svg{ animation: pointerFloat 560ms ease-in-out infinite; }
+
 @keyframes pointerFloat{
-  0%{
-    transform: translateX(-50%) translateY(var(--pointer-offsetY))
-      rotate(-1.05deg) translateZ(0);
-  }
-  50%{
-    transform: translateX(-50%) translateY(calc(var(--pointer-offsetY) + 1px))
-      rotate(1.55deg) translateZ(0);
-  }
-  100%{
-    transform: translateX(-50%) translateY(var(--pointer-offsetY))
-      rotate(-1.05deg) translateZ(0);
-  }
-}
-.pointer.is-kick{ animation: pointerKick 120ms ease-out 1; }
-@keyframes pointerKick{
-  0%{
-    transform: translateX(-50%) translateY(var(--pointer-offsetY))
-      rotate(0deg) translateZ(0);
-  }
-  45%{
-    transform: translateX(-50%) translateY(var(--pointer-offsetY))
-      rotate(var(--kick-deg, -11deg)) translateZ(0);
-  }
-  100%{
-    transform: translateX(-50%) translateY(var(--pointer-offsetY))
-      rotate(0deg) translateZ(0);
-  }
+  0%   { transform: rotate(-1.05deg) translate3d(0,0,0); }
+  50%  { transform: rotate( 1.55deg) translate3d(0,1px,0); }
+  100% { transform: rotate(-1.05deg) translate3d(0,0,0); }
 }
 
-/* Outer frame */
+.pointer.is-kick svg{ animation: pointerKick 120ms ease-out 1; }
+
+@keyframes pointerKick{
+  0%   { transform: rotate(0deg) translate3d(0,0,0); }
+  45%  { transform: rotate(var(--kick-deg, -11deg)) translate3d(0,0,0); }
+  100% { transform: rotate(0deg) translate3d(0,0,0); }
+}
+
+/* ✅ Kick numpang tanpa matiin float */
+.pointer.is-spin.is-kick svg{
+  animation:
+    pointerFloat 560ms ease-in-out infinite,
+    pointerKick 120ms ease-out 1;
+}
+
+/* =========================
+ * 3) OUTER FRAME
+ * ======================= */
 .wheel-outer{
   position: relative;
   width: 100%;
@@ -620,26 +664,23 @@ header::after{
   border-radius: 50%;
   padding: var(--rim-pad);
   z-index: 2;
-
   isolation: isolate;
 
-  /* ✅ clip pseudo agar tidak bikin halo keluar */
-  overflow: hidden;
-
+  overflow: hidden; /* clip anti halo */
   background: transparent;
   box-shadow: var(--wheel-shadow);
 
-  transform: var(--gpu);
+  transform: var(--gpu3d);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
 
-/* ✅ HALO luar dimatikan by default (hapus “lingkaran putih / blur” di belakang wheel) */
+/* Halo (OFF by default) */
 .wheel-outer::before{
   content:"";
   position:absolute;
-  inset: 0;                /* tidak keluar radius */
-  border-radius: 0%;
+  inset: 0;
+  border-radius: 50%; /* ✅ FIX: jangan 0% biar gak artefak */
   pointer-events:none;
 
   background:
@@ -655,11 +696,10 @@ header::after{
     );
 
   opacity: calc(0.85 * var(--wheel-halo));
-  filter: none;
-  transform: translateZ(0);
+  transform: var(--gpu3d);
 }
 
-/* Rim detail (anti “ring putih”) */
+/* Rim detail */
 .wheel-outer::after{
   content:"";
   position:absolute;
@@ -668,13 +708,15 @@ header::after{
   pointer-events:none;
 
   box-shadow:
-    inset 0 0 0 1px rgba(255,232,176,0.06),   /* sebelumnya putih, sekarang gold tipis */
+    inset 0 0 0 1px rgba(255,232,176,0.06),
     inset 0 8px 18px rgba(255,255,255,0.020),
     inset 0 -14px 22px rgba(0,0,0,0.28);
   opacity: 0.96;
 }
 
-/* Inner host */
+/* =========================
+ * 4) INNER HOST
+ * ======================= */
 .wheel-inner{
   position: relative;
   width: 100%;
@@ -691,12 +733,12 @@ header::after{
     inset 0 16px 30px rgba(0,0,0,0.26),
     inset 0 -14px 22px rgba(255,255,255,0.026);
 
-  transform: var(--gpu);
+  transform: var(--gpu3d);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  will-change: transform;
 }
 
+/* SVG wheel layer */
 .wheel-inner .wheel-svg{
   position: absolute;
   inset: 0;
@@ -707,7 +749,7 @@ header::after{
   overflow: visible;
 }
 
-/* overlay halus */
+/* overlay halus (mask cutout) */
 .wheel-inner::before{
   content:"";
   position:absolute;
@@ -722,24 +764,30 @@ header::after{
     radial-gradient(circle at 50% 50%, rgba(0,0,0,0.065), transparent 82%);
   opacity: 0.44;
 
-  transform: scale(var(--inner-safe-scale)) translateZ(0);
+  transform: scale(var(--inner-safe-scale)) var(--gpu3d);
   transform-origin: 50% 50%;
-
-  -webkit-mask: radial-gradient(circle at 50% 50%,
-    rgba(0,0,0,0.00) 0%,
-    rgba(0,0,0,0.00) calc((var(--hub-cut) - var(--hub-feather)) * 100%),
-    rgba(0,0,0,1.00) calc((var(--hub-cut) + var(--hub-feather)) * 100%),
-    rgba(0,0,0,1.00) 100%
-  );
-          mask: radial-gradient(circle at 50% 50%,
-    rgba(0,0,0,0.00) 0%,
-    rgba(0,0,0,0.00) calc((var(--hub-cut) - var(--hub-feather)) * 100%),
-    rgba(0,0,0,1.00) calc((var(--hub-cut) + var(--hub-feather)) * 100%),
-    rgba(0,0,0,1.00) 100%
-  );
 }
 
-/* Core FX */
+@supports (-webkit-mask: radial-gradient(circle, #000, transparent)){
+  .wheel-inner::before{
+    -webkit-mask: radial-gradient(circle at 50% 50%,
+      rgba(0,0,0,0.00) 0%,
+      rgba(0,0,0,0.00) calc((var(--hub-cut) - var(--hub-feather)) * 100%),
+      rgba(0,0,0,1.00) calc((var(--hub-cut) + var(--hub-feather)) * 100%),
+      rgba(0,0,0,1.00) 100%
+    );
+            mask: radial-gradient(circle at 50% 50%,
+      rgba(0,0,0,0.00) 0%,
+      rgba(0,0,0,0.00) calc((var(--hub-cut) - var(--hub-feather)) * 100%),
+      rgba(0,0,0,1.00) calc((var(--hub-cut) + var(--hub-feather)) * 100%),
+      rgba(0,0,0,1.00) 100%
+    );
+  }
+}
+
+/* =========================
+ * 5) CORE FX — SAFE VERSION
+ * ======================= */
 .wheel-corefx{
   position:absolute;
   inset:0;
@@ -747,15 +795,12 @@ header::after{
   pointer-events:none;
   z-index: 11;
 
-  transform-origin: 50% 50%;
   opacity: var(--corefx-opacity);
-
   filter: none;
+
+  /* default desktop: blend boleh */
   mix-blend-mode: screen;
 
-  will-change: transform, opacity;
-
-  /* ✅ kurangi “white wash” supaya tidak jadi ring putih */
   background:
     conic-gradient(from 0deg,
       rgba(255,255,255,0.00) 0deg,
@@ -768,58 +813,66 @@ header::after{
       rgba(255,255,255,0.00) 360deg
     );
 
-  -webkit-mask: radial-gradient(circle at 50% 50%,
-    rgba(0,0,0,0.00) 0%,
-    rgba(0,0,0,0.00) calc((var(--hub-cut) + 0.020) * 100%),
-    rgba(0,0,0,0.92) calc((var(--hub-cut) + 0.105) * 100%),
-    rgba(0,0,0,1.00) 46%,
-    rgba(0,0,0,0.78) 58%,
-    rgba(0,0,0,0.00) 68%,
-    rgba(0,0,0,0.00) 100%
-  );
-          mask: radial-gradient(circle at 50% 50%,
-    rgba(0,0,0,0.00) 0%,
-    rgba(0,0,0,0.00) calc((var(--hub-cut) + 0.020) * 100%),
-    rgba(0,0,0,0.92) calc((var(--hub-cut) + 0.105) * 100%),
-    rgba(0,0,0,1.00) 46%,
-    rgba(0,0,0,0.78) 58%,
-    rgba(0,0,0,0.00) 68%,
-    rgba(0,0,0,0.00) 100%
-  );
-
+  transform: scale(var(--inner-safe-scale)) var(--gpu3d);
+  transform-origin: 50% 50%;
   animation: coreFXRotate 12.5s linear infinite;
 }
-@keyframes coreFXRotate{
-  from{ transform: translateZ(0) scale(var(--inner-safe-scale)) rotate(0deg); }
-  to  { transform: translateZ(0) scale(var(--inner-safe-scale)) rotate(360deg); }
+
+@supports (-webkit-mask: radial-gradient(circle, #000, transparent)){
+  .wheel-corefx{
+    -webkit-mask: radial-gradient(circle at 50% 50%,
+      rgba(0,0,0,0.00) 0%,
+      rgba(0,0,0,0.00) calc((var(--hub-cut) + 0.020) * 100%),
+      rgba(0,0,0,0.92) calc((var(--hub-cut) + 0.105) * 100%),
+      rgba(0,0,0,1.00) 46%,
+      rgba(0,0,0,0.78) 58%,
+      rgba(0,0,0,0.00) 68%,
+      rgba(0,0,0,0.00) 100%
+    );
+            mask: radial-gradient(circle at 50% 50%,
+      rgba(0,0,0,0.00) 0%,
+      rgba(0,0,0,0.00) calc((var(--hub-cut) + 0.020) * 100%),
+      rgba(0,0,0,0.92) calc((var(--hub-cut) + 0.105) * 100%),
+      rgba(0,0,0,1.00) 46%,
+      rgba(0,0,0,0.78) 58%,
+      rgba(0,0,0,0.00) 68%,
+      rgba(0,0,0,0.00) 100%
+    );
+  }
 }
 
-/* Legacy spin */
+@keyframes coreFXRotate{
+  from{ transform: scale(var(--inner-safe-scale)) rotate(0deg) translate3d(0,0,0); }
+  to  { transform: scale(var(--inner-safe-scale)) rotate(360deg) translate3d(0,0,0); }
+}
+
+/* Legacy spin (kalau kamu pakai class spinning) */
 .wheel-inner.spinning{
   animation: spin-wheel var(--spin-dur) cubic-bezier(0.15, 0, 0.15, 1) forwards;
 }
 @keyframes spin-wheel{
-  from { transform: rotate(var(--from-rotation, 0deg)) translateZ(0); }
-  to   { transform: rotate(var(--rotation)) translateZ(0); }
+  from { transform: rotate(var(--from-rotation, 0deg)) translate3d(0,0,0); }
+  to   { transform: rotate(var(--rotation)) translate3d(0,0,0); }
 }
 .wheel-inner.spinning .wheel-corefx{
   opacity: var(--corefx-opacity-spin);
   animation-duration: 2.35s;
 }
 
-/* Hide legacy text */
+/* hide legacy text if ada */
 .prize-text{ display:none !important; }
 
-/* Hub */
+/* =========================
+ * 6) HUB
+ * ======================= */
 .wheel-center{
   position:absolute;
   top:50%;
   left:50%;
-  transform: translate(-50%, -50%) translateZ(0);
+  transform: translate3d(-50%, -50%, 0);
 
   width: var(--hub-size);
   height: var(--hub-size);
-
   border-radius:50%;
   overflow:hidden;
   isolation:isolate;
@@ -847,70 +900,8 @@ header::after{
     inset 0 10px 16px rgba(255,255,255,0.06),
     inset 0 -18px 22px rgba(0,0,0,0.26);
 
-  backface-visibility:hidden;
-  -webkit-backface-visibility:hidden;
-  will-change: transform;
-}
-
-.wheel-center::before{
-  content:"";
-  position:absolute;
-  inset:-2%;
-  border-radius:50%;
-  pointer-events:none;
-  z-index: 1;
-
-  background:
-    conic-gradient(from 16deg,
-      rgba(255,255,255,0.32),
-      rgba(0,0,0,0.00) 14%,
-      rgba(255,255,255,0.13) 26%,
-      rgba(0,0,0,0.00) 42%,
-      rgba(255,255,255,0.20) 58%,
-      rgba(0,0,0,0.00) 74%,
-      rgba(255,255,255,0.32) 100%
-    ),
-    radial-gradient(circle at 50% 50%,
-      rgba(0,0,0,0.00) 54%,
-      rgba(0,0,0,0.16) 72%,
-      rgba(0,0,0,0.00) 100%
-    );
-
-  opacity: 0.58;
-  filter: none;
-  mix-blend-mode: screen;
-}
-
-.wheel-center::after{
-  content:"";
-  position:absolute;
-  left:50%;
-  top:50%;
-  transform: translate(-50%, -50%) translateZ(0);
-
-  width: 60%;
-  height: 60%;
-  border-radius:50%;
-  z-index: 3;
-
-  background:
-    repeating-radial-gradient(circle at 50% 50%,
-      rgba(255,255,255,0.10) 0 1.8%,
-      rgba(0,0,0,0.00) 1.8% 5.2%
-    ),
-    radial-gradient(circle at 34% 26%, rgba(255,255,255,0.34), transparent 54%),
-    radial-gradient(circle at 64% 74%, rgba(0,0,0,0.42), transparent 66%),
-    linear-gradient(180deg,
-      rgba(255,244,214,0.98),
-      rgba(246,179,61,0.94),
-      rgba(138,74,22,0.94)
-    );
-
-  border: 1px solid rgba(255,255,255,0.14);
-  box-shadow:
-    inset 0 0 0 1px rgba(0,0,0,0.20),
-    inset 0 10px 18px rgba(255,255,255,0.06),
-    inset 0 -16px 18px rgba(0,0,0,0.30);
+  /* ✅ jangan will-change di hub (anti layer bengkak / flicker) */
+  will-change: auto;
 }
 
 .wheel-center .hub-sheen{
@@ -921,9 +912,7 @@ header::after{
   z-index: 4;
 
   opacity: 0.16;
-  mix-blend-mode: screen;
   filter: none;
-  will-change: opacity;
 
   background:
     radial-gradient(circle at 26% 18%, rgba(255,255,255,0.36), transparent 48%),
@@ -940,14 +929,23 @@ header::after{
   animation: hubSpark 1.9s ease-in-out infinite;
 }
 @keyframes hubSpark{
-  0%   { opacity: 0.12; }
-  50%  { opacity: 0.20; }
-  100% { opacity: 0.12; }
+  0%{ opacity: 0.12; }
+  50%{ opacity: 0.20; }
+  100%{ opacity: 0.12; }
 }
 
-/* Mobile/low interaction */
+/* =========================
+ * 7) MOBILE PERF GUARD (paling penting buat iOS)
+ * Matikan blend+mask berat -> anti freeze/flicker
+ * ======================= */
 @media (hover: none) and (pointer: coarse){
-  .wheel-corefx{ animation-duration: 16s; }
+  .wheel-corefx{
+    mix-blend-mode: normal;
+    -webkit-mask: none !important;
+            mask: none !important;
+    opacity: 0.16;
+    animation-duration: 18s;
+  }
 }
 
 /* Reduced motion */
