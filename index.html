@@ -3001,331 +3001,8 @@ function initFxParticlesCanvas() {
 }
 
 /* =========================================================
- * 7) AUDIO — MOBILE SMOOTH (WebAudio SFX + smart limiter)
+ * 7) AUDIO (clean start on first gesture)
  * ======================================================= */
-
-/** --- Global state (pastikan tidak bentrok) --- */
-let audioPrimed = false;
-let bgStarted = false;
-
-let tickPool = [];       // fallback only
-let historyPool = [];    // fallback only
-let tickPoolIdx = 0;
-let historyPoolIdx = 0;
-
-let historySfxAt = 0;
-let pointerKickT = 0;
-let toastTimer = 0;
-
-/** --- WebAudio engine (SFX only) --- */
-const SFX = (() => {
-  const st = {
-    supported: false,
-    ctx: null,
-    master: null,
-    sfxGain: null,
-    bgGain: null,
-    buffers: Object.create(null),
-    loading: null,
-    unlocked: false,
-    lastTickAtMs: 0,
-    lastHistAtMs: 0,
-    activeTickVoices: 0,
-    toastOnce: false,
-    mediaSrcNode: null,
-    lowEnd: false,
-  };
-
-  function _isLowEndDevice() {
-    try {
-      const dm = navigator.deviceMemory || 0;
-      const hc = navigator.hardwareConcurrency || 0;
-      const saveData = !!(navigator.connection && navigator.connection.saveData);
-      return saveData || (dm && dm <= 2) || (hc && hc <= 4);
-    } catch (_) { return false; }
-  }
-
-  function _ensureCtx() {
-    if (st.ctx) return true;
-
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return false;
-
-    try {
-      st.ctx = new AC({ latencyHint: "interactive" });
-      st.master = st.ctx.createGain();
-      st.sfxGain = st.ctx.createGain();
-      st.bgGain = st.ctx.createGain();
-
-      // master routing
-      st.sfxGain.connect(st.master);
-      st.bgGain.connect(st.master);
-      st.master.connect(st.ctx.destination);
-
-      st.supported = true;
-      st.lowEnd = _isLowEndDevice();
-
-      // initial gain (akan diset ulang saat setupAudio)
-      st.master.gain.value = 1.0;
-      st.sfxGain.gain.value = 1.0;
-      st.bgGain.gain.value = 1.0;
-
-      return true;
-    } catch (_) {
-      st.ctx = null;
-      return false;
-    }
-  }
-
-  async function _resume() {
-    if (!_ensureCtx()) return false;
-    try {
-      if (st.ctx.state !== "running") await st.ctx.resume();
-      return st.ctx.state === "running";
-    } catch (_) { return false; }
-  }
-
-  async function _unlockOnce() {
-    if (st.unlocked) return true;
-    const ok = await _resume();
-    if (!ok) return false;
-
-    // iOS-friendly unlock: play ultra-short silent buffer
-    try {
-      const sr = st.ctx.sampleRate || 48000;
-      const b = st.ctx.createBuffer(1, Math.max(1, Math.floor(sr * 0.01)), sr);
-      const src = st.ctx.createBufferSource();
-      src.buffer = b;
-      const g = st.ctx.createGain();
-      g.gain.value = 0.00001;
-
-      src.connect(g);
-      g.connect(st.master);
-      src.start(st.ctx.currentTime);
-      src.stop(st.ctx.currentTime + 0.01);
-
-      st.unlocked = true;
-      return true;
-    } catch (_) {
-      // kalau gagal, tetap anggap unlocked best-effort
-      st.unlocked = true;
-      return true;
-    }
-  }
-
-  async function _fetchDecode(url) {
-    const res = await fetch(url, { cache: "force-cache", mode: "cors" }).catch(() => null);
-    if (!res || !res.ok) throw new Error("fetch_failed");
-    const ab = await res.arrayBuffer();
-    // decodeAudioData iOS kadang perlu promise/CB fallback
-    return await new Promise((resolve, reject) => {
-      try {
-        st.ctx.decodeAudioData(
-          ab.slice(0),
-          (buf) => resolve(buf),
-          () => reject(new Error("decode_failed"))
-        );
-      } catch (e) {
-        reject(e);
-      }
-    });
-  }
-
-  function prepare({ tickUrl, histUrl, spinUrl, winUrl, vol }) {
-    // Boleh dipanggil sebelum gesture, tapi ctx dibuat best-effort.
-    _ensureCtx();
-    if (!st.supported) return;
-
-    // gain sync dari CONFIG
-    const v = vol || {};
-    const vTick = Number(v.tick ?? 1);
-    const vHist = Number(v.history ?? 1);
-    const vSpin = Number(v.spin ?? 1);
-    const vWin  = Number(v.win ?? 1);
-    const vBg   = Number(v.bg ?? 1);
-
-    // Master / group gain (bg gain dipakai kalau kamu mau routing bg via webaudio)
-    st.sfxGain.gain.value = 1.0;
-    st.bgGain.gain.value = 1.0;
-
-    // Simpan “per-sfx base volume” (dipakai saat play)
-    st._baseVol = {
-      tick:  Math.max(0, Math.min(1, vTick)),
-      history: Math.max(0, Math.min(1, vHist)),
-      spin:  Math.max(0, Math.min(1, vSpin)),
-      win:   Math.max(0, Math.min(1, vWin)),
-      bg:    Math.max(0, Math.min(1, vBg)),
-    };
-
-    const jobs = [];
-    const map = [
-      ["tick", tickUrl],
-      ["history", histUrl],
-      ["spin", spinUrl],
-      ["win", winUrl],
-    ];
-
-    st.loading = (async () => {
-      // jangan decode kalau ctx belum ada
-      if (!st.ctx) return;
-
-      for (const [key, url] of map) {
-        if (!url || typeof url !== "string") continue;
-        // cache hit
-        if (st.buffers[key]) continue;
-        jobs.push(
-          _fetchDecode(url)
-            .then((buf) => { st.buffers[key] = buf; })
-            .catch(() => { /* fallback akan dipakai */ })
-        );
-      }
-
-      // paralel tapi ringan
-      await Promise.allSettled(jobs);
-    })();
-
-    // kembalikan promise biar opsional ditunggu
-    return st.loading;
-  }
-
-  function _playBuffer(key, {
-    vol = 1,
-    rate = 1,
-    detune = 0,
-    maxVoices = 999,
-    voiceKey = "",
-  } = {}) {
-    if (!st.supported || !st.ctx || st.ctx.state !== "running") return false;
-
-    const buf = st.buffers[key];
-    if (!buf) return false;
-
-    // polyphony limiter khusus tick (biar nggak “pecah”)
-    if (voiceKey === "tick") {
-      if (st.activeTickVoices >= maxVoices) return false;
-      st.activeTickVoices++;
-    }
-
-    try {
-      const src = st.ctx.createBufferSource();
-      src.buffer = buf;
-      src.playbackRate.value = Math.max(0.5, Math.min(1.7, rate));
-      if (detune) src.detune.value = detune;
-
-      const g = st.ctx.createGain();
-      const base = st._baseVol?.[key] ?? 1;
-      g.gain.value = Math.max(0, Math.min(1, base * vol));
-
-      // route to SFX bus
-      src.connect(g);
-      g.connect(st.sfxGain);
-
-      const t0 = st.ctx.currentTime;
-      src.start(t0);
-
-      // cleanup
-      src.onended = () => {
-        try { src.disconnect(); } catch (_) {}
-        try { g.disconnect(); } catch (_) {}
-        if (voiceKey === "tick") st.activeTickVoices = Math.max(0, st.activeTickVoices - 1);
-      };
-
-      return true;
-    } catch (_) {
-      if (voiceKey === "tick") st.activeTickVoices = Math.max(0, st.activeTickVoices - 1);
-      return false;
-    }
-  }
-
-  function tick(intensity = 1) {
-    const now = Date.now();
-
-    // smart throttle:
-    // - lowEnd: lebih longgar supaya tidak “pecah”
-    // - high: tetap cepat tapi jangan terlalu rapat (mobile decoding/CPU)
-    const minGap = st.lowEnd ? 55 : 38; // ms
-    if (now - st.lastTickAtMs < minGap) return true; // skip silently
-    st.lastTickAtMs = now;
-
-    // tick feel: sedikit variasi rate (natural, tapi tidak bikin fals)
-    const rate = 1 + (Math.random() * 0.06 - 0.03);
-    const detune = (Math.random() * 14 - 7); // cents
-
-    // intensity juga ngaruh volume
-    const vol = Math.max(0.10, Math.min(1, 0.45 + 0.55 * intensity));
-
-    // max voices: lowEnd 2, high 3 (lebih dari itu biasanya jadi “berisik”)
-    const maxVoices = st.lowEnd ? 2 : 3;
-
-    return _playBuffer("tick", { vol, rate, detune, maxVoices, voiceKey: "tick" });
-  }
-
-  function history() {
-    const now = Date.now();
-    const gap = st.lowEnd ? 850 : 700;
-    if (now - st.lastHistAtMs < gap) return true;
-    st.lastHistAtMs = now;
-    return _playBuffer("history", { vol: 1.0, rate: 1.0, detune: 0 });
-  }
-
-  function spin() {
-    return _playBuffer("spin", { vol: 1.0, rate: 1.0 });
-  }
-
-  function win() {
-    return _playBuffer("win", { vol: 1.0, rate: 1.0 });
-  }
-
-  async function onFirstGesture() {
-    // wajib dipanggil dari user gesture (click/touch/pointerdown)
-    if (!st.supported) _ensureCtx();
-    if (!st.supported) return false;
-
-    await _resume();
-    await _unlockOnce();
-
-    // tunggu decoding best-effort (biar SFX langsung nempel)
-    try { if (st.loading) await Promise.race([st.loading, new Promise(r => setTimeout(r, 900))]); } catch (_) {}
-
-    return true;
-  }
-
-  function routeBgElement(bgEl) {
-    // OPTIONAL: kalau kamu mau bgMusic lewat AudioContext bus (lebih konsisten)
-    // Tapi kalau ada masalah di device tertentu, kamu bisa komentar fungsi ini.
-    if (!st.supported || !st.ctx || !bgEl) return;
-    if (st.mediaSrcNode) return;
-
-    try {
-      st.mediaSrcNode = st.ctx.createMediaElementSource(bgEl);
-      st.mediaSrcNode.connect(st.bgGain);
-    } catch (_) {
-      // iOS bisa throw kalau element sudah pernah di-route di context lain
-      st.mediaSrcNode = null;
-    }
-  }
-
-  function setBgVolume(v) {
-    if (!st.supported) return;
-    const val = Math.max(0, Math.min(1, Number(v || 0)));
-    // bgGain hanya efektif kalau bg di-route via routeBgElement()
-    try { if (st.bgGain) st.bgGain.gain.value = val; } catch (_) {}
-  }
-
-  return {
-    st,
-    prepare,
-    onFirstGesture,
-    tick,
-    history,
-    spin,
-    win,
-    routeBgElement,
-    setBgVolume,
-  };
-})();
-
-/** --- Setup audio elements + fallback pools --- */
 function setupAudio() {
   const bgMusic = document.getElementById("bgMusic");
   const spinSound = document.getElementById("spinSound");
@@ -3335,44 +3012,18 @@ function setupAudio() {
 
   if (!bgMusic || !spinSound || !tickSound || !winSound || !historySound) return;
 
-  // src
   bgMusic.src = CONFIG.AUDIO.bg;
   spinSound.src = CONFIG.AUDIO.spin;
   winSound.src = CONFIG.AUDIO.win;
   tickSound.src = CONFIG.AUDIO.tick;
   historySound.src = CONFIG.AUDIO.history;
 
-  // volumes (HTML fallback)
   bgMusic.volume = CONFIG.AUDIO.vol.bg;
   spinSound.volume = CONFIG.AUDIO.vol.spin;
   winSound.volume = CONFIG.AUDIO.vol.win;
   tickSound.volume = CONFIG.AUDIO.vol.tick;
   historySound.volume = CONFIG.AUDIO.vol.history;
 
-  // iOS/Android: hint
-  try {
-    bgMusic.preload = "auto";
-    bgMusic.loop = true;
-    bgMusic.playsInline = true;
-    // beberapa browser butuh atribut, tapi via JS ini aman
-    bgMusic.setAttribute("playsinline", "");
-  } catch (_) {}
-
-  // WebAudio SFX prepare (decode buffer)
-  SFX.prepare({
-    tickUrl: CONFIG.AUDIO.tick,
-    histUrl: CONFIG.AUDIO.history,
-    spinUrl: CONFIG.AUDIO.spin,
-    winUrl: CONFIG.AUDIO.win,
-    vol: CONFIG.AUDIO.vol,
-  });
-
-  // OPTIONAL route bg via AudioContext bus (lebih konsisten volume)
-  // Aman karena hanya connect sekali.
-  SFX.routeBgElement(bgMusic);
-  SFX.setBgVolume(CONFIG.AUDIO.vol.bg);
-
-  // Fallback pools (dipakai jika WebAudio gagal / belum ready)
   tickPool = [];
   for (let i = 0; i < 6; i++) {
     const a = new Audio(tickSound.src);
@@ -3391,7 +3042,6 @@ function setupAudio() {
 }
 
 function primeAudioPool(pool) {
-  if (!pool || !pool.length) return;
   pool.forEach((a) => {
     try {
       const prevMuted = a.muted;
@@ -3405,50 +3055,31 @@ function primeAudioPool(pool) {
   });
 }
 
-/** --- Call this on user gesture (click/touch) --- */
-async function kickAudio(withBgStart = false) {
-  // prime once
+function kickAudio(withBgStart = false) {
   if (!audioPrimed) {
     audioPrimed = true;
-
-    // WebAudio unlock (best effort)
-    try { await SFX.onFirstGesture(); } catch (_) {}
-
-    // fallback prime (best effort)
     primeAudioPool(tickPool);
     primeAudioPool(historyPool);
   }
-
   if (!withBgStart) return;
 
   if (!bgStarted) {
     bgStarted = true;
     const bgMusic = document.getElementById("bgMusic");
-
-    // ensure WebAudio context running (agar route bg stabil)
-    try { await SFX.onFirstGesture(); } catch (_) {}
-
     if (bgMusic && bgMusic.paused) {
       bgMusic.play().then(() => {
-        if (!SFX.st.toastOnce) {
-          SFX.st.toastOnce = true;
-          // toast sekali saja (anti spam)
-          showToast("Audio aktif", "success", 1200);
-        }
-      }).catch(() => {
-        // kalau autoplay ditolak, jangan spam toast
-      });
+        // optional: tiny confirmation (tidak ganggu)
+        showToast("Audio aktif", "success", 1400);
+      }).catch(() => {});
     }
   }
 }
 
-/* =========================================================
- * Pointer kick (tetap, tapi lebih aman)
- * ======================================================= */
 function pointerKick(intensity = 1) {
   if (!pointerEl) return;
   if (pointerKickT) clearTimeout(pointerKickT);
 
+  // micro random for realism
   const deg = (-8 - Math.random() * 6) * intensity; // -8..-14
   pointerEl.style.setProperty("--kick-deg", deg.toFixed(2) + "deg");
 
@@ -3456,25 +3087,11 @@ function pointerKick(intensity = 1) {
   void pointerEl.offsetWidth;
   pointerEl.classList.add("is-kick");
 
-  pointerKickT = setTimeout(() => {
-    if (pointerEl) pointerEl.classList.remove("is-kick");
-  }, 140);
+  pointerKickT = setTimeout(() => pointerEl && pointerEl.classList.remove("is-kick"), 140);
 }
 
-/* =========================================================
- * SFX play — WebAudio first, fallback second
- * ======================================================= */
 function playTick(intensity = 1) {
   pointerKick(intensity);
-
-  // WebAudio (smooth)
-  if (SFX.st.supported && SFX.st.ctx && SFX.st.ctx.state === "running") {
-    const ok = SFX.tick(intensity);
-    if (ok) return;
-  }
-
-  // fallback pool (guard)
-  if (!tickPool || !tickPool.length) return;
   try {
     const a = tickPool[tickPoolIdx++ % tickPool.length];
     a.currentTime = 0;
@@ -3484,18 +3101,8 @@ function playTick(intensity = 1) {
 
 function playHistorySfx() {
   const now = Date.now();
-  const gap = SFX.st.lowEnd ? 850 : 700;
-  if (now - (historySfxAt || 0) < gap) return;
+  if (now - historySfxAt < 700) return;
   historySfxAt = now;
-
-  // WebAudio first
-  if (SFX.st.supported && SFX.st.ctx && SFX.st.ctx.state === "running") {
-    const ok = SFX.history();
-    if (ok) return;
-  }
-
-  // fallback pool
-  if (!historyPool || !historyPool.length) return;
   try {
     const a = historyPool[historyPoolIdx++ % historyPool.length];
     a.currentTime = 0;
@@ -3503,25 +3110,8 @@ function playHistorySfx() {
   } catch (_) {}
 }
 
-/* Optional helpers (kalau kamu mau panggil saat spin/win) */
-function playSpinSfx() {
-  if (SFX.st.supported && SFX.st.ctx && SFX.st.ctx.state === "running") {
-    if (SFX.spin()) return;
-  }
-  const el = document.getElementById("spinSound");
-  if (el) { try { el.currentTime = 0; el.play().catch(() => {}); } catch (_) {} }
-}
-
-function playWinSfx() {
-  if (SFX.st.supported && SFX.st.ctx && SFX.st.ctx.state === "running") {
-    if (SFX.win()) return;
-  }
-  const el = document.getElementById("winSound");
-  if (el) { try { el.currentTime = 0; el.play().catch(() => {}); } catch (_) {} }
-}
-
 /* =========================================================
- * 8) BUTTON FX + TOAST (tetap, tapi timer per-button lebih stabil)
+ * 8) BUTTON FX + TOAST
  * ======================================================= */
 function pressFX(btn, ev) {
   if (!btn) return;
@@ -3541,9 +3131,7 @@ function pressFX(btn, ev) {
   void btn.offsetWidth;
   btn.classList.add("fx");
 
-  // per-button timer (anti race)
-  if (btn._fxTimer) clearTimeout(btn._fxTimer);
-  btn._fxTimer = setTimeout(() => btn.classList.remove("fx"), 560);
+  setTimeout(() => btn.classList.remove("fx"), 560);
 
   try { if (navigator.vibrate && !isReducedMotion()) navigator.vibrate(12); } catch (_) {}
 }
@@ -5561,14 +5149,12 @@ function detectPerfTier(mode) {
   }
 
 /* =========================================================
- * 18) DOWNLOAD + SHARE RESULT (PNG) — FINAL (FULL REPLACE v2)
- * ✅ Fix: lastResult ReferenceError (safe getter)
- * ✅ Fix: fallback dataUrl beneran kepakai (tidak stub kosong)
- * ✅ Fix: revokeObjectURL terlalu cepat (lebih aman)
- * ✅ Improve: iOS popup/blank tab lebih aman (pre-open)
- * ✅ Improve: Share/Clipboard error handling lebih jelas
- * ✅ NEW: Auto-resize “Reward Modal” supaya lebih kecil & responsif di mobile
- * ✅ Improve: PNG base width adaptif (mobile lebih ringan, tetap HD)
+ * 18) DOWNLOAD + SHARE RESULT (PNG) — FINAL (FULL REPLACE v3)
+ * ✅ Force: Play URL/domain SELALU ikut saat share (text + navigator.share url)
+ * ✅ Add: Domain tampil di PNG (biar repost gambar tetap ada alamat main)
+ * ✅ Add: Fallback Share Menu (WA/Telegram/X/FB/LINE/Email/Copy Link)
+ * ✅ Keep: lastResult safe getter, iOS pre-open, blob/dataUrl fallback, revoke safe
+ * ✅ Keep: Reward modal auto-resize responsif
  * ======================================================= */
 
 /* -------------------------
@@ -5580,13 +5166,8 @@ function __toast(msg, type) {
 function __kick() { try { if (typeof kickAudio === "function") kickAudio(true); } catch (_) {} }
 
 function __getLastResult() {
-  try {
-    if (typeof lastResult !== "undefined" && lastResult) return lastResult;
-  } catch (_) {}
-  // fallback: kalau kamu simpan di window
-  try {
-    if (typeof window !== "undefined" && window.lastResult) return window.lastResult;
-  } catch (_) {}
+  try { if (typeof lastResult !== "undefined" && lastResult) return lastResult; } catch (_) {}
+  try { if (typeof window !== "undefined" && window.lastResult) return window.lastResult; } catch (_) {}
   return null;
 }
 
@@ -5597,9 +5178,7 @@ function __isIOS() {
   } catch (_) { return false; }
 }
 function __isMobileLike() {
-  try {
-    if (typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches) return true;
-  } catch (_) {}
+  try { if (typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches) return true; } catch (_) {}
   try {
     const ua = String(navigator.userAgent || "");
     return /Android|iPhone|iPad|iPod/i.test(ua);
@@ -5613,8 +5192,88 @@ function __pad2(n) {
 }
 
 /* -------------------------
+ * PLAY URL (domain bermain) — selalu ada
+ * priority:
+ * 1) CONFIG.PLAY_URL
+ * 2) CONFIG.CLAIM_URL
+ * 3) current page (origin + pathname)
+ * ------------------------- */
+function __normalizeUrl(u) {
+  try {
+    const url = new URL(String(u || "").trim(), location.href);
+    // buang hash biar rapih
+    url.hash = "";
+    return url.toString();
+  } catch (_) {
+    return String(u || "").trim();
+  }
+}
+
+function __getMetaUrl() {
+  try {
+    // 1) canonical
+    const canon = document.querySelector('link[rel="canonical"][href]');
+    if (canon && canon.href) return canon.href;
+
+    // 2) og:url
+    const og = document.querySelector('meta[property="og:url"][content]');
+    if (og && og.content) return og.content;
+  } catch (_) {}
+  return "";
+}
+
+function __getPlayUrl() {
+  // PRIORITY:
+  // A) runtime override (optional) -> window.MT2_PLAY_URL
+  // B) localStorage override (optional) -> mt2:play_url
+  // C) canonical / og:url (kalau kamu set)
+  // D) lokasi halaman sekarang (pasti sesuai domain deploy yang sedang dipakai)
+
+  let u = "";
+
+  // A) runtime override
+  try {
+    if (typeof window !== "undefined" && window.MT2_PLAY_URL) u = String(window.MT2_PLAY_URL || "");
+  } catch (_) {}
+
+  // B) localStorage override
+  if (!u) {
+    try { u = String(localStorage.getItem("mt2:play_url") || ""); } catch (_) {}
+  }
+
+  // C) canonical/og:url
+  if (!u) {
+    try { u = __getMetaUrl(); } catch (_) { u = ""; }
+  }
+
+  // D) current location (AUTO domain deploy)
+  if (!u) {
+    try { u = String(location.href || ""); } catch (_) { u = ""; }
+  }
+
+  return __normalizeUrl(u);
+}
+
+/* optional helper kalau suatu saat mau set manual tanpa edit code */
+function __setPlayUrlOverride(url) {
+  const v = __normalizeUrl(url);
+  try { localStorage.setItem("mt2:play_url", v); } catch (_) {}
+  try { window.MT2_PLAY_URL = v; } catch (_) {}
+  return v;
+}
+
+function __shortUrl(u) {
+  try {
+    const url = new URL(String(u || ""), location.href);
+    // pendek & enak dibaca: origin + pathname
+    return (url.origin + url.pathname).replace(/\/+$/, "");
+  } catch (_) {
+    return String(u || "").replace(/\/+$/, "");
+  }
+}
+
+/* -------------------------
  * RESPONSIVE: shrink Reward Modal on mobile
- * (aman: hanya apply ke container yang punya downloadBtn/shareBtn)
  * ------------------------- */
 (function setupRewardModalResponsiveSizing() {
   let raf = 0;
@@ -5625,7 +5284,6 @@ function __pad2(n) {
     const btn = dBtn || sBtn;
     if (!btn) return null;
 
-    // cari ancestor yang paling mungkin modal/dialog
     const root =
       btn.closest('[role="dialog"]') ||
       btn.closest(".modal") ||
@@ -5652,25 +5310,19 @@ function __pad2(n) {
       root.querySelector(".modal-content, .dialog-content, .content, .panel, .card") ||
       root;
 
-    // jangan ganggu kalau panel memang bukan modal content
     try {
-      // width + height (lebih kecil di mobile)
       panel.style.width = mobile ? "min(420px, 92vw)" : "min(520px, 92vw)";
       panel.style.maxHeight = mobile ? "min(74vh, 640px)" : "min(78vh, 720px)";
       panel.style.overflow = "auto";
       panel.style.boxSizing = "border-box";
-
-      // padding halus (kalau CSS kamu tidak ngunci)
       if (!panel.style.padding) panel.style.padding = mobile ? "14px 14px 16px" : "18px 18px 20px";
       if (!panel.style.borderRadius) panel.style.borderRadius = "18px";
     } catch (_) {}
 
-    // scale preview image (kalau ada)
     try {
       const imgs = root.querySelectorAll("img");
       for (let i = 0; i < imgs.length; i++) {
         const img = imgs[i];
-        // jangan ganggu icon kecil
         const w = img.naturalWidth || img.width || 0;
         if (w && w < 120) continue;
 
@@ -5691,9 +5343,150 @@ function __pad2(n) {
     window.addEventListener("resize", schedule, { passive: true });
     window.addEventListener("orientationchange", schedule, { passive: true });
   } catch (_) {}
-  // initial
   schedule();
 })();
+
+/* -------------------------
+ * FALLBACK SHARE MENU (platform links)
+ * ------------------------- */
+const __SHARE_MENU = { el: null };
+
+function __ensureShareMenu() {
+  if (__SHARE_MENU.el) return __SHARE_MENU.el;
+
+  const wrap = document.createElement("div");
+  wrap.id = "mt2ShareMenu";
+  wrap.style.cssText = [
+    "position:fixed; inset:0; z-index:2147483000;",
+    "display:none; align-items:flex-end; justify-content:center;",
+    "background:rgba(0,0,0,0.62);",
+    "padding:16px;"
+  ].join("");
+
+  const panel = document.createElement("div");
+  panel.style.cssText = [
+    "width:min(520px, 96vw);",
+    "border-radius:18px;",
+    "background:linear-gradient(135deg, rgba(6,18,14,0.96), rgba(7,30,22,0.96));",
+    "border:1px solid rgba(34,197,94,0.30);",
+    "box-shadow:0 22px 80px rgba(0,0,0,0.55);",
+    "padding:14px 14px 12px;",
+    "margin-bottom: max(8px, env(safe-area-inset-bottom));"
+  ].join("");
+
+  const title = document.createElement("div");
+  title.textContent = "Bagikan hasil";
+  title.style.cssText = "font:900 16px system-ui,-apple-system,Segoe UI,Roboto,Arial; color:rgba(255,255,255,0.92); margin:4px 6px 10px;";
+
+  const grid = document.createElement("div");
+  grid.style.cssText = "display:grid; grid-template-columns:1fr 1fr; gap:10px;";
+
+  function mkBtn(label) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.style.cssText = [
+      "appearance:none; border:1px solid rgba(255,255,255,0.12);",
+      "background:rgba(255,255,255,0.06);",
+      "color:rgba(255,255,255,0.92);",
+      "border-radius:14px; padding:12px 10px;",
+      "font:800 14px system-ui,-apple-system,Segoe UI,Roboto,Arial;",
+      "cursor:pointer;"
+    ].join("");
+    b.onpointerdown = () => { b.style.transform = "scale(0.98)"; };
+    b.onpointerup = () => { b.style.transform = "scale(1)"; };
+    b.onpointercancel = () => { b.style.transform = "scale(1)"; };
+    return b;
+  }
+
+  const closeRow = document.createElement("div");
+  closeRow.style.cssText = "display:flex; gap:10px; margin-top:10px;";
+
+  const closeBtn = mkBtn("Tutup");
+  closeBtn.style.cssText += "flex:1; background:rgba(255,255,255,0.04);";
+  closeBtn.addEventListener("click", () => __hideShareMenu());
+
+  const copyBtn = mkBtn("Copy Link");
+  copyBtn.style.cssText += "flex:1; border-color:rgba(34,197,94,0.35);";
+
+  closeRow.appendChild(copyBtn);
+  closeRow.appendChild(closeBtn);
+
+  panel.appendChild(title);
+  panel.appendChild(grid);
+  panel.appendChild(closeRow);
+
+  wrap.appendChild(panel);
+
+  wrap.addEventListener("click", (e) => {
+    if (e.target === wrap) __hideShareMenu();
+  });
+
+  document.body.appendChild(wrap);
+
+  __SHARE_MENU.el = wrap;
+  __SHARE_MENU.grid = grid;
+  __SHARE_MENU.copyBtn = copyBtn;
+
+  return wrap;
+}
+
+function __showShareMenu(payload) {
+  const el = __ensureShareMenu();
+  const grid = __SHARE_MENU.grid;
+  grid.innerHTML = "";
+
+  const url = String(payload.url || "");
+  const text = String(payload.text || "");
+  const title = String(payload.title || "");
+  const encText = encodeURIComponent(text);
+  const encUrl = encodeURIComponent(url);
+
+  const targets = [
+    ["WhatsApp", `https://wa.me/?text=${encText}`],
+    ["Telegram", `https://t.me/share/url?url=${encUrl}&text=${encText}`],
+    ["X / Twitter", `https://twitter.com/intent/tweet?text=${encText}`],
+    ["Facebook", `https://www.facebook.com/sharer/sharer.php?u=${encUrl}`],
+    ["LINE", `https://social-plugins.line.me/lineit/share?url=${encUrl}`],
+    ["Email", `mailto:?subject=${encodeURIComponent(title)}&body=${encText}`],
+  ];
+
+  for (let i = 0; i < targets.length; i++) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = targets[i][0];
+    btn.style.cssText = [
+      "appearance:none; border:1px solid rgba(255,255,255,0.12);",
+      "background:rgba(255,255,255,0.06);",
+      "color:rgba(255,255,255,0.92);",
+      "border-radius:14px; padding:12px 10px;",
+      "font:800 14px system-ui,-apple-system,Segoe UI,Roboto,Arial;",
+      "cursor:pointer;"
+    ].join("");
+    btn.addEventListener("click", () => {
+      try { window.open(targets[i][1], "_blank", "noopener,noreferrer"); } catch (_) {}
+      __hideShareMenu();
+    });
+    grid.appendChild(btn);
+  }
+
+  __SHARE_MENU.copyBtn.onclick = async () => {
+    try {
+      const clip = url ? url : text;
+      if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(clip);
+      __toast("Link disalin", "success");
+    } catch (_) {
+      __toast("Gagal menyalin link", "error");
+    }
+    __hideShareMenu();
+  };
+
+  el.style.display = "flex";
+}
+
+function __hideShareMenu() {
+  try { if (__SHARE_MENU.el) __SHARE_MENU.el.style.display = "none"; } catch (_) {}
+}
 
 /* -------------------------
  * PUBLIC API
@@ -5706,7 +5499,6 @@ function downloadResultPng() {
   const r = rSafe;
   const ts = r.ts || Date.now();
 
-  // iOS: pre-open tab supaya tidak keblok (gesture aman)
   const preOpen = __isIOS();
   let preTab = null;
   if (preOpen) {
@@ -5717,33 +5509,20 @@ function downloadResultPng() {
     .then(({ blob, fileName, dataUrl }) => {
       const name = fileName || buildFileName(r.userId, ts);
 
-      // prefer blob
       if (blob instanceof Blob) {
         try {
           const url = URL.createObjectURL(blob);
-
-          // download normal
-          try {
-            triggerDownload(url, name);
-          } catch (_) {}
-
-          // iOS fallback: arahkan tab yang sudah dibuka
-          if (preTab && !preTab.closed) {
-            try { preTab.location.href = url; } catch (_) {}
-          }
-
-          // revoke lebih lama biar aman
+          try { triggerDownload(url, name); } catch (_) {}
+          if (preTab && !preTab.closed) { try { preTab.location.href = url; } catch (_) {} }
           setTimeout(() => { try { URL.revokeObjectURL(url); } catch (_) {} }, 60000);
           __toast("File hasil berhasil dibuat", "success");
           return;
         } catch (_) {}
       }
 
-      // fallback: dataUrl
       if (typeof dataUrl === "string" && dataUrl.startsWith("data:image/")) {
-        try {
-          triggerDownload(dataUrl, name);
-        } catch (_) {
+        try { triggerDownload(dataUrl, name); }
+        catch (_) {
           try {
             if (preTab && !preTab.closed) preTab.location.href = dataUrl;
             else window.open(dataUrl, "_blank", "noopener,noreferrer");
@@ -5753,7 +5532,6 @@ function downloadResultPng() {
         return;
       }
 
-      // fallback terakhir
       __toast("Gagal membuat gambar.", "error");
       try { if (preTab && !preTab.closed) preTab.close(); } catch (_) {}
     })
@@ -5763,7 +5541,7 @@ function downloadResultPng() {
     });
 }
 
-/* ✅ Tambahan: Share via Web Share API */
+/* ✅ Share via Web Share API + ALWAYS include play link */
 async function shareResultPng() {
   const rSafe = __getLastResult();
   if (!rSafe) { __toast("Hasil belum tersedia. Silakan spin terlebih dahulu.", "error"); return; }
@@ -5772,66 +5550,39 @@ async function shareResultPng() {
   const r = rSafe;
   const ts = r.ts || Date.now();
 
+  const playUrl = __getPlayUrl();
+  const prize = String(r.prizeLabel || "BONUS 10%");
+  const safeUser = String(r.userId || "-");
   const timeStr = new Date(ts).toLocaleString("id-ID", {
     day: "2-digit", month: "short", year: "numeric",
     hour: "2-digit", minute: "2-digit", second: "2-digit"
   });
 
-  const safeUser = String(r.userId || "-");
-  const prize = String(r.prizeLabel || "BONUS 10%");
-  const shareTitle = "Hasil Spin — MADETOTO2";
+  const shareTitle = "MADETOTO2 — Hasil Spin";
 
-  const claimUrl =
-    (typeof CONFIG === "object" && CONFIG && CONFIG.CLAIM_URL) ? String(CONFIG.CLAIM_URL) : "";
+  // ✅ TEXT untuk Web Share (TANPA URL) agar WA tidak dobel
+  const shareTextNoUrl =
+    `🎉 MADETOTO2\n` +
+    `Hadiah : ${prize}\n` +
+    `User ID : ${safeUser}\n` +
+    `Waktu : ${timeStr}\n` +
+    `Ayo coba spin!`;
 
-  const shareText =
-    `🎉 ${shareTitle}\n` +
-    `Hadiah: ${prize}\n` +
-    `User ID: ${safeUser}\n` +
-    `Waktu: ${timeStr}\n` +
-    (claimUrl ? `Klaim: ${claimUrl}` : "");
+  // ✅ TEXT untuk Clipboard/fallback (PAKAI URL) agar tetap kebawa
+  const shareTextWithUrl =
+    shareTextNoUrl + `\nMainkan di: ${playUrl}`;
 
-  // iOS/Android: jika ingin “lebih enteng” saat share, generate ukuran sedikit lebih kecil
-  let blob = null, dataUrl = "";
-  let fileName = buildFileName(r.userId, ts);
+  // iOS: WA sering buang caption kalau share files -> prioritaskan text+url
+  const isIOS = __isIOS();
 
-  try {
-    const res = await makeRewardPngBlob(r, ts, { intent: "share" });
-    blob = res.blob || null;
-    dataUrl = res.dataUrl || "";
-    fileName = res.fileName || fileName;
-  } catch (_) {
-    blob = null;
-  }
-
-  // 1) Web Share API + files (terbaik)
-  if (blob && typeof navigator !== "undefined" && typeof navigator.share === "function") {
-    try {
-      const file = new File([blob], fileName || "MADETOTO2-REWARD.png", { type: "image/png", lastModified: ts });
-      const canShareFiles = !!(navigator.canShare && navigator.canShare({ files: [file] }));
-      if (canShareFiles) {
-        await navigator.share({ title: shareTitle, text: shareText, files: [file] });
-        __toast("Menu bagikan dibuka", "success");
-        return;
-      }
-
-      // share ada tapi files tidak didukung -> share text
-      await navigator.share({ title: shareTitle, text: shareText });
-      __toast("Menu bagikan dibuka", "success");
-      return;
-    } catch (err) {
-      if (err && (err.name === "AbortError" || String(err.message || "").includes("AbortError"))) {
-        __toast("Bagikan dibatalkan", "error");
-        return;
-      }
-      // lanjut fallback
-    }
-  }
-
-  // 2) Web Share API text-only (kalau ada)
+  // 1) Web Share API (text + url) — paling konsisten & tidak dobel link
   if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
     try {
-      await navigator.share({ title: shareTitle, text: shareText });
+      await navigator.share({
+        title: shareTitle,
+        text: shareTextNoUrl,
+        url: playUrl
+      });
       __toast("Menu bagikan dibuka", "success");
       return;
     } catch (err) {
@@ -5839,45 +5590,25 @@ async function shareResultPng() {
         __toast("Bagikan dibatalkan", "error");
         return;
       }
-    }
-  }
-
-  // 3) Copy image ke clipboard (kalau support)
-  if (blob && typeof navigator !== "undefined" && navigator.clipboard && typeof window !== "undefined" && window.ClipboardItem) {
-    try {
-      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-      __toast("Gambar disalin. Tinggal paste ke sosmed.", "success");
-      try { await navigator.clipboard.writeText(shareText); } catch (_) {}
-      return;
-    } catch (_) {
       // lanjut fallback
     }
   }
 
-  // 4) Copy text (paling kompatibel)
-  if (typeof navigator !== "undefined" && navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-    try {
-      await navigator.clipboard.writeText(shareText);
-      __toast("Teks hasil disalin. Tinggal paste ke sosmed.", "success");
-      return;
-    } catch (_) {}
-  }
-
-  // 5) Fallback terakhir: buka gambar di tab baru
-  //    (pakai blob URL kalau ada, kalau tidak pakai dataUrl)
+  // 2) Clipboard fallback (pasti ada URL)
   try {
-    if (blob) {
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank", "noopener,noreferrer");
-      setTimeout(() => { try { URL.revokeObjectURL(url); } catch (_) {} }, 60000);
-      __toast("Gambar dibuka di tab baru untuk dibagikan.", "success");
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(shareTextWithUrl);
+      __toast("Teks + link disalin. Tinggal paste ke sosmed.", "success");
       return;
     }
-    if (dataUrl && typeof dataUrl === "string" && dataUrl.startsWith("data:image/")) {
-      window.open(dataUrl, "_blank", "noopener,noreferrer");
-      __toast("Gambar dibuka di tab baru untuk dibagikan.", "success");
-      return;
-    }
+  } catch (_) {}
+
+  // 3) Last fallback: WhatsApp share link
+  try {
+    const wa = "https://wa.me/?text=" + encodeURIComponent(shareTextWithUrl);
+    window.open(wa, "_blank", "noopener,noreferrer");
+    __toast("Buka WhatsApp untuk bagikan.", "success");
+    return;
   } catch (_) {}
 
   __toast("Browser tidak mendukung fitur bagikan.", "error");
@@ -5904,7 +5635,6 @@ async function shareResultPng() {
 
 /* -------------------------
  * CORE: generate PNG blob (shared by download/share)
- * - mobile lebih ringan (baseW turun, dpr cap)
  * ------------------------- */
 function makeRewardPngBlob(r, ts, opt) {
   return new Promise((resolve, reject) => {
@@ -5914,18 +5644,16 @@ function makeRewardPngBlob(r, ts, opt) {
       const intent = (opt && opt.intent) ? String(opt.intent) : "download";
 
       const mobile = __isMobileLike();
-
-      // base width adaptif (mobile lebih kecil -> file lebih ringan & cepat)
-      // desktop tetap 1080 biar tajam
       const baseW = mobile ? (intent === "share" ? 900 : 960) : 1080;
 
-      // DPR cap: share biasanya lebih sensitif (file size), download boleh agak lebih tinggi
       const rawDpr = (typeof window !== "undefined" && window.devicePixelRatio) ? window.devicePixelRatio : 1;
       const dprCap = mobile ? (intent === "share" ? 1.6 : 1.9) : 2;
       const dpr = Math.max(1, Math.min(dprCap, rawDpr || 1));
 
-      // --- Measure layout first
-      const lay = calcRewardPngLayout(t, stamp, { baseW });
+      const playUrl = (opt && opt.playUrl) ? String(opt.playUrl) : __getPlayUrl();
+      const playShort = __shortUrl(playUrl);
+
+      const lay = calcRewardPngLayout(t, stamp, { baseW, playShort });
 
       const canvas = document.createElement("canvas");
       canvas.width = Math.floor(lay.baseW * dpr);
@@ -5935,7 +5663,6 @@ function makeRewardPngBlob(r, ts, opt) {
       if (!ctx) { reject(new Error("no_ctx")); return; }
       ctx.scale(dpr, dpr);
 
-      // --- Background
       const g = ctx.createLinearGradient(0, 0, lay.baseW, lay.baseH);
       g.addColorStop(0, "#06130f");
       g.addColorStop(0.55, "#071e16");
@@ -5943,12 +5670,10 @@ function makeRewardPngBlob(r, ts, opt) {
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, lay.baseW, lay.baseH);
 
-      // Orbs (adapt to height)
       drawOrb(ctx, Math.min(260, lay.baseW * 0.24), 220, 260, "rgba(34,197,94,0.14)");
       drawOrb(ctx, lay.baseW - Math.min(220, lay.baseW * 0.20), 320, 220, "rgba(255,255,255,0.07)");
       drawOrb(ctx, lay.baseW - Math.min(260, lay.baseW * 0.24), lay.baseH - 260, 300, "rgba(20,184,166,0.10)");
 
-      // --- Card
       roundRect(ctx, lay.cardX, lay.cardY, lay.cardW, lay.cardH, 34);
 
       const cg = ctx.createLinearGradient(lay.cardX, lay.cardY, lay.cardX + lay.cardW, lay.cardY + lay.cardH);
@@ -5961,7 +5686,6 @@ function makeRewardPngBlob(r, ts, opt) {
       ctx.strokeStyle = "rgba(34,197,94,0.55)";
       ctx.stroke();
 
-      // --- Header
       ctx.fillStyle = "rgba(255,255,255,0.95)";
       ctx.font = "900 44px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillText("MADETOTO2", lay.innerX, lay.brandY);
@@ -5970,7 +5694,6 @@ function makeRewardPngBlob(r, ts, opt) {
       ctx.font = "700 24px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillText("HASIL SPIN REWARD", lay.innerX, lay.subY);
 
-      // --- Prize
       ctx.fillStyle = "#bbf7d0";
       ctx.font = `1000 ${lay.prize.fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
 
@@ -5983,7 +5706,6 @@ function makeRewardPngBlob(r, ts, opt) {
       }
       ctx.restore();
 
-      // Divider
       ctx.strokeStyle = "rgba(255,255,255,0.10)";
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -5991,7 +5713,6 @@ function makeRewardPngBlob(r, ts, opt) {
       ctx.lineTo(lay.innerX + lay.innerW, lay.dividerY);
       ctx.stroke();
 
-      // --- Labels
       ctx.fillStyle = "rgba(255,255,255,0.70)";
       ctx.font = "800 22px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace";
       ctx.fillText("USER ID", lay.innerX, lay.userLabelY);
@@ -6007,7 +5728,6 @@ function makeRewardPngBlob(r, ts, opt) {
       });
       ctx.fillText(timeStr, lay.innerX, lay.timeValueY);
 
-      // --- Note box
       roundRect(ctx, lay.noteX, lay.noteY, lay.noteW, lay.noteH, 22);
       ctx.fillStyle = "rgba(0,0,0,0.30)";
       ctx.fill();
@@ -6021,22 +5741,19 @@ function makeRewardPngBlob(r, ts, opt) {
         ctx.fillText(lay.noteLines[i], lay.noteTextX, lay.noteTextY + i * lay.noteLineH);
       }
 
-      // --- Footer
+      // footer (domain tampil)
       ctx.fillStyle = "rgba(255,255,255,0.55)";
       ctx.font = "700 18px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      ctx.fillText("Spin & Win • MADETOTO2", lay.innerX, lay.footerY);
+      ctx.fillText(`Mainkan: ${playShort}`, lay.innerX, lay.footerY);
 
       const fileName = buildFileName(t.userId, stamp);
 
-      // output
-      // NOTE: untuk kompatibilitas + gesture, kita selalu siapkan dataUrl fallback
       let dataUrl = "";
       try { dataUrl = canvas.toDataURL("image/png"); } catch (_) { dataUrl = ""; }
 
       if (canvas.toBlob) {
         canvas.toBlob((b) => {
           if (b) { resolve({ blob: b, fileName, dataUrl }); return; }
-          // fallback to dataUrl -> blob
           try {
             const b2 = dataUrl ? dataUrlToBlob(dataUrl) : null;
             resolve({ blob: b2, fileName, dataUrl });
@@ -6118,7 +5835,7 @@ function roundRect(ctx, x, y, w, h, r) {
 }
 
 /* -------------------------
- * LAYOUT (MEASURE) — tetap akurat, tapi baseW bisa adaptif
+ * LAYOUT (MEASURE)
  * ------------------------- */
 const __MEASURE = { ctx: null };
 function getMeasureCtx() {
@@ -6135,9 +5852,9 @@ function getMeasureCtx() {
 
 function calcRewardPngLayout(r, ts, opt) {
   const baseW = (opt && opt.baseW) ? Math.max(720, Math.min(1080, Number(opt.baseW) || 1080)) : 1080;
+  const playShort = (opt && opt.playShort) ? String(opt.playShort || "") : "";
 
-  // card geometry (sedikit adaptif biar proporsional di baseW kecil)
-  const pad = Math.round(baseW * 0.061); // ~66 saat 1080
+  const pad = Math.round(baseW * 0.061);
   const cardX = pad;
   const cardY = 120;
   const cardW = baseW - pad * 2;
@@ -6145,11 +5862,9 @@ function calcRewardPngLayout(r, ts, opt) {
   const innerX = cardX + 44;
   const innerW = cardW - 88;
 
-  // header
   const brandY = cardY + 90;
   const subY = cardY + 140;
 
-  // prize
   const prizeStartY = cardY + 255;
   const prizeText = String(r.prizeLabel || "BONUS 10%");
 
@@ -6167,8 +5882,12 @@ function calcRewardPngLayout(r, ts, opt) {
     const noteTextX = noteX + 26;
     const noteTextY = noteY + 44;
     const noteLineH = 28;
-    const noteLines = ["Silakan klaim melalui Live Chat", "dan sertakan USER ID + hasil unduh ini."];
-    const noteH = 110;
+
+    const noteLines = playShort
+      ? [`Mainkan di: ${playShort}`, "Klaim via Live Chat + sertakan", "USER ID + gambar ini."]
+      : ["Silakan klaim melalui Live Chat", "dan sertakan USER ID + hasil unduh ini."];
+
+    const noteH = playShort ? 132 : 110;
     const footerY = noteY + noteH + 58;
     const cardH = (footerY + 40) - cardY;
     const baseH = cardY + cardH + 110;
@@ -6199,7 +5918,6 @@ function calcRewardPngLayout(r, ts, opt) {
 
   const prizeBlockH = Math.ceil((prize.lines.length - 1) * prize.lineH + prize.fontSize * 1.12);
   const prizeBottom = prizeStartY + prizeBlockH;
-
   const dividerY = Math.ceil(prizeBottom + 14);
 
   const userLabelY = dividerY + 70;
@@ -6212,7 +5930,6 @@ function calcRewardPngLayout(r, ts, opt) {
   const noteX = innerX;
   const noteW = innerW;
 
-  const noteText = "Silakan klaim melalui Live Chat dan sertakan USER ID + hasil unduh ini.";
   const noteFont = "800 22px system-ui, -apple-system, Segoe UI, Roboto, Arial";
   const noteLineH = 28;
 
@@ -6220,6 +5937,10 @@ function calcRewardPngLayout(r, ts, opt) {
   const noteInnerPadX = 26;
   const noteInnerPadY = 22;
   const noteMaxW = noteW - noteInnerPadX * 2;
+
+  const noteText = playShort
+    ? `Mainkan di: ${playShort} • Klaim via Live Chat dan sertakan USER ID + gambar ini.`
+    : "Silakan klaim melalui Live Chat dan sertakan USER ID + hasil unduh ini.";
 
   const noteLines = wrapLinesByWords(mctx, noteText, noteMaxW, 3);
   const noteH = Math.max(68, noteInnerPadY * 2 + noteLines.length * noteLineH + 2);
