@@ -695,221 +695,222 @@
     color: rgba(12,35,64,.95);
   }
 
-  /* ==========================================================
-     ✅ History (HIGHLIGHT MENYATU + HEADER BADGE + NO BALANCE)
-     ========================================================== */
-  .history{
-    --rowH: 44px;
-    width:100%;
-    border-collapse: separate;
-    border-spacing: 0;
+/* ==========================================================
+   ✅ History (NORMAL HEADER + HIGHLIGHT CLEAN MENYATU)
+   ========================================================== */
+.history{
+  --rowH: 44px;
+  width:100%;
+  border-collapse: collapse;
 
-    background: rgba(255,255,255,0.58);
-    border-radius: 14px;
-    overflow:hidden;
+  background: rgba(255,255,255,0.58);
+  border-radius: 14px;
+  overflow:hidden;
 
-    border: 1px solid rgba(30,167,255,0.16);
-    box-shadow: 0 16px 30px rgba(12,35,64,0.06);
-    margin-top: 14px;
-  }
+  border: 1px solid rgba(30,167,255,0.16);
+  box-shadow: 0 16px 30px rgba(12,35,64,0.06);
+  margin-top: 14px;
+}
 
-  .history thead{
-    display: table;
-    width:100%;
-    table-layout: fixed;
-    background: rgba(30,167,255,0.10);
-  }
+.history thead{
+  display: table;
+  width:100%;
+  table-layout: fixed;
+  background: rgba(30,167,255,0.10);
+}
 
-  .history tbody{
-    display:block;
-    width:100%;
-    max-height: calc(var(--rowH) * 5);
-    overflow-y:auto;
+.history tbody{
+  display:block;
+  width:100%;
+  max-height: calc(var(--rowH) * 5);
+  overflow-y:auto;
 
-    scroll-behavior:smooth;
-    -webkit-overflow-scrolling: touch;
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling: touch;
 
-    overscroll-behavior: contain;
+  overscroll-behavior: contain;
 
-    scrollbar-width: thin;
-    scrollbar-color: rgba(30,167,255,0.45) rgba(12,35,64,0.06);
-  }
+  scrollbar-width: thin;
+  scrollbar-color: rgba(30,167,255,0.45) rgba(12,35,64,0.06);
+}
 
-  .history tbody tr{
-    display: table;
-    width:100%;
-    table-layout: fixed;
+.history tbody tr{
+  display: table;
+  width:100%;
+  table-layout: fixed;
+  position: relative;
+}
 
-    /* ✅ Highlight row menyatu (default) */
-    background: transparent;
-    position: relative;
-  }
+/* ✅ cell base */
+.history th,
+.history td{
+  height: var(--rowH);
+  vertical-align: middle;
+  padding: 0 10px;
+  font-size: 0.92rem;
+  color: var(--ink);
+}
 
-  .history th, .history td{
-    height: var(--rowH);
-    vertical-align: middle;
-    padding: 0 10px;
-    font-size: 0.92rem;
-    color: var(--ink);
+/* ✅ HEADER NORMAL (balik clean, no badge/pill) */
+.history th{
+  font-weight: 900;
+  letter-spacing: .25px;
+  color: rgba(12,35,64,.78);
+  text-transform: uppercase;
 
-    /* ✅ penting: biar row highlight tidak pecah per-cell */
-    background: transparent !important;
-  }
+  border-bottom: 1px solid rgba(30,167,255,0.14);
+}
 
-  /* ✅ kolom NO lebih balance */
+/* ✅ NO balance */
+.history th:nth-child(1),
+.history td:nth-child(1){
+  width: 56px;
+  text-align:center;
+  padding: 0 6px;
+  font-weight: 900;
+  color: rgba(12,35,64,.72);
+}
+
+/* USER ID */
+.history th:nth-child(2),
+.history td:nth-child(2){
+  text-align:left;
+  padding-left: 10px;
+}
+
+/* HADIAH */
+.history th:nth-child(3),
+.history td:nth-child(3){
+  text-align:right;
+  padding-right: 12px;
+}
+
+/* ✅ garis halus antar row (biar rapi & premium) */
+.history tbody tr:not(:last-child) td{
+  border-bottom: 1px solid rgba(12,35,64,0.06);
+}
+
+/* ✅ hover (lebih normal & gak aneh) */
+.history tbody tr:hover{
+  background: rgba(30,167,255,0.06);
+}
+
+/* ✅ anim row masuk */
+.history tbody tr.row-enter td{
+  animation: rowIn .32s ease both;
+}
+@keyframes rowIn{
+  from{ opacity:0; transform: translateY(-10px); }
+  to  { opacity:1; transform: translateY(0); }
+}
+
+/* ✅ hadiah menang */
+.history td.win{
+  color: #ff9f1a;
+  font-weight: 900;
+  text-shadow: 0 0 10px rgba(255,159,26,0.14);
+}
+
+/* ✅ Row “ME” highlight menyatu (clean + accent kiri) */
+.history tbody tr.row-me{
+  background: linear-gradient(90deg,
+    rgba(30,167,255,.14) 0%,
+    rgba(30,167,255,.08) 55%,
+    rgba(30,167,255,0) 100%
+  );
+}
+
+.history tbody tr.row-me td:first-child{
+  position: relative;
+}
+
+.history tbody tr.row-me td:first-child::before{
+  content:"";
+  position:absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 999px;
+  background: rgba(30,167,255,.90);
+  box-shadow: 0 0 0 4px rgba(30,167,255,.12);
+}
+
+/* ✅ scrollbar */
+.history tbody::-webkit-scrollbar{ width: 10px; }
+.history tbody::-webkit-scrollbar-track{ background: rgba(12,35,64,0.06); }
+.history tbody::-webkit-scrollbar-thumb{
+  background: rgba(30,167,255,0.40);
+  border-radius: 999px;
+  border: 2px solid rgba(255,255,255,0.60);
+}
+.history tbody::-webkit-scrollbar-thumb:hover{
+  background: rgba(30,167,255,0.55);
+}
+
+@media (max-width: 480px){
+  .history{ --rowH: 42px; }
+  .history th, .history td{ font-size: .90rem; }
   .history th:nth-child(1),
-  .history td:nth-child(1){
-    width: 56px;
-    text-align:center;
-    padding: 0 6px;
-    font-weight: 900;
-    color: rgba(12,35,64,.78);
-  }
+  .history td:nth-child(1){ width: 54px; }
+}
 
-  .history th:nth-child(2),
-  .history td:nth-child(2){
-    text-align:left;
-    padding-left: 10px;
-  }
+/* ============================================================
+   ✅ HISTORY: user + tanggal/jam di bawahnya (minimalis rapi)
+   ============================================================ */
+.history td{ vertical-align: middle; }
+.history td:nth-child(2){ text-align:left; }
 
-  .history th:nth-child(3),
-  .history td:nth-child(3){
-    text-align:right;
-    padding-right: 12px;
-  }
+.h-userbtn{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:2px;
+  width:100%;
+  border:0;
+  background:transparent;
+  padding:0;
+  margin:0;
+  text-align:left;
+  color:inherit;
+  font:inherit;
+  cursor:default;
+}
 
-  /* ✅ HEADER jadi badge look (rapi & presisi) */
-  .history th{
-    font-weight: 900;
-    letter-spacing: .35px;
-    position: relative;
-    z-index: 0;
-  }
+.h-userrow{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  line-height:1.1;
+  font-weight:900;
+}
 
-  .history th::before{
-    content:"";
-    position:absolute;
-    left: 6px;
-    right: 6px;
-    top: 8px;
-    bottom: 8px;
+.h-userbadge{
+  font-size:.68rem;
+  font-weight:900;
+  padding:3px 8px;
+  border-radius:999px;
+  background: rgba(30,167,255,.12);
+  border: 1px solid rgba(30,167,255,.22);
+  color: rgba(12,35,64,.85);
+  box-shadow: 0 10px 28px rgba(30,167,255,.14);
+  letter-spacing:.2px;
+}
 
-    border-radius: 999px;
-    background: rgba(255,255,255,.58);
-    border: 1px solid rgba(30,167,255,.18);
-    box-shadow:
-      0 10px 18px rgba(12,35,64,.06),
-      0 0 0 1px rgba(255,255,255,.52) inset;
+.h-time{
+  font-size:.76rem;
+  opacity:.68;
+  line-height:1.15;
+  white-space:nowrap;
+}
 
-    z-index: -1;
-  }
-
-  /* ✅ highlight row hover menyatu */
-  .history tbody tr:hover{
-    background: linear-gradient(90deg,
-      rgba(30,167,255,.08),
-      rgba(30,167,255,.05),
-      rgba(30,167,255,0)
-    );
-  }
-
-  /* ✅ row masuk anim */
-  .history tbody tr.row-enter{
-    animation: rowIn .32s ease both;
-  }
-  @keyframes rowIn{
-    from{ opacity:0; transform: translateY(-10px); }
-    to  { opacity:1; transform: translateY(0); }
-  }
-
-  /* ✅ hadiah menang */
-  .history td.win{
-    color: #ff9f1a;
-    font-weight: 900;
-    text-shadow: 0 0 10px rgba(255,159,26,0.14);
-  }
-
-  /* ✅ row “me” highlight menyatu 1 garis */
-  tr.row-me{
-    background: linear-gradient(90deg,
-      var(--hRowA) 0%,
-      var(--hRowB) 55%,
-      var(--hRowC) 100%
-    );
-  }
-
-  /* ✅ scroll styling */
-  .history tbody::-webkit-scrollbar{ width: 10px; }
-  .history tbody::-webkit-scrollbar-track{ background: rgba(12,35,64,0.06); }
-  .history tbody::-webkit-scrollbar-thumb{
-    background: rgba(30,167,255,0.40);
-    border-radius: 999px;
-    border: 2px solid rgba(255,255,255,0.60);
-  }
-  .history tbody::-webkit-scrollbar-thumb:hover{
-    background: rgba(30,167,255,0.55);
-  }
-
-  @media (max-width: 480px){
-    .history{ --rowH: 42px; }
-    .history th, .history td{ font-size: .90rem; }
-    .history th:nth-child(1),
-    .history td:nth-child(1){ width: 54px; }
-  }
-
-  /* ============================================================
-     ✅ HISTORY: user + tanggal/jam di bawahnya (minimalis rapi)
-     ============================================================ */
-  .history td{ vertical-align: middle; }
-  .history td:nth-child(2){ text-align:left; }
-
-  .h-userbtn{
-    display:flex;
-    flex-direction:column;
-    align-items:flex-start;
-    gap:2px;
-    width:100%;
-    border:0;
-    background:transparent;
-    padding:0;
-    margin:0;
-    text-align:left;
-    color:inherit;
-    font:inherit;
-    cursor:default;
-  }
-  .h-userrow{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    line-height:1.1;
-    font-weight:900;
-  }
-  .h-userbadge{
-    font-size:.68rem;
-    font-weight:900;
-    padding:3px 8px;
-    border-radius:999px;
-    background: rgba(30,167,255,.12);
-    border: 1px solid rgba(30,167,255,.22);
-    color: rgba(12,35,64,.85);
-    box-shadow: 0 10px 28px rgba(30,167,255,.14);
-    letter-spacing:.2px;
-  }
-  .h-time{
-    font-size:.76rem;
-    opacity:.68;
-    line-height:1.15;
-    white-space:nowrap;
-  }
-
-  .h-userbtn.is-me{
-    cursor:pointer;
-  }
-  .h-userbtn.is-me .h-userrow{
-    color: rgba(12,35,64,.98);
-    text-shadow: 0 10px 30px rgba(30,167,255,.18);
-  }
+.h-userbtn.is-me{
+  cursor:pointer;
+}
+.h-userbtn.is-me .h-userrow{
+  color: rgba(12,35,64,.98);
+  text-shadow: 0 10px 30px rgba(30,167,255,.18);
+}
 
   /* ============================================================
      ✅ MODAL DETAIL HISTORY (smooth)
