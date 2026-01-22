@@ -2071,7 +2071,7 @@ const ensureResultHintStyles = () => {
 ensureResultHintStyles();
 
 // ==========================================================
-// ✅ History Styles (Injected) — MODERN + SMOOTH HIGHLIGHT
+// ✅ History Styles (Injected) — SYNC dengan CSS terbaru (Row highlight MENYATU)
 // ==========================================================
 const ensureHistoryUIStyles = () => {
   if (document.getElementById("lbHistoryUIStyle")) return;
@@ -2079,180 +2079,265 @@ const ensureHistoryUIStyles = () => {
   const st = document.createElement("style");
   st.id = "lbHistoryUIStyle";
   st.textContent = `
+/* ==========================================================
+   ✅ Table helpers (jangan bikin highlight pecah)
+   ========================================================== */
 .history td{ vertical-align: middle; }
 
 /* tombol user */
 .h-userbtn{
-  width: 100%;
-  border: 0;
-  background: transparent;
-  cursor: default;
-  padding: 0;
-  text-align: left;
-  color: inherit;
-}
-.h-userbtn.is-me{ cursor: pointer; }
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:2px;
 
+  width:100%;
+  border:0;
+  background:transparent;
+  padding:0;
+  margin:0;
+
+  text-align:left;
+  color:inherit;
+  font:inherit;
+
+  cursor:default;
+}
+.h-userbtn.is-me{ cursor:pointer; }
+
+/* 1 baris user + badge */
 .h-userrow{
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 800;
-  letter-spacing: .2px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+
+  font-weight:900;
+  letter-spacing:.15px;
+  line-height:1.1;
 }
-.h-time{
-  margin-top: 2px;
-  font-size: .78rem;
-  opacity: .62;
-  white-space: nowrap;
-}
+
+/* badge kecil */
 .h-userbadge{
-  font-size: .68rem;
-  font-weight: 900;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(30,167,255,.14);
-  border: 1px solid rgba(30,167,255,.26);
+  font-size:.68rem;
+  font-weight:900;
+  padding:3px 8px;
+  border-radius:999px;
+
+  background: rgba(30,167,255,.12);
+  border: 1px solid rgba(30,167,255,.22);
   color: rgba(12,35,64,.85);
-}
-.row-me td{
-  background: rgba(30,167,255,.08);
-}
-
-/* ✅ Highlight row baru (modern + sheen) */
-tr.row-new td{
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(30,167,255,.16) inset, 0 12px 26px rgba(30,167,255,.10);
-  background:
-    linear-gradient(90deg,
-      rgba(30,167,255,.18),
-      rgba(30,167,255,.08) 45%,
-      rgba(255,255,255,0) 100%);
-  animation: lbRowPulse 1.35s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-tr.row-new td:first-child{
-  border-left: 3px solid rgba(30,167,255,.75);
+  box-shadow: 0 10px 28px rgba(30,167,255,.14);
+  letter-spacing:.2px;
 }
 
-tr.row-new td > *{
-  position: relative;
-  z-index: 1;
+/* tanggal jam */
+.h-time{
+  font-size:.76rem;
+  opacity:.68;
+  line-height:1.15;
+  white-space:nowrap;
 }
 
-tr.row-new td::after{
+/* ==========================================================
+   ✅ ROW HIGHLIGHT: MENYATU FULL BARIS (PENTING!)
+   - Jangan kasih background ke TD lagi
+   ========================================================== */
+.history tbody tr{
+  position:relative;
+}
+
+/* ✅ row-me highlight menyatu */
+.history tbody tr.row-me{
+  background: linear-gradient(90deg,
+    rgba(30,167,255,.14) 0%,
+    rgba(30,167,255,.08) 55%,
+    rgba(30,167,255,0) 100%
+  );
+}
+
+/* ✅ accent kiri untuk row-me */
+.history tbody tr.row-me td:first-child{
+  position:relative;
+}
+.history tbody tr.row-me td:first-child::before{
   content:"";
   position:absolute;
-  inset:-2px;
-  z-index: 0;
-  pointer-events:none;
-  mix-blend-mode: soft-light;
-  background: linear-gradient(110deg,
-    rgba(255,255,255,0) 0%,
-    rgba(255,255,255,.55) 18%,
-    rgba(255,255,255,0) 36%);
-  transform: translateX(-120%);
-  animation: lbRowSheen 1.05s cubic-bezier(0.22, 1, 0.36, 1) both;
+  left:0;
+  top:8px;
+  bottom:8px;
+  width:3px;
+  border-radius:999px;
+
+  background: rgba(30,167,255,.90);
+  box-shadow: 0 0 0 4px rgba(30,167,255,.12);
 }
 
-@keyframes lbRowPulse{
-  0%{ filter: saturate(1.25) brightness(1.06); }
-  55%{ filter: saturate(1.08) brightness(1.01); }
-  100%{ filter: saturate(1) brightness(1); }
+/* ✅ row-new highlight menyatu + clean (tanpa kotak per kolom) */
+.history tbody tr.row-new{
+  background: linear-gradient(90deg,
+    rgba(30,167,255,.22) 0%,
+    rgba(30,167,255,.10) 48%,
+    rgba(30,167,255,0) 100%
+  );
+  animation: lbRowNewPulse .65s cubic-bezier(.22,1,.36,1) both;
 }
-@keyframes lbRowSheen{
-  to{ transform: translateX(120%); }
+
+/* accent kiri untuk row-new */
+.history tbody tr.row-new td:first-child{
+  position:relative;
+}
+.history tbody tr.row-new td:first-child::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:8px;
+  bottom:8px;
+  width:3px;
+  border-radius:999px;
+
+  background: rgba(30,167,255,.98);
+  box-shadow: 0 0 0 4px rgba(30,167,255,.16);
+}
+
+/* glow tipis biar terasa “baru” tapi tetap premium */
+.history tbody tr.row-new{
+  box-shadow: 0 0 0 1px rgba(30,167,255,.10) inset;
+}
+
+@keyframes lbRowNewPulse{
+  0%   { filter: saturate(1.15) brightness(1.06); }
+  100% { filter: saturate(1) brightness(1); }
 }
 
 @media (prefers-reduced-motion: reduce){
-  tr.row-new td{
-    animation: none !important;
-    box-shadow: none !important;
-  }
-  tr.row-new td::after{ animation:none !important; }
+  .history tbody tr.row-new{ animation:none !important; }
 }
 
-/* History Modal */
+/* ==========================================================
+   ✅ Modal History (tetap premium & nyambung)
+   ========================================================== */
 .hmodal{
-  position: fixed;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 18px;
-  z-index: 100001;
-  background: rgba(12,35,64,.26);
+  position:fixed;
+  inset:0;
+  z-index:100001;
+  display:grid;
+  place-items:center;
+  padding:18px;
+
+  background: rgba(12,35,64,.32);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .2s ease;
+
+  opacity:0;
+  pointer-events:none;
+  transition: opacity .22s ease;
 }
 .hmodal.show{
-  opacity: 1;
-  pointer-events: auto;
+  opacity:1;
+  pointer-events:auto;
 }
+
 .hmodal-card{
-  width: min(360px, 92vw);
-  border-radius: 22px;
-  background: rgba(255,255,255,.96);
-  border: 1px solid rgba(255,255,255,.75);
-  box-shadow: 0 34px 88px rgba(12,35,64,.22);
-  overflow: hidden;
-  transform: translateY(10px) scale(.98);
-  animation: hmodalIn .22s cubic-bezier(.22,1,.36,1) forwards;
+  width:min(380px,92vw);
+  border-radius:22px;
+  overflow:hidden;
+
+  background:
+    radial-gradient(900px 420px at 50% -12%,
+      rgba(30,167,255,.18) 0%,
+      rgba(30,167,255,0) 60%
+    ),
+    linear-gradient(180deg,
+      rgba(255,255,255,.96) 0%,
+      rgba(233,246,255,.92) 100%
+    );
+
+  border: 1px solid rgba(255,255,255,.86);
+  box-shadow:
+    0 38px 90px rgba(12,35,64,.22),
+    0 0 0 1px rgba(30,167,255,.12) inset;
+
+  transform: translateY(10px) scale(.985);
+  transition: transform .22s cubic-bezier(.22,1,.36,1);
 }
-@keyframes hmodalIn{ to{ transform: translateY(0) scale(1); } }
+.hmodal.show .hmodal-card{
+  transform: translateY(0) scale(1);
+}
+
 .hmodal-head{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding: 14px 14px 10px;
-  border-bottom: 1px solid rgba(12,35,64,.08);
+  padding:14px 14px 10px;
 }
 .hmodal-title{
-  font-weight: 1000;
-  letter-spacing: .2px;
-  color: #0c2340;
+  font-weight:1000;
+  font-size:1.02rem;
+  color:#0c2340;
+  letter-spacing:.2px;
 }
+
 .hmodal-x{
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  border: 1px solid rgba(12,35,64,.10);
-  background: rgba(12,35,64,.04);
-  cursor: pointer;
-  font-weight: 900;
+  width:38px;
+  height:38px;
+  border-radius:12px;
+
+  border:1px solid rgba(12,35,64,.10);
+  background: rgba(255,255,255,.88);
+  cursor:pointer;
+
+  font-weight:1000;
+  color: rgba(12,35,64,.74);
+  box-shadow: 0 14px 30px rgba(12,35,64,.10);
 }
-.hmodal-body{
-  padding: 14px;
-}
+
+.hmodal-body{ padding: 6px 14px 16px; }
+
 .hm-big{
-  font-weight: 1000;
-  font-size: 1.12rem;
-  color: #0c2340;
-  margin-bottom: 10px;
+  font-weight:1000;
+  font-size:1.2rem;
+  color:#0c2340;
+  margin-bottom:10px;
 }
+
 .hm-row{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: rgba(30,167,255,.06);
-  border: 1px solid rgba(30,167,255,.14);
-  margin-top: 8px;
+  gap:12px;
+
+  padding:10px 12px;
+  border-radius:16px;
+
+  background: rgba(255,255,255,.76);
+  border: 1px solid rgba(12,35,64,.08);
+  margin-top:8px;
 }
-.hm-k{ opacity: .65; font-weight: 800; }
-.hm-v{ font-weight: 1000; }
+
+.hm-k{
+  font-size:.84rem;
+  color: rgba(12,35,64,.62);
+  font-weight:800;
+}
+.hm-v{
+  font-size:.92rem;
+  color: rgba(12,35,64,.92);
+  font-weight:1000;
+  text-align:right;
+  max-width:60%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
 @media (prefers-reduced-motion: reduce){
-  .hmodal, .hmodal-card{ transition:none !important; animation:none !important; }
+  .hmodal, .hmodal-card{ transition:none !important; }
 }
   `;
   document.head.appendChild(st);
 };
-ensureHistoryUIStyles();
 
+ensureHistoryUIStyles();
 
 // ==========================================================
 // ✅ History Render — REALTIME FLIP (modal-aware + pending highlight)
