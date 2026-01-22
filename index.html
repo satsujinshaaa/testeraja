@@ -1014,309 +1014,418 @@
     .hmodal, .hmodal-card{ transition:none !important; }
   }
 
-    /* ==========================================================
-       ✅ RESULT POPUP (UPGRADE: BALLOON SVG PREMIUM)
-       ========================================================== */
-    html.modal-open, body.modal-open{ overflow:hidden !important; }
+/* ==========================================================
+   ✅ RESULT POPUP (PREMIUM MINIMAL + MOBILE SMALL)
+   ========================================================== */
+html.modal-open, body.modal-open{ overflow:hidden !important; }
 
-    .result-pop{
-      position: fixed;
-      inset: 0;
-      display: grid;
-      place-items: center;
+.result-pop{
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
 
-      padding:
-        calc(18px + var(--safeT))
-        18px
-        calc(18px + var(--safeB));
+  padding:
+    calc(16px + var(--safeT))
+    14px
+    calc(16px + var(--safeB));
 
-      z-index: 99999;
+  z-index: 99999;
 
-      background: rgba(12,35,64,0.28);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+  background: rgba(12,35,64,0.28);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .22s ease;
-    }
-    .result-pop.show{
-      opacity: 1;
-      pointer-events: auto;
-    }
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s ease;
+}
+.result-pop.show{
+  opacity: 1;
+  pointer-events: auto;
+}
 
-    .result-card{
-      width: min(390px, 92vw);
-      border-radius: 24px;
-      position: relative;
-      overflow: hidden;
+.result-card{
+  width: min(390px, 92vw);
+  max-height: min(78vh, 560px); /* ✅ biar tidak nutup layar */
+  border-radius: 22px;
+  position: relative;
+  overflow: hidden;
 
-      background:
-        radial-gradient(880px 420px at 50% -10%,
-          rgba(30,167,255,.14) 0%,
-          rgba(30,167,255,0) 58%
-        ),
-        linear-gradient(180deg,
-          rgba(255,255,255,.96) 0%,
-          rgba(233,246,255,.92) 100%
-        );
+  display:flex;
+  flex-direction: column;
 
-      border: 1px solid rgba(255,255,255,.82);
-      box-shadow:
-        0 34px 88px rgba(12,35,64,0.22),
-        0 0 0 1px rgba(30,167,255,.12) inset;
+  background:
+    radial-gradient(820px 420px at 50% -10%,
+      rgba(30,167,255,.14) 0%,
+      rgba(30,167,255,0) 58%
+    ),
+    linear-gradient(180deg,
+      rgba(255,255,255,.96) 0%,
+      rgba(233,246,255,.92) 100%
+    );
 
-      transform: translateY(14px) scale(.985);
-      opacity: 0;
-    }
-    .result-pop.show .result-card{
-      animation: resultIn .34s var(--easeOut) forwards;
-    }
-    @keyframes resultIn{
-      to{ transform: translateY(0) scale(1); opacity: 1; }
-    }
+  border: 1px solid rgba(255,255,255,.82);
+  box-shadow:
+    0 34px 88px rgba(12,35,64,0.22),
+    0 0 0 1px rgba(30,167,255,.12) inset;
 
-    .result-card::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      background:
-        radial-gradient(120% 72% at 50% 0%,
-          rgba(255,255,255,.62) 0%,
-          rgba(255,255,255,0) 60%
-        );
-      opacity: .92;
-    }
+  transform: translateY(14px) scale(.985);
+  opacity: 0;
+}
+.result-pop.show .result-card{
+  animation: resultIn .34s var(--easeOut) forwards;
+}
+@keyframes resultIn{
+  to{ transform: translateY(0) scale(1); opacity: 1; }
+}
 
-    .result-card::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      border-radius: 24px;
-      box-shadow:
-        0 0 0 1px rgba(30,167,255,0.14) inset,
-        0 0 0 12px rgba(255,255,255,0.06) inset;
-      opacity: .95;
-    }
+.result-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(120% 72% at 50% 0%,
+      rgba(255,255,255,.62) 0%,
+      rgba(255,255,255,0) 60%
+    );
+  opacity: .92;
+}
 
-    /* ✅ TOP (balloon svg + badge) */
-    .result-top{
-      position: relative;
-      display:flex;
-      flex-direction: column;
-      align-items:center;
-      justify-content:center;
-      gap: 10px;
+.result-card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  border-radius: 22px;
+  box-shadow:
+    0 0 0 1px rgba(30,167,255,0.14) inset,
+    0 0 0 12px rgba(255,255,255,0.06) inset;
+  opacity: .95;
+}
 
-      padding: 16px 16px 0;
-    }
+/* ✅ TOP (balloon svg + badge) */
+.result-top{
+  position: relative;
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  justify-content:center;
+  gap: 9px;
 
-    .result-balloon-svg{
-      width: 78px;
-      height: 96px;
-      filter: drop-shadow(0 18px 30px rgba(12,35,64,0.18));
-      transform: translateZ(0);
-    }
+  padding: 14px 16px 0;
+  z-index: 1;
+}
 
-    .result-balloon-svg svg{
-      width:100%;
-      height:100%;
-      display:block;
-    }
+.result-balloon-svg{
+  width: 74px;
+  height: 92px;
+  filter: drop-shadow(0 18px 30px rgba(12,35,64,0.18));
+  transform: translateZ(0);
+}
+.result-balloon-svg svg{
+  width:100%;
+  height:100%;
+  display:block;
+}
 
-    @media (prefers-reduced-motion: no-preference){
-      .result-pop.show .result-balloon-svg{
-        animation: modalBalloonFloat 1.25s var(--easeOut) both,
-                   modalBalloonIdle 3.2s ease-in-out infinite 1.25s;
-      }
-      @keyframes modalBalloonFloat{
-        from{ transform: translateY(16px) scale(.92); opacity:0; }
-        to  { transform: translateY(0) scale(1); opacity:1; }
-      }
-      @keyframes modalBalloonIdle{
-        0%,100%{ transform: translateY(0) rotate(-1.2deg); }
-        50%    { transform: translateY(-6px) rotate(1.2deg); }
-      }
-    }
+@media (prefers-reduced-motion: no-preference){
+  .result-pop.show .result-balloon-svg{
+    animation: modalBalloonFloat 1.15s var(--easeOut) both,
+               modalBalloonIdle 3.2s ease-in-out infinite 1.15s;
+  }
+  @keyframes modalBalloonFloat{
+    from{ transform: translateY(14px) scale(.94); opacity:0; }
+    to  { transform: translateY(0) scale(1); opacity:1; }
+  }
+  @keyframes modalBalloonIdle{
+    0%,100%{ transform: translateY(0) rotate(-1.2deg); }
+    50%    { transform: translateY(-6px) rotate(1.2deg); }
+  }
+}
 
-    .result-pill{
-      padding: 9px 14px;
-      border-radius: 999px;
+.result-pill{
+  padding: 8px 13px;
+  border-radius: 999px;
 
-      background: linear-gradient(180deg,
-        rgba(30,167,255,1),
-        rgba(45,125,255,1)
-      );
-      color:#fff;
-      font-weight: 800;
-      font-size: .92rem;
+  background: linear-gradient(180deg,
+    rgba(30,167,255,1),
+    rgba(45,125,255,1)
+  );
+  color:#fff;
+  font-weight: 800;
+  font-size: .90rem;
 
-      box-shadow: 0 14px 28px rgba(30,167,255,.20);
-      border: 1px solid rgba(255,255,255,0.32);
+  box-shadow: 0 14px 28px rgba(30,167,255,.20);
+  border: 1px solid rgba(255,255,255,0.32);
 
-      opacity: 0;
-      transform: translateY(6px);
-    }
+  opacity: 0;
+  transform: translateY(6px);
+}
 
-    .result-pop.show .result-pill{
-      animation: pillIn .34s ease forwards;
-      animation-delay: .10s;
-    }
-    @keyframes pillIn{
-      to{ opacity:1; transform: translateY(0); }
-    }
+.result-pop.show .result-pill{
+  animation: pillIn .34s ease forwards;
+  animation-delay: .08s;
+}
+@keyframes pillIn{
+  to{ opacity:1; transform: translateY(0); }
+}
 
-    .result-body{ padding: 12px 16px 8px; position:relative; z-index:1; }
+/* ✅ BODY SCROLL SAFE */
+.result-body{
+  padding: 10px 16px 10px;
+  position:relative;
+  z-index:1;
 
-    .result-label{
-      text-align:center;
-      font-weight: 800;
-      font-size: .82rem;
-      letter-spacing: .25px;
-      color: rgba(12,35,64,.62);
-      margin-top: 8px;
-    }
+  overflow: auto;              /* ✅ kalau kepanjangan jadi scroll */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
 
-    .result-prize{
-      text-align:center;
-      margin: 10px 0 12px;
-      line-height: 1.02;
-      font-weight: 800;
-      font-size: clamp(2.05rem, 6.6vw, 2.35rem);
+.result-body::-webkit-scrollbar{ width: 10px; }
+.result-body::-webkit-scrollbar-thumb{
+  background: rgba(12,35,64,.14);
+  border-radius: 999px;
+  border: 3px solid rgba(255,255,255,.55);
+}
 
-      background: linear-gradient(180deg,
-        #ffeaa0 0%,
-        #ffbf2f 45%,
-        #ff9f1a 100%
-      );
-      -webkit-background-clip:text;
-      background-clip:text;
-      color:transparent;
-      text-shadow: 0 16px 30px rgba(255,191,47,.16);
-    }
+.result-label{
+  text-align:center;
+  font-weight: 800;
+  font-size: .80rem;
+  letter-spacing: .25px;
+  color: rgba(12,35,64,.62);
+  margin-top: 6px;
+}
 
-    .result-prize.is-zero{
-      background: linear-gradient(180deg, rgba(12,35,64,.35), rgba(12,35,64,.72));
-      -webkit-background-clip:text;
-      background-clip:text;
-      text-shadow:none;
-    }
+.result-prize{
+  text-align:center;
+  margin: 8px 0 10px;
+  line-height: 1.02;
+  font-weight: 900;
 
-    .result-meta{
-      display:grid;
-      gap: 10px;
-      margin-top: 6px;
-    }
+  font-size: clamp(1.95rem, 6.2vw, 2.28rem);
 
-    .meta-row{
-      display:flex;
-      align-items:center;
-      justify-content: space-between;
-      gap: 10px;
+  background: linear-gradient(180deg,
+    #ffeaa0 0%,
+    #ffbf2f 45%,
+    #ff9f1a 100%
+  );
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
 
-      padding: 11px 12px;
-      border-radius: 14px;
+  text-shadow: 0 16px 30px rgba(255,191,47,.16);
+}
 
-      background: rgba(255,255,255,.66);
-      border: 1px solid rgba(30,167,255,.14);
-      box-shadow: 0 10px 22px rgba(12,35,64,.06);
-    }
+.result-prize.is-zero{
+  background: linear-gradient(180deg, rgba(12,35,64,.35), rgba(12,35,64,.72));
+  -webkit-background-clip:text;
+  background-clip:text;
+  text-shadow:none;
+}
 
-    .meta-k{
-      font-weight: 800;
-      font-size: .82rem;
-      color: rgba(12,35,64,.60);
-    }
+.result-meta{
+  display:grid;
+  gap: 9px;
+  margin-top: 4px;
+}
 
-    .meta-v{
-      font-weight: 800;
-      font-size: .96rem;
-      color: rgba(12,35,64,.92);
-    }
+.meta-row{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
 
-    .result-actions{
-      padding: 12px 16px 16px;
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      position:relative;
-      z-index:1;
-    }
+  padding: 10px 12px;
+  border-radius: 14px;
 
-    .result-btn{
-      width:100%;
-      min-height: 50px;
-      border:none;
-      border-radius: 16px;
-      padding: 14px 16px;
-      font-weight: 800;
-      font-size: 1.05rem;
-      cursor:pointer;
-      color:#fff;
+  background: rgba(255,255,255,.66);
+  border: 1px solid rgba(30,167,255,.14);
+  box-shadow: 0 10px 22px rgba(12,35,64,.06);
+}
 
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
+.meta-k{
+  font-weight: 800;
+  font-size: .80rem;
+  color: rgba(12,35,64,.60);
+}
+.meta-v{
+  font-weight: 900;
+  font-size: .94rem;
+  color: rgba(12,35,64,.92);
+}
 
-      position:relative;
-      overflow:hidden;
+/* ✅ ACTIONS (sticky bawah, tetap rapi di mobile) */
+.result-actions{
+  padding: 12px 16px 14px;
+  display:grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
 
-      background: linear-gradient(180deg, rgba(30,167,255,1), rgba(45,125,255,1));
-      box-shadow: 0 18px 34px rgba(30,167,255,.22);
+  position:relative;
+  z-index:1;
+}
 
-      transition: filter .16s ease, transform .16s ease, box-shadow .16s ease;
-      outline:none;
-    }
+.result-btn{
+  width:100%;
+  min-height: 50px;
+  border:none;
+  border-radius: 16px;
+  padding: 14px 16px;
 
-    .result-btn::before{
-      content:"";
-      position:absolute;
-      top:-40%;
-      left:-60%;
-      width:55%;
-      height:180%;
-      pointer-events:none;
+  font-weight: 900;
+  font-size: 1.02rem;
 
-      background: linear-gradient(90deg,
-        rgba(255,255,255,0),
-        rgba(255,255,255,.18),
-        rgba(255,255,255,.44),
-        rgba(255,255,255,.18),
-        rgba(255,255,255,0)
-      );
-      transform: skewX(-14deg);
-      animation: btnShimmer 2.35s ease-in-out infinite;
-      opacity:.85;
-    }
+  cursor:pointer;
+  color:#fff;
 
-    @keyframes btnShimmer{
-      0%   { transform: translateX(-150%) skewX(-14deg); opacity:.45; }
-      60%  { opacity:.92; }
-      100% { transform: translateX(360%) skewX(-14deg); opacity:.55; }
-    }
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
 
-    .result-btn:hover{
-      filter: brightness(1.03);
-      box-shadow: 0 20px 38px rgba(30,167,255,.24);
-    }
+  position:relative;
+  overflow:hidden;
 
-    .result-btn:active{ transform: translateY(1px); }
+  background: linear-gradient(180deg, rgba(30,167,255,1), rgba(45,125,255,1));
+  box-shadow: 0 18px 34px rgba(30,167,255,.22);
 
-    .result-btn:focus-visible{
-      box-shadow:
-        0 20px 38px rgba(30,167,255,.24),
-        0 0 0 4px rgba(30,167,255,0.18),
-        0 0 0 1px rgba(255,255,255,0.88) inset;
-    }
+  transition: filter .16s ease, transform .16s ease, box-shadow .16s ease;
+  outline:none;
+}
 
-    .result-btn.btn-share::before{ opacity:.45; }
-    .result-btn:disabled::before{ display:none; }
+/* ✅ Shimmer hanya untuk tombol utama (KLAIM) */
+.result-btn::before{
+  content:"";
+  position:absolute;
+  top:-40%;
+  left:-60%;
+  width:55%;
+  height:180%;
+  pointer-events:none;
 
-    @media (prefers-reduced-motion: reduce){
-      .result-btn::before{ animation:none !important; }
-    }
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0),
+    rgba(255,255,255,.18),
+    rgba(255,255,255,.44),
+    rgba(255,255,255,.18),
+    rgba(255,255,255,0)
+  );
+
+  transform: skewX(-14deg);
+  animation: btnShimmer 2.35s ease-in-out infinite;
+  opacity:.85;
+}
+@keyframes btnShimmer{
+  0%   { transform: translateX(-150%) skewX(-14deg); opacity:.45; }
+  60%  { opacity:.92; }
+  100% { transform: translateX(360%) skewX(-14deg); opacity:.55; }
+}
+
+.result-btn:hover{
+  filter: brightness(1.03);
+  box-shadow: 0 20px 38px rgba(30,167,255,.24);
+}
+.result-btn:active{ transform: translateY(1px); }
+.result-btn:focus-visible{
+  box-shadow:
+    0 20px 38px rgba(30,167,255,.24),
+    0 0 0 4px rgba(30,167,255,0.18),
+    0 0 0 1px rgba(255,255,255,0.88) inset;
+}
+.result-btn:disabled{
+  opacity:.62;
+  cursor:not-allowed;
+}
+.result-btn:disabled::before{ display:none; }
+
+/* ==========================================================
+   ✅ BAGIKAN: putih bersih, TANPA shine
+   ========================================================== */
+.result-btn.btn-share{
+  background: linear-gradient(180deg,
+    rgba(255,255,255,0.98),
+    rgba(241,248,255,0.95)
+  );
+  color: rgba(12,35,64,.92);
+
+  border: 1px solid rgba(30,167,255,.18);
+  box-shadow:
+    0 16px 28px rgba(12,35,64,.10),
+    0 0 0 1px rgba(255,255,255,.70) inset;
+}
+.result-btn.btn-share::before{
+  display:none !important; /* ✅ kill shimmer */
+}
+.result-btn.btn-share:hover{
+  filter: none;
+  box-shadow:
+    0 18px 30px rgba(12,35,64,.12),
+    0 0 0 1px rgba(255,255,255,.72) inset;
+}
+
+/* ✅ Motion safe */
+@media (prefers-reduced-motion: reduce){
+  .result-btn::before{ animation:none !important; }
+}
+
+/* ==========================================================
+   ✅ MOBILE: lebih kecil, lebih minimal, tidak menutup layar
+   ========================================================== */
+@media (max-width: 420px){
+  .result-pop{
+    padding:
+      calc(14px + var(--safeT))
+      12px
+      calc(14px + var(--safeB));
+  }
+
+  .result-card{
+    width: min(340px, 92vw);
+    max-height: min(74vh, 520px);
+    border-radius: 20px;
+  }
+
+  .result-top{
+    padding: 12px 14px 0;
+    gap: 8px;
+  }
+
+  .result-balloon-svg{
+    width: 66px;
+    height: 82px;
+  }
+
+  .result-pill{
+    font-size: .86rem;
+    padding: 7px 12px;
+  }
+
+  .result-body{ padding: 9px 14px 10px; }
+
+  .result-prize{
+    font-size: clamp(1.75rem, 7vw, 2.05rem);
+    margin: 7px 0 9px;
+  }
+
+  .meta-row{
+    padding: 9px 11px;
+    border-radius: 13px;
+  }
+
+  .result-actions{
+    padding: 10px 14px 13px;
+    gap: 9px;
+  }
+
+  .result-btn{
+    min-height: 46px;
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-size: 1rem;
+  }
+}
 
     /* ==========================================================
        ✅ CLAIM LOADING OVERLAY (Premium)
@@ -1461,194 +1570,296 @@
     <div class="balloon-container" id="balloonContainer">
       <div class="balloon-set" id="balloon">
 
-        <!-- 🎈 BALON 1 (PINK) -->
-        <button class="balloon-item b1" type="button" aria-label="Balon Pink">
-          <svg viewBox="0 0 200 330" width="200" height="330" role="img" aria-hidden="true">
-            <defs>
-              <radialGradient id="gPinkA" cx="35%" cy="28%" r="70%">
-                <stop offset="0%"  stop-color="#ffffff" stop-opacity="0.96"/>
-                <stop offset="24%" stop-color="#ffeaf2" stop-opacity="0.96"/>
-                <stop offset="58%" stop-color="#ff5d98" stop-opacity="0.92"/>
-                <stop offset="100%" stop-color="#ff2d7a" stop-opacity="0.88"/>
-              </radialGradient>
-              <linearGradient id="gPinkShade" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%"  stop-color="#000000" stop-opacity="0"/>
-                <stop offset="72%" stop-color="#000000" stop-opacity="0.08"/>
-                <stop offset="100%" stop-color="#000000" stop-opacity="0.12"/>
-              </linearGradient>
-              <filter id="softShadowPink" x="-40%" y="-40%" width="180%" height="190%">
-                <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/>
-                <feOffset dy="8" result="off"/>
-                <feColorMatrix in="off" type="matrix"
-                  values="0 0 0 0 0
-                          0 0 0 0 0
-                          0 0 0 0 0
-                          0 0 0 .18 0" result="shadow"/>
-                <feMerge>
-                  <feMergeNode in="shadow"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
-            <g filter="url(#softShadowPink)">
-              <path d="M100 18 C62 10 18 58 18 122 C18 206 60 254 100 270 C140 254 182 206 182 122 C182 58 138 10 100 18 Z"
-                    fill="url(#gPinkA)" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
-              <path d="M100 18 C62 10 18 58 18 122 C18 206 60 254 100 270 C140 254 182 206 182 122 C182 58 138 10 100 18 Z"
-                    fill="url(#gPinkShade)" opacity="0.70"/>
-              <path d="M82 46 C54 70 46 98 50 126 C54 166 70 198 92 218 C66 188 60 156 62 128 C64 96 72 68 90 52 Z"
-                    fill="#fff" opacity="0.26"/>
-              <circle cx="78" cy="80" r="10" fill="#fff" opacity="0.18"/>
-              <circle cx="88" cy="98" r="5"  fill="#fff" opacity="0.12"/>
-              <path d="M100 270 C92 280 90 286 90 292 C90 302 98 308 100 310 C102 308 110 302 110 292 C110 286 108 280 100 270 Z"
-                    fill="#ff3a7f" opacity="0.78"/>
-            </g>
-            <path d="M100 310 C114 322 92 328 106 330"
-                  fill="none" stroke="rgba(12,35,64,0.28)" stroke-width="2.2" stroke-linecap="round"/>
-          </svg>
-          <span class="balloon-q">?</span>
-        </button>
+  <!-- 🎈 BALON 1 (PINK) -->
+  <button class="balloon-item b1" type="button" aria-label="Balon Pink">
+    <svg viewBox="0 0 200 330" width="200" height="330" role="img" aria-hidden="true">
+      <defs>
+        <radialGradient id="gPinkA" cx="35%" cy="28%" r="70%">
+          <stop offset="0%"  stop-color="#ffffff" stop-opacity="0.96"/>
+          <stop offset="24%" stop-color="#ffeaf2" stop-opacity="0.96"/>
+          <stop offset="58%" stop-color="#ff5d98" stop-opacity="0.92"/>
+          <stop offset="100%" stop-color="#ff2d7a" stop-opacity="0.88"/>
+        </radialGradient>
+        <linearGradient id="gPinkShade" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%"  stop-color="#000000" stop-opacity="0"/>
+          <stop offset="72%" stop-color="#000000" stop-opacity="0.08"/>
+          <stop offset="100%" stop-color="#000000" stop-opacity="0.12"/>
+        </linearGradient>
+        <filter id="softShadowPink" x="-40%" y="-40%" width="180%" height="210%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/>
+          <feOffset dy="8" result="off"/>
+          <feColorMatrix in="off" type="matrix"
+            values="0 0 0 0 0
+                    0 0 0 0 0
+                    0 0 0 0 0
+                    0 0 0 .18 0" result="shadow"/>
+          <feMerge>
+            <feMergeNode in="shadow"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
 
-        <!-- 🎈 BALON 2 (YELLOW) -->
-        <button class="balloon-item b2" type="button" aria-label="Balon Kuning">
-          <svg viewBox="0 0 200 330" width="200" height="330" role="img" aria-hidden="true">
-            <defs>
-              <radialGradient id="gYellowA" cx="35%" cy="28%" r="70%">
-                <stop offset="0%"  stop-color="#ffffff" stop-opacity="0.96"/>
-                <stop offset="24%" stop-color="#fff7cf" stop-opacity="0.96"/>
-                <stop offset="60%" stop-color="#ffd84b" stop-opacity="0.92"/>
-                <stop offset="100%" stop-color="#ffb200" stop-opacity="0.88"/>
-              </radialGradient>
-              <linearGradient id="gYellowShade" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%"  stop-color="#000000" stop-opacity="0"/>
-                <stop offset="72%" stop-color="#000000" stop-opacity="0.08"/>
-                <stop offset="100%" stop-color="#000000" stop-opacity="0.12"/>
-              </linearGradient>
-              <filter id="softShadowYellow" x="-40%" y="-40%" width="180%" height="190%">
-                <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/>
-                <feOffset dy="8" result="off"/>
-                <feColorMatrix in="off" type="matrix"
-                  values="0 0 0 0 0
-                          0 0 0 0 0
-                          0 0 0 0 0
-                          0 0 0 .18 0" result="shadow"/>
-                <feMerge>
-                  <feMergeNode in="shadow"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
-            <g filter="url(#softShadowYellow)">
-              <path d="M100 18 C62 10 18 58 18 122 C18 206 60 254 100 270 C140 254 182 206 182 122 C182 58 138 10 100 18 Z"
-                    fill="url(#gYellowA)" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
-              <path d="M100 18 C62 10 18 58 18 122 C18 206 60 254 100 270 C140 254 182 206 182 122 C182 58 138 10 100 18 Z"
-                    fill="url(#gYellowShade)" opacity="0.70"/>
-              <path d="M82 46 C54 70 46 98 50 126 C54 166 70 198 92 218 C66 188 60 156 62 128 C64 96 72 68 90 52 Z"
-                    fill="#fff" opacity="0.24"/>
-              <circle cx="78" cy="80" r="10" fill="#fff" opacity="0.16"/>
-              <circle cx="88" cy="98" r="5"  fill="#fff" opacity="0.11"/>
-              <path d="M100 270 C92 280 90 286 90 292 C90 302 98 308 100 310 C102 308 110 302 110 292 C110 286 108 280 100 270 Z"
-                    fill="#ffb200" opacity="0.72"/>
-            </g>
-            <path d="M100 310 C114 322 90 328 104 330"
-                  fill="none" stroke="rgba(12,35,64,0.28)" stroke-width="2.2" stroke-linecap="round"/>
-          </svg>
-          <span class="balloon-q">?</span>
-        </button>
+      <g filter="url(#softShadowPink)">
+        <!-- ✅ ROUND + sedikit lonjong bawah (balance) -->
+        <path d="M100 40
+                 C62 40 34 74 34 116
+                 C34 170 66 206 100 214
+                 C134 206 166 170 166 116
+                 C166 74 138 40 100 40 Z"
+              fill="url(#gPinkA)"
+              stroke="rgba(255,255,255,0.38)" stroke-width="2"/>
 
-        <!-- 🎈 BALON 3 (ORANGE) -->
-        <button class="balloon-item b3" type="button" aria-label="Balon Orange">
-          <svg viewBox="0 0 200 330" width="200" height="330" role="img" aria-hidden="true">
-            <defs>
-              <radialGradient id="gOrangeA" cx="35%" cy="28%" r="70%">
-                <stop offset="0%"  stop-color="#ffffff" stop-opacity="0.96"/>
-                <stop offset="24%" stop-color="#ffe7d4" stop-opacity="0.96"/>
-                <stop offset="60%" stop-color="#ff9f3a" stop-opacity="0.92"/>
-                <stop offset="100%" stop-color="#ff6a2a" stop-opacity="0.88"/>
-              </radialGradient>
-              <linearGradient id="gOrangeShade" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%"  stop-color="#000000" stop-opacity="0"/>
-                <stop offset="72%" stop-color="#000000" stop-opacity="0.08"/>
-                <stop offset="100%" stop-color="#000000" stop-opacity="0.12"/>
-              </linearGradient>
-              <filter id="softShadowOrange" x="-40%" y="-40%" width="180%" height="190%">
-                <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/>
-                <feOffset dy="8" result="off"/>
-                <feColorMatrix in="off" type="matrix"
-                  values="0 0 0 0 0
-                          0 0 0 0 0
-                          0 0 0 0 0
-                          0 0 0 .18 0" result="shadow"/>
-                <feMerge>
-                  <feMergeNode in="shadow"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
-            <g filter="url(#softShadowOrange)">
-              <path d="M100 18 C62 10 18 58 18 122 C18 206 60 254 100 270 C140 254 182 206 182 122 C182 58 138 10 100 18 Z"
-                    fill="url(#gOrangeA)" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
-              <path d="M100 18 C62 10 18 58 18 122 C18 206 60 254 100 270 C140 254 182 206 182 122 C182 58 138 10 100 18 Z"
-                    fill="url(#gOrangeShade)" opacity="0.70"/>
-              <path d="M82 46 C54 70 46 98 50 126 C54 166 70 198 92 218 C66 188 60 156 62 128 C64 96 72 68 90 52 Z"
-                    fill="#fff" opacity="0.23"/>
-              <circle cx="78" cy="80" r="10" fill="#fff" opacity="0.15"/>
-              <circle cx="88" cy="98" r="5"  fill="#fff" opacity="0.10"/>
-              <path d="M100 270 C92 280 90 286 90 292 C90 302 98 308 100 310 C102 308 110 302 110 292 C110 286 108 280 100 270 Z"
-                    fill="#ff6a2a" opacity="0.72"/>
-            </g>
-            <path d="M100 310 C114 322 88 328 106 330"
-                  fill="none" stroke="rgba(12,35,64,0.28)" stroke-width="2.2" stroke-linecap="round"/>
-          </svg>
-          <span class="balloon-q">?</span>
-        </button>
+        <path d="M100 40
+                 C62 40 34 74 34 116
+                 C34 170 66 206 100 214
+                 C134 206 166 170 166 116
+                 C166 74 138 40 100 40 Z"
+              fill="url(#gPinkShade)" opacity="0.72"/>
 
-        <!-- 🎈 BALON 4 (PURPLE) -->
-        <button class="balloon-item b4" type="button" aria-label="Balon Ungu">
-          <svg viewBox="0 0 200 330" width="200" height="330" role="img" aria-hidden="true">
-            <defs>
-              <radialGradient id="gPurpleA" cx="35%" cy="28%" r="70%">
-                <stop offset="0%"  stop-color="#ffffff" stop-opacity="0.96"/>
-                <stop offset="24%" stop-color="#f2eaff" stop-opacity="0.96"/>
-                <stop offset="60%" stop-color="#caa2ff" stop-opacity="0.92"/>
-                <stop offset="100%" stop-color="#8e62ff" stop-opacity="0.88"/>
-              </radialGradient>
-              <linearGradient id="gPurpleShade" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%"  stop-color="#000000" stop-opacity="0"/>
-                <stop offset="72%" stop-color="#000000" stop-opacity="0.08"/>
-                <stop offset="100%" stop-color="#000000" stop-opacity="0.12"/>
-              </linearGradient>
-              <filter id="softShadowPurple" x="-40%" y="-40%" width="180%" height="190%">
-                <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/>
-                <feOffset dy="8" result="off"/>
-                <feColorMatrix in="off" type="matrix"
-                  values="0 0 0 0 0
-                          0 0 0 0 0
-                          0 0 0 0 0
-                          0 0 0 .18 0" result="shadow"/>
-                <feMerge>
-                  <feMergeNode in="shadow"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
-            </defs>
-            <g filter="url(#softShadowPurple)">
-              <path d="M100 18 C62 10 18 58 18 122 C18 206 60 254 100 270 C140 254 182 206 182 122 C182 58 138 10 100 18 Z"
-                    fill="url(#gPurpleA)" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
-              <path d="M100 18 C62 10 18 58 18 122 C18 206 60 254 100 270 C140 254 182 206 182 122 C182 58 138 10 100 18 Z"
-                    fill="url(#gPurpleShade)" opacity="0.70"/>
-              <path d="M82 46 C54 70 46 98 50 126 C54 166 70 198 92 218 C66 188 60 156 62 128 C64 96 72 68 90 52 Z"
-                    fill="#fff" opacity="0.24"/>
-              <circle cx="78" cy="80" r="10" fill="#fff" opacity="0.15"/>
-              <circle cx="88" cy="98" r="5"  fill="#fff" opacity="0.10"/>
-              <path d="M100 270 C92 280 90 286 90 292 C90 302 98 308 100 310 C102 308 110 302 110 292 C110 286 108 280 100 270 Z"
-                    fill="#8e62ff" opacity="0.72"/>
-            </g>
-            <path d="M100 310 C110 322 92 328 108 330"
-                  fill="none" stroke="rgba(12,35,64,0.28)" stroke-width="2.2" stroke-linecap="round"/>
-          </svg>
-          <span class="balloon-q">?</span>
-        </button>
-      </div>
+        <!-- ✅ highlight glossy -->
+        <path d="M78 58
+                 C54 78 46 102 50 128
+                 C54 162 70 184 92 198
+                 C68 176 62 154 64 130
+                 C66 102 74 78 90 66 Z"
+              fill="#fff" opacity="0.24"/>
+        <circle cx="78" cy="88" r="10" fill="#fff" opacity="0.16"/>
+        <circle cx="90" cy="106" r="5" fill="#fff" opacity="0.10"/>
+
+        <!-- ✅ knot -->
+        <path d="M100 214
+                 C92 224 90 232 90 240
+                 C90 250 98 256 100 258
+                 C102 256 110 250 110 240
+                 C110 232 108 224 100 214 Z"
+              fill="#ff3a7f" opacity="0.82"/>
+      </g>
+
+      <!-- ✅ string -->
+      <path d="M100 258 C116 272 92 278 108 286"
+            fill="none"
+            stroke="rgba(12,35,64,0.28)"
+            stroke-width="2.2"
+            stroke-linecap="round"/>
+    </svg>
+    <span class="balloon-q">?</span>
+  </button>
+
+  <!-- 🎈 BALON 2 (YELLOW) -->
+  <button class="balloon-item b2" type="button" aria-label="Balon Kuning">
+    <svg viewBox="0 0 200 330" width="200" height="330" role="img" aria-hidden="true">
+      <defs>
+        <radialGradient id="gYellowA" cx="35%" cy="28%" r="70%">
+          <stop offset="0%"  stop-color="#ffffff" stop-opacity="0.96"/>
+          <stop offset="24%" stop-color="#fff7cf" stop-opacity="0.96"/>
+          <stop offset="60%" stop-color="#ffd84b" stop-opacity="0.92"/>
+          <stop offset="100%" stop-color="#ffb200" stop-opacity="0.88"/>
+        </radialGradient>
+        <linearGradient id="gYellowShade" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%"  stop-color="#000000" stop-opacity="0"/>
+          <stop offset="72%" stop-color="#000000" stop-opacity="0.08"/>
+          <stop offset="100%" stop-color="#000000" stop-opacity="0.12"/>
+        </linearGradient>
+        <filter id="softShadowYellow" x="-40%" y="-40%" width="180%" height="210%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/>
+          <feOffset dy="8" result="off"/>
+          <feColorMatrix in="off" type="matrix"
+            values="0 0 0 0 0
+                    0 0 0 0 0
+                    0 0 0 0 0
+                    0 0 0 .18 0" result="shadow"/>
+          <feMerge>
+            <feMergeNode in="shadow"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
+      <g filter="url(#softShadowYellow)">
+        <path d="M100 40
+                 C62 40 34 74 34 116
+                 C34 170 66 206 100 214
+                 C134 206 166 170 166 116
+                 C166 74 138 40 100 40 Z"
+              fill="url(#gYellowA)"
+              stroke="rgba(255,255,255,0.38)" stroke-width="2"/>
+        <path d="M100 40
+                 C62 40 34 74 34 116
+                 C34 170 66 206 100 214
+                 C134 206 166 170 166 116
+                 C166 74 138 40 100 40 Z"
+              fill="url(#gYellowShade)" opacity="0.70"/>
+
+        <path d="M78 58
+                 C54 78 46 102 50 128
+                 C54 162 70 184 92 198
+                 C68 176 62 154 64 130
+                 C66 102 74 78 90 66 Z"
+              fill="#fff" opacity="0.22"/>
+        <circle cx="78" cy="88" r="10" fill="#fff" opacity="0.14"/>
+        <circle cx="90" cy="106" r="5" fill="#fff" opacity="0.09"/>
+
+        <path d="M100 214
+                 C92 224 90 232 90 240
+                 C90 250 98 256 100 258
+                 C102 256 110 250 110 240
+                 C110 232 108 224 100 214 Z"
+              fill="#ffb200" opacity="0.78"/>
+      </g>
+
+      <path d="M100 258 C116 272 90 278 106 286"
+            fill="none"
+            stroke="rgba(12,35,64,0.28)"
+            stroke-width="2.2"
+            stroke-linecap="round"/>
+    </svg>
+    <span class="balloon-q">?</span>
+  </button>
+
+  <!-- 🎈 BALON 3 (ORANGE) -->
+  <button class="balloon-item b3" type="button" aria-label="Balon Orange">
+    <svg viewBox="0 0 200 330" width="200" height="330" role="img" aria-hidden="true">
+      <defs>
+        <radialGradient id="gOrangeA" cx="35%" cy="28%" r="70%">
+          <stop offset="0%"  stop-color="#ffffff" stop-opacity="0.96"/>
+          <stop offset="24%" stop-color="#ffe7d4" stop-opacity="0.96"/>
+          <stop offset="60%" stop-color="#ff9f3a" stop-opacity="0.92"/>
+          <stop offset="100%" stop-color="#ff6a2a" stop-opacity="0.88"/>
+        </radialGradient>
+        <linearGradient id="gOrangeShade" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%"  stop-color="#000000" stop-opacity="0"/>
+          <stop offset="72%" stop-color="#000000" stop-opacity="0.08"/>
+          <stop offset="100%" stop-color="#000000" stop-opacity="0.12"/>
+        </linearGradient>
+        <filter id="softShadowOrange" x="-40%" y="-40%" width="180%" height="210%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/>
+          <feOffset dy="8" result="off"/>
+          <feColorMatrix in="off" type="matrix"
+            values="0 0 0 0 0
+                    0 0 0 0 0
+                    0 0 0 0 0
+                    0 0 0 .18 0" result="shadow"/>
+          <feMerge>
+            <feMergeNode in="shadow"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
+      <g filter="url(#softShadowOrange)">
+        <path d="M100 40
+                 C62 40 34 74 34 116
+                 C34 170 66 206 100 214
+                 C134 206 166 170 166 116
+                 C166 74 138 40 100 40 Z"
+              fill="url(#gOrangeA)"
+              stroke="rgba(255,255,255,0.38)" stroke-width="2"/>
+        <path d="M100 40
+                 C62 40 34 74 34 116
+                 C34 170 66 206 100 214
+                 C134 206 166 170 166 116
+                 C166 74 138 40 100 40 Z"
+              fill="url(#gOrangeShade)" opacity="0.70"/>
+
+        <path d="M78 58
+                 C54 78 46 102 50 128
+                 C54 162 70 184 92 198
+                 C68 176 62 154 64 130
+                 C66 102 74 78 90 66 Z"
+              fill="#fff" opacity="0.20"/>
+        <circle cx="78" cy="88" r="10" fill="#fff" opacity="0.13"/>
+        <circle cx="90" cy="106" r="5" fill="#fff" opacity="0.09"/>
+
+        <path d="M100 214
+                 C92 224 90 232 90 240
+                 C90 250 98 256 100 258
+                 C102 256 110 250 110 240
+                 C110 232 108 224 100 214 Z"
+              fill="#ff6a2a" opacity="0.78"/>
+      </g>
+
+      <path d="M100 258 C116 272 88 278 108 286"
+            fill="none"
+            stroke="rgba(12,35,64,0.28)"
+            stroke-width="2.2"
+            stroke-linecap="round"/>
+    </svg>
+    <span class="balloon-q">?</span>
+  </button>
+
+  <!-- 🎈 BALON 4 (PURPLE) -->
+  <button class="balloon-item b4" type="button" aria-label="Balon Ungu">
+    <svg viewBox="0 0 200 330" width="200" height="330" role="img" aria-hidden="true">
+      <defs>
+        <radialGradient id="gPurpleA" cx="35%" cy="28%" r="70%">
+          <stop offset="0%"  stop-color="#ffffff" stop-opacity="0.96"/>
+          <stop offset="24%" stop-color="#f2eaff" stop-opacity="0.96"/>
+          <stop offset="60%" stop-color="#caa2ff" stop-opacity="0.92"/>
+          <stop offset="100%" stop-color="#8e62ff" stop-opacity="0.88"/>
+        </radialGradient>
+        <linearGradient id="gPurpleShade" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%"  stop-color="#000000" stop-opacity="0"/>
+          <stop offset="72%" stop-color="#000000" stop-opacity="0.08"/>
+          <stop offset="100%" stop-color="#000000" stop-opacity="0.12"/>
+        </linearGradient>
+        <filter id="softShadowPurple" x="-40%" y="-40%" width="180%" height="210%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/>
+          <feOffset dy="8" result="off"/>
+          <feColorMatrix in="off" type="matrix"
+            values="0 0 0 0 0
+                    0 0 0 0 0
+                    0 0 0 0 0
+                    0 0 0 .18 0" result="shadow"/>
+          <feMerge>
+            <feMergeNode in="shadow"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
+      <g filter="url(#softShadowPurple)">
+        <path d="M100 40
+                 C62 40 34 74 34 116
+                 C34 170 66 206 100 214
+                 C134 206 166 170 166 116
+                 C166 74 138 40 100 40 Z"
+              fill="url(#gPurpleA)"
+              stroke="rgba(255,255,255,0.38)" stroke-width="2"/>
+        <path d="M100 40
+                 C62 40 34 74 34 116
+                 C34 170 66 206 100 214
+                 C134 206 166 170 166 116
+                 C166 74 138 40 100 40 Z"
+              fill="url(#gPurpleShade)" opacity="0.70"/>
+
+        <path d="M78 58
+                 C54 78 46 102 50 128
+                 C54 162 70 184 92 198
+                 C68 176 62 154 64 130
+                 C66 102 74 78 90 66 Z"
+              fill="#fff" opacity="0.20"/>
+        <circle cx="78" cy="88" r="10" fill="#fff" opacity="0.13"/>
+        <circle cx="90" cy="106" r="5" fill="#fff" opacity="0.09"/>
+
+        <path d="M100 214
+                 C92 224 90 232 90 240
+                 C90 250 98 256 100 258
+                 C102 256 110 250 110 240
+                 C110 232 108 224 100 214 Z"
+              fill="#8e62ff" opacity="0.78"/>
+      </g>
+
+      <path d="M100 258 C114 272 92 278 108 286"
+            fill="none"
+            stroke="rgba(12,35,64,0.28)"
+            stroke-width="2.2"
+            stroke-linecap="round"/>
+    </svg>
+    <span class="balloon-q">?</span>
+  </button>
+
+</div>
 
       <div class="prize-overlay" id="prizeOverlay"></div>
     </div>
