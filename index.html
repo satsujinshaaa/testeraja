@@ -892,9 +892,8 @@ button:active{ transform:translateY(0) scale(.99); }
 
 /* ─────────────────────────────────────────────────────────────
  * BLOK 18 — POPUP (CLEAN + RAPI)
- *  ✅ hapus logo lingkaran + 2026
- *  ✅ jarak antar card & button lebih rapi
- *  ✅ hapus label keterangan (claimHint)
+ *  ✅ "SELAMAT!" + "Anda Mendapatkan Hadiah"
+ *  ✅ hilangkan label "PRIZE"
  * ─────────────────────────────────────────────────────────── */
 #popup{
   position:fixed;
@@ -979,21 +978,30 @@ button:active{ transform:translateY(0) scale(.99); }
   position:relative;
   z-index:2;
   margin:2px 0 10px;
-  font-size: clamp(20px, 3.9vw, 28px);
-  font-weight: 1000;
-  letter-spacing:.2px;
   text-shadow:
     0 12px 26px rgba(0,0,0,.42),
     0 0 18px rgba(255,228,166,.10);
 }
+.rewardText .t1{
+  font-size: clamp(22px, 4.2vw, 30px);
+  font-weight: 1000;
+  letter-spacing:.25px;
+  margin:0;
+}
+.rewardText .t2{
+  margin:6px 0 0;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing:.35px;
+  opacity:.90;
+}
+
 .rewardPrize{
   position:relative;
   z-index:2;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
+  display:block;
   margin:0 auto 12px;
-  padding:10px 14px;
+  padding:12px 14px;
   border-radius:16px;
   border:1px solid rgba(255,228,166,.42);
   background:
@@ -1005,17 +1013,8 @@ button:active{ transform:translateY(0) scale(.99); }
   color:rgba(255,246,224,.98);
   max-width: 100%;
 }
-.rewardPrize .badge{
-  margin-right:10px;
-  font-size:12px;
-  font-weight:950;
-  letter-spacing:.12em;
-  color:rgba(255,228,166,.98);
-  opacity:.92;
-  text-transform:uppercase;
-}
 .rewardPrize .val{
-  font-size:clamp(14px, 3.2vw, 18px);
+  font-size:clamp(15px, 3.4vw, 19px);
   line-height:1.15;
   text-shadow:0 10px 22px rgba(0,0,0,.32);
   word-break:break-word;
@@ -1078,7 +1077,7 @@ button:active{ transform:translateY(0) scale(.99); }
 }
 
 /* ─────────────────────────────────────────────────────────────
- * BLOK 18B — OVERLAY: LIST 5 HADIAH (FIRST OPEN)
+ * BLOK 18B — OVERLAY HADIAH (GRID 4 PNG)
  * ─────────────────────────────────────────────────────────── */
 #prizeOverlay{
   position:fixed;
@@ -1087,143 +1086,160 @@ button:active{ transform:translateY(0) scale(.99); }
   align-items:center;
   justify-content:center;
   z-index:30;
+
   background:
-    radial-gradient(1000px 720px at 50% 24%, rgba(255,228,166,.11), transparent 62%),
-    radial-gradient(980px 620px at 20% 18%, rgba(255,120,70,.08), transparent 62%),
-    radial-gradient(980px 620px at 80% 18%, rgba(255,120,70,.08), transparent 62%),
-    var(--ovBg);
-  padding:18px;
-  backdrop-filter: blur(var(--ovBlur)) saturate(1.08);
-  -webkit-backdrop-filter: blur(var(--ovBlur)) saturate(1.08);
+    radial-gradient(900px 640px at 50% 22%, rgba(255,228,166,.10), transparent 62%),
+    rgba(0,0,0,.44);
+
+  padding:max(14px, calc(var(--safe-top) + 10px)) 14px calc(14px + var(--safe-bot));
+  backdrop-filter: blur(6px) saturate(1.05);
+  -webkit-backdrop-filter: blur(6px) saturate(1.05);
   animation: popFade .22s var(--ease2) both;
 }
-.prizeCard{
-  width:min(640px, 94vw);
-  border-radius: calc(var(--radius) + 2px);
+
+.prizeMiniCard{
+  width:min(520px, 92vw);
+  border-radius:22px;
   position:relative;
-  padding:22px 18px 16px;
+  padding:16px 14px 12px;
+  text-align:center;
+
   background:
-    radial-gradient(860px 520px at 50% 18%, rgba(255,255,255,.14), transparent 60%),
-    radial-gradient(460px 240px at 50% 0%, rgba(255,228,166,.18), transparent 72%),
-    linear-gradient(180deg, rgba(255,214,126,.16), rgba(255,214,126,.04)),
-    linear-gradient(180deg, rgba(90,11,20,.95), rgba(22,4,10,.98));
+    radial-gradient(760px 420px at 50% 18%, rgba(255,255,255,.14), transparent 62%),
+    linear-gradient(180deg, rgba(255,214,126,.14), rgba(255,214,126,.04)),
+    linear-gradient(180deg, rgba(90,11,20,.92), rgba(22,4,10,.98));
+
   border:1px solid rgba(255,228,166,.44);
   box-shadow:
-    0 30px 92px rgba(0,0,0,.70),
-    0 12px 34px rgba(0,0,0,.42);
+    0 30px 92px rgba(0,0,0,.62),
+    0 12px 34px rgba(0,0,0,.38);
+
   overflow:hidden;
+  transform: translateZ(0);
   animation: popIn2 .42s var(--ease2) both;
 }
-.prizeCard::before{
+.prizeMiniCard::before{
   content:"";
   position:absolute;
   inset:10px;
-  border-radius: calc(var(--radius) - 6px);
+  border-radius:18px;
   border:2px solid rgba(255,228,166,.70);
   box-shadow:
-    inset 0 0 0 2px rgba(199,154,64,.20),
+    inset 0 0 0 2px rgba(199,154,64,.18),
     inset 0 0 0 1px rgba(255,255,255,.08),
-    0 0 14px rgba(255,228,166,.18);
+    0 0 14px rgba(255,228,166,.16);
   pointer-events:none;
 }
-.prizeHead{
+
+.prizeMiniBody{
   position:relative;
   z-index:2;
   display:grid;
-  gap:6px;
-  text-align:center;
-  padding:2px 6px 12px;
+  justify-items:center;
+  gap:10px;
+  padding:6px 8px 8px;
 }
-.prizeHead .h1{
-  margin:0;
+
+.prizeMiniTitle{
   font-weight:1000;
-  letter-spacing:.4px;
-  font-size:clamp(18px, 2.6vw, 22px);
-  text-shadow:0 12px 24px rgba(0,0,0,.40);
-}
-.prizeHead .h2{
-  margin:0;
+  letter-spacing:.16em;
   font-size:12px;
-  opacity:.86;
-  letter-spacing:.25px;
+  opacity:.92;
+  color:rgba(255,228,166,.95);
+  text-shadow:0 12px 26px rgba(0,0,0,.42);
 }
-.prizeList{
-  position:relative;
-  z-index:2;
+
+.prizeGrid{
+  width:100%;
   display:grid;
-  gap:10px;
-  padding:8px 4px 6px;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:12px;
+  padding:6px 4px 2px;
 }
-.prizeRow{
-  display:grid;
-  grid-template-columns: 54px 1fr;
-  gap:10px;
-  align-items:center;
-  padding:10px 10px;
-  border-radius:16px;
-  border:1px solid rgba(255,228,166,.18);
-  background: rgba(12,2,6,.22);
-}
-.prizeThumb{
-  width:54px;
-  height:54px;
-  border-radius:14px;
-  border:1px solid rgba(255,228,166,.26);
+
+.prizeItem{
+  border-radius:18px;
+  border:1px solid rgba(255,228,166,.22);
   background:
-    radial-gradient(40px 34px at 30% 25%, rgba(255,255,255,.16), transparent 70%),
-    linear-gradient(135deg, rgba(255,228,166,.10), rgba(199,154,64,.06));
+    radial-gradient(240px 150px at 30% 20%, rgba(255,255,255,.12), transparent 70%),
+    rgba(10,2,6,.26);
+  box-shadow: 0 14px 30px rgba(0,0,0,.32);
+  padding:10px 10px 12px;
+  overflow:hidden;
+
+  transform:translateZ(0);
+  transition:transform .16s var(--ease), filter .16s var(--ease), border-color .16s var(--ease);
+}
+@media (hover:hover){
+  .prizeItem:hover{
+    transform:translateY(-2px) scale(1.01);
+    border-color: rgba(255,228,166,.42);
+    filter:brightness(1.03);
+  }
+}
+.prizeItem:active{ transform:translateY(0) scale(.995); }
+
+.prizeThumb{
+  width:100%;
+  aspect-ratio:1/1;
+  border-radius:16px;
+  overflow:hidden;
+  border:1px solid rgba(255,228,166,.18);
+  background:
+    radial-gradient(70px 62px at 32% 26%, rgba(255,255,255,.16), transparent 70%),
+    linear-gradient(135deg, rgba(255,228,166,.08), rgba(199,154,64,.05));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
   display:grid;
   place-items:center;
-  box-shadow: 0 12px 26px rgba(0,0,0,.24);
-  overflow:hidden;
 }
 .prizeThumb img{
   width:100%;
   height:100%;
   object-fit:cover;
   display:block;
-  opacity:.95;
+  opacity:.96;
 }
-.prizeMeta{
-  display:grid;
-  gap:8px;
+
+.prizeName{
+  margin-top:10px;
+  font-weight:1000;
+  letter-spacing:.35px;
+  font-size:12px;
+  color:rgba(255,246,224,.98);
+  text-shadow:0 12px 26px rgba(0,0,0,.42);
+  line-height:1.15;
+  min-height: 28px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 0 4px;
+  word-break:break-word;
 }
-.prizeMeta .lab{
+
+.prizeMiniHint{
+  margin:2px 0 0;
   font-size:11px;
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  opacity:.76;
+  opacity:.78;
+  letter-spacing:.25px;
+  line-height:1.35;
+  max-width: 420px;
 }
-.prizeMeta input{
-  padding:12px 12px;
-  border-radius:14px;
-}
-.prizeMeta .two{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:10px;
-}
-@media (max-width:520px){
-  .prizeMeta .two{ grid-template-columns:1fr; }
-  .prizeRow{ grid-template-columns: 50px 1fr; }
-  .prizeThumb{ width:50px; height:50px; border-radius:13px; }
-}
-.prizeFooter{
+
+.prizeMiniBtns{
   position:relative;
   z-index:2;
   display:grid;
   gap:10px;
   justify-items:center;
-  margin-top:12px;
-  padding-top:6px;
+  padding: 6px 8px 10px;
 }
-.prizeFooter .note{
-  font-size:11px;
-  opacity:.78;
-  letter-spacing:.2px;
-  text-align:center;
-  line-height:1.35;
-  max-width: 560px;
+
+@media (max-width:420px){
+  .prizeMiniCard{ width:min(460px, 92vw); }
+  .prizeGrid{ gap:10px; }
+  .prizeItem{ padding:9px 9px 11px; border-radius:16px; }
+  .prizeThumb{ border-radius:14px; }
+  .prizeName{ font-size:11px; min-height: 26px; }
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -1321,6 +1337,7 @@ button:active{ transform:translateY(0) scale(.99); }
   .lanternWrap.l2, .lanternWrap.l3{ --lScale:.82; }
   .popupCard{ padding:24px 14px 16px; }
   .metaRow .v{ max-width: 64%; }
+  .prizeMiniImg{ width:88px; height:88px; border-radius:16px; }
 }
 @media (max-height:650px){
   .cloudPng{ opacity:.90; }
@@ -1480,38 +1497,46 @@ button:active{ transform:translateY(0) scale(.99); }
         <div class="innerPattern"></div>
         <h1 class="title" id="main-title">Pilih Ang Pao Keberuntunganmu!</h1>
         <div class="angpaoGrid" id="angpao-grid" aria-label="Pilih salah satu Ang Pao"></div>
+
+        <div class="btnRow" style="margin-top:12px">
+          <button id="btnShowPrize" class="btnGhost" type="button">HADIAH</button>
+        </div>
+
         <div class="hint" id="main-hint">Klik salah satu Ang Pao</div>
       </div>
 
     </div>
   </div>
 
-  <!-- OVERLAY: 5 HADIAH (first open) -->
-  <div id="prizeOverlay" role="dialog" aria-modal="true" aria-label="Daftar Hadiah">
-    <div class="prizeCard" role="document">
-      <div class="prizeHead">
-        <h2 class="h1">DAFTAR 5 HADIAH</h2>
-        <p class="h2">Isi label hadiah & URL PNG (kamu bisa isi sekarang / nanti). Klik LANJUTKAN untuk masuk game.</p>
-      </div>
+<!-- OVERLAY HADIAH (GRID 4 PNG) -->
+<div id="prizeOverlay" role="dialog" aria-modal="true" aria-label="Daftar Hadiah">
+  <div class="prizeMiniCard" role="document">
+    <div class="prizeMiniBody">
+      <div class="prizeMiniTitle" id="prizeOverlayTitle">HADIAH UTAMA</div>
 
-      <div class="prizeList" id="prizeList"></div>
+      <!-- GRID 4 -->
+      <div class="prizeGrid" id="prizeGrid" aria-label="Grid hadiah"></div>
 
-      <div class="prizeFooter">
-        <button id="btnPrizeContinue" type="button">LANJUTKAN</button>
-        <div class="note">Catatan: ini hanya overlay informasi. Tidak mengubah mekanik hadiah game (pengaturan hadiah tetap dari CONFIG.game).</div>
-      </div>
+      <p class="prizeMiniHint" id="prizeOverlayHint">—</p>
+    </div>
+
+    <div class="prizeMiniBtns">
+      <button id="btnPrizeOk" type="button">OK</button>
     </div>
   </div>
+</div>
 
   <!-- Popup (reward) -->
   <div id="popup" role="dialog" aria-modal="true" aria-label="Hadiah">
     <div class="popupCard" role="document" aria-describedby="reward-text">
       <button class="closeX" id="btnClose" type="button" aria-label="Tutup">&times;</button>
 
-      <div class="rewardText" id="reward-text">Selamat! Anda Mendapatkan Hadiah</div>
+      <div class="rewardText" id="reward-text">
+        <div class="t1">SELAMAT!</div>
+        <div class="t2">Anda Mendapatkan Hadiah</div>
+      </div>
 
       <div class="rewardPrize" aria-label="Detail hadiah">
-        <span class="badge">PRIZE</span>
         <span class="val" id="prize-val">—</span>
       </div>
 
@@ -1580,20 +1605,21 @@ button:active{ transform:translateY(0) scale(.99); }
       angpao:      "https://i.postimg.cc/CxRSkfR6/511.png"
     },
 
-    /* ✅ OVERLAY 5 HADIAH (kamu isi nanti) */
-    prizeOverlay: {
-      enabled: true,
-      showOncePerDevice: true, // true = tampil sekali (localStorage), false = tiap refresh sampai ditutup
-      storageKey: "lap_prize_overlay_seen_v1",
-      items: [
-        { name: "HADIAH 1", img: "" },
-        { name: "HADIAH 2", img: "" },
-        { name: "HADIAH 3", img: "" },
-        { name: "HADIAH 4", img: "" },
-        { name: "HADIAH 5", img: "" }
-      ]
-    },
+prizeIntro: {
+  enabled: true,
+  showOncePerDevice: true,
+  storageKey: "lap_prize_intro_seen_v2",
 
+  // 4 item grid (isi URL PNG kamu)
+  items: [
+    { name: "iPhone 17 Pro Max", img: "https://YOUR-PNG-1.png" },
+    { name: "BONUS IMLEK 10%", img: "https://YOUR-PNG-2.png" },
+    { name: "Uang Tunai Rp 3.000.00", img: "https://YOUR-PNG-3.png" },
+    { name: "Free Chip Rp 200.000", img: "https://YOUR-PNG-4.png" }
+  ],
+
+  hintText: "Hadiah utama event ini. Klik OK untuk lanjut bermain."
+},
     game: {
       envelopes: 9,
       lockAfterPick: true,
@@ -1644,7 +1670,7 @@ button:active{ transform:translateY(0) scale(.99); }
       fadeMs: 420
     },
 
-    // ✅ CLAIM UX (overlay loading seragam)
+    // ✅ CLAIM UX
     claimUX: {
       loadingMs: 1800,
       openInNewTab: true,
@@ -1786,8 +1812,6 @@ button:active{ transform:translateY(0) scale(.99); }
 
     const get = (k) => { try{ return localStorage.getItem(k); }catch{ return null; } };
     const set = (k, v) => { try{ localStorage.setItem(k, v); }catch{} };
-    const del = (k) => { try{ localStorage.removeItem(k); }catch{} };
-
     const getJSON = (k) => {
       const v = get(k);
       if (!v) return null;
@@ -1797,7 +1821,7 @@ button:active{ transform:translateY(0) scale(.99); }
 
     return {
       keys: { kUser, kPlayed, kResult },
-      get, set, del, getJSON, setJSON,
+      get, set, getJSON, setJSON,
       isPlayed(){ return get(kPlayed) === "1"; },
       setPlayed(){ set(kPlayed, "1"); },
       getUser(){ return get(kUser) || ""; },
@@ -1963,7 +1987,6 @@ button:active{ transform:translateY(0) scale(.99); }
     const btnClaim = $("#btnClaim");
     const btnShare = $("#btnShare");
 
-    const rewardText = $("#reward-text");
     const prizeVal   = $("#prize-val");
     const metaUser   = $("#meta-user");
     const metaTime   = $("#meta-time");
@@ -1981,10 +2004,13 @@ button:active{ transform:translateY(0) scale(.99); }
 
     const claimLabel = $("#claimLabel");
 
-    // prize overlay
+    // prize intro overlay
     const prizeOverlay = $("#prizeOverlay");
-    const prizeListEl  = $("#prizeList");
-    const btnPrizeContinue = $("#btnPrizeContinue");
+    const prizeOverlayImg = $("#prizeOverlayImg");
+    const prizeOverlayName = $("#prizeOverlayName");
+    const prizeOverlayHint = $("#prizeOverlayHint");
+    const btnPrizeOk = $("#btnPrizeOk");
+    const btnShowPrize = $("#btnShowPrize");
 
     // claim overlay
     const claimOverlay = $("#claimOverlay");
@@ -2009,6 +2035,8 @@ button:active{ transform:translateY(0) scale(.99); }
     setCSSUrlVar("--angpao-url",       CONFIG.images.angpao);
 
     Object.values(CONFIG.images || {}).forEach(preloadImage);
+    if (CONFIG.prizeIntro?.prizeImg) preloadImage(CONFIG.prizeIntro.prizeImg);
+
     applyMeta();
 
     if (CONFIG.audio.enabled){
@@ -2148,131 +2176,135 @@ button:active{ transform:translateY(0) scale(.99); }
     }, { passive:true });
 
     // =====================================================
-    // PRIZE OVERLAY (FIRST OPEN)
+    // PRIZE INTRO OVERLAY (MINIMAL)
     // =====================================================
-    const PrizeOverlay = (() => {
-      const conf = CONFIG.prizeOverlay || {};
-      const enabled = !!conf.enabled;
+    const PrizeIntro = (() => {
+  const conf = CONFIG.prizeIntro || {};
+  const enabled = !!conf.enabled;
+  const LSKEY = String(conf.storageKey || "lap_prize_intro_seen_v2");
 
-      const LSKEY = String(conf.storageKey || "lap_prize_overlay_seen_v1");
+  const hasSeen = () => {
+    if (!enabled) return true;
+    if (!conf.showOncePerDevice) return false;
+    try{ return localStorage.getItem(LSKEY) === "1"; }catch{ return false; }
+  };
 
-      const hasSeen = () => {
-        if (!enabled) return true;
-        if (!conf.showOncePerDevice) return false;
-        try{ return localStorage.getItem(LSKEY) === "1"; }catch{ return false; }
-      };
+  const setSeen = () => {
+    if (!enabled) return;
+    if (!conf.showOncePerDevice) return;
+    try{ localStorage.setItem(LSKEY, "1"); }catch{}
+  };
 
-      const setSeen = () => {
-        if (!enabled) return;
-        if (!conf.showOncePerDevice) return;
-        try{ localStorage.setItem(LSKEY, "1"); }catch{}
-      };
+  function normalizeItems(){
+    const items = Array.isArray(conf.items) ? conf.items : [];
+    const out = items
+      .map(it => ({
+        name: String(it?.name || "").trim(),
+        img:  String(it?.img  || "").trim()
+      }))
+      .filter(it => it.name || it.img);
 
-      function build(){
-        if (!enabled || !prizeOverlay || !prizeListEl) return;
+    // pastikan 4 slot (kalau kurang, isi placeholder ringan)
+    while (out.length < 4){
+      out.push({ name: "Hadiah", img: "" });
+    }
+    return out.slice(0, 4);
+  }
 
-        const items = Array.isArray(conf.items) ? conf.items.slice(0, 5) : [];
-        while (items.length < 5) items.push({ name:`HADIAH ${items.length+1}`, img:"" });
+  function hydrate(){
+    if (!enabled) return;
 
-        const frag = document.createDocumentFragment();
+    const hint = String(conf.hintText || "").trim() || "Hadiah utama event ini. Klik OK untuk lanjut bermain.";
+    if (prizeOverlayHint) prizeOverlayHint.textContent = hint;
 
-        items.forEach((it, idx) => {
-          const row = document.createElement("div");
-          row.className = "prizeRow";
+    const items = normalizeItems();
 
-          const thumb = document.createElement("div");
-          thumb.className = "prizeThumb";
-          const img = document.createElement("img");
-          img.alt = `Hadiah ${idx+1}`;
-          img.loading = "lazy";
-          img.decoding = "async";
-          img.src = it.img ? String(it.img) : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cdefs%3E%3CradialGradient id='g' cx='.35' cy='.28' r='.9'%3E%3Cstop offset='0' stop-color='%23fff6df' stop-opacity='.22'/%3E%3Cstop offset='1' stop-color='%23c79a40' stop-opacity='.04'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='120' height='120' rx='22' fill='url(%23g)'/%3E%3Cpath d='M28 78l16-18 14 12 20-26 14 32H28Z' fill='rgba(255,228,166,.22)'/%3E%3Ccircle cx='44' cy='44' r='10' fill='rgba(255,228,166,.18)'/%3E%3C/svg%3E";
-          thumb.appendChild(img);
+    // preload
+    for (const it of items){
+      if (it.img && /^https?:\/\//i.test(it.img)) preloadImage(it.img);
+    }
 
-          const meta = document.createElement("div");
-          meta.className = "prizeMeta";
+    if (!prizeGrid) return;
+    prizeGrid.innerHTML = "";
 
-          const lab = document.createElement("div");
-          lab.className = "lab";
-          lab.textContent = `Hadiah ${idx+1}`;
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < 4; i++){
+      const it = items[i];
 
-          const two = document.createElement("div");
-          two.className = "two";
+      const card = document.createElement("div");
+      card.className = "prizeItem";
+      card.setAttribute("role", "group");
+      card.setAttribute("aria-label", it.name ? `Hadiah ${it.name}` : `Hadiah ${i+1}`);
 
-          const inName = document.createElement("input");
-          inName.type = "text";
-          inName.autocomplete = "off";
-          inName.spellcheck = false;
-          inName.placeholder = "Label Hadiah (contoh: BONUS 20%)";
-          inName.value = it.name ? String(it.name) : "";
-          inName.dataset.kind = "name";
-          inName.dataset.index = String(idx);
+      const thumb = document.createElement("div");
+      thumb.className = "prizeThumb";
 
-          const inImg = document.createElement("input");
-          inImg.type = "url";
-          inImg.autocomplete = "off";
-          inImg.spellcheck = false;
-          inImg.placeholder = "URL PNG Hadiah (isi nanti)";
-          inImg.value = it.img ? String(it.img) : "";
-          inImg.dataset.kind = "img";
-          inImg.dataset.index = String(idx);
+      const img = document.createElement("img");
+      img.alt = it.name ? it.name : `Hadiah ${i+1}`;
+      img.decoding = "async";
+      img.loading = "eager";
 
-          inImg.addEventListener("input", () => {
-            const url = String(inImg.value || "").trim();
-            if (url && /^https?:\/\//i.test(url)){
-              img.src = url;
-            }
-          }, { passive:true });
-
-          two.appendChild(inName);
-          two.appendChild(inImg);
-
-          meta.appendChild(lab);
-          meta.appendChild(two);
-
-          row.appendChild(thumb);
-          row.appendChild(meta);
-
-          frag.appendChild(row);
-        });
-
-        prizeListEl.innerHTML = "";
-        prizeListEl.appendChild(frag);
+      if (it.img && /^https?:\/\//i.test(it.img)){
+        img.src = it.img;
+      } else {
+        // placeholder ringan (no external)
+        img.src =
+          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cdefs%3E%3CradialGradient id='g' cx='.35' cy='.28' r='.9'%3E%3Cstop offset='0' stop-color='%23fff6df' stop-opacity='.20'/%3E%3Cstop offset='1' stop-color='%23c79a40' stop-opacity='.05'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='160' height='160' rx='26' fill='url(%23g)'/%3E%3Cpath d='M34 104l24-28 18 16 30-38 22 50H34Z' fill='rgba(255,228,166,.18)'/%3E%3Ccircle cx='56' cy='54' r='14' fill='rgba(255,228,166,.14)'/%3E%3C/svg%3E";
       }
 
-      function open(){
-        if (!enabled || !prizeOverlay) return;
-        prizeOverlay.style.display = "flex";
-        document.body.classList.add("modal-open");
+      const name = document.createElement("div");
+      name.className = "prizeName";
+      name.textContent = it.name || `Hadiah ${i+1}`;
+
+      thumb.appendChild(img);
+      card.appendChild(thumb);
+      card.appendChild(name);
+      frag.appendChild(card);
+    }
+
+    prizeGrid.appendChild(frag);
+  }
+
+  function open(){
+    if (!enabled || !prizeOverlay) return;
+    hydrate();
+    prizeOverlay.style.display = "flex";
+    document.body.classList.add("modal-open");
+  }
+
+  function close(){
+    if (!enabled || !prizeOverlay) return;
+    prizeOverlay.style.display = "none";
+    document.body.classList.remove("modal-open");
+  }
+
+  function init(){
+    if (!enabled) return;
+
+    hydrate();
+
+    btnPrizeOk?.addEventListener("click", () => {
+      setSeen();
+      close();
+    });
+
+    prizeOverlay?.addEventListener("click", (e) => {
+      if (e.target === prizeOverlay){
+        setSeen();
+        close();
       }
+    });
 
-      function close(){
-        if (!enabled || !prizeOverlay) return;
-        prizeOverlay.style.display = "none";
-        document.body.classList.remove("modal-open");
-      }
+    btnShowPrize?.addEventListener("click", () => open());
+  }
 
-      function init(){
-        if (!enabled) return;
-        build();
-        if (!hasSeen()){
-          open();
-        }
-        btnPrizeContinue?.addEventListener("click", () => {
-          setSeen();
-          close();
-        });
-        prizeOverlay?.addEventListener("click", (e) => {
-          if (e.target === prizeOverlay){
-            setSeen();
-            close();
-          }
-        });
-      }
+  function maybeShowOnce(){
+    if (!enabled) return;
+    if (!hasSeen()) open();
+  }
 
-      return { init };
-    })();
-
+  return { init, maybeShowOnce, open };
+})();
     // =====================================================
     // CLAIM OVERLAY
     // =====================================================
@@ -2321,7 +2353,6 @@ button:active{ transform:translateY(0) scale(.99); }
     }
 
     function fillPopupMeta({ username, prize, ts }){
-      if (rewardText) rewardText.textContent = "Selamat! Anda Mendapatkan Hadiah";
       if (prizeVal) prizeVal.textContent = escapeText(prize || "—") || "—";
       if (metaUser) metaUser.textContent = escapeText(username || "—") || "—";
       if (metaTime) metaTime.textContent = fmtTime(ts || Date.now());
@@ -2377,6 +2408,9 @@ button:active{ transform:translateY(0) scale(.99); }
       if (mainMenu)  mainMenu.style.display  = "block";
       showErr("");
       AudioEngine.ensureBg?.();
+
+      // ✅ tampilkan overlay hadiah (sekali, jika enabled)
+      PrizeIntro.maybeShowOnce?.();
     }
 
     function lockUsernameUI(u){
@@ -2388,7 +2422,6 @@ button:active{ transform:translateY(0) scale(.99); }
     }
 
     function resetSession(){
-      if (rewardText) rewardText.textContent = "";
       if (statusNote) statusNote.textContent = "";
       pickedIndex = -1;
       pickedPrize = "";
@@ -2399,6 +2432,8 @@ button:active{ transform:translateY(0) scale(.99); }
     // INIT RESTORE
     // =====================================================
     (function initRestore(){
+      PrizeIntro.init?.();
+
       if (CONFIG.site.requireUsername && CONFIG.game.oneUsernamePerDevice){
         const savedU = escapeText(STORE.getUser());
         if (savedU) lockUsernameUI(savedU);
@@ -2428,6 +2463,9 @@ button:active{ transform:translateY(0) scale(.99); }
           showErr("Kesempatan bermain telah digunakan.");
           if (btnStart) btnStart.disabled = true;
         }
+      } else {
+        // jika belum pernah main, tidak auto tampil overlay di login
+        // overlay muncul saat masuk main (gotoMain)
       }
     })();
 
@@ -2608,6 +2646,17 @@ button:active{ transform:translateY(0) scale(.99); }
     popup?.addEventListener("click", (e) => { if (e.target === popup) closePopup(); });
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && popup && popup.style.display === "flex") closePopup();
+      if (e.key === "Escape" && prizeOverlay && prizeOverlay.style.display === "flex"){
+        // ESC juga boleh tutup overlay hadiah, tapi tetap tandai "seen"
+        try{
+          const conf = CONFIG.prizeIntro || {};
+          if (conf.enabled && conf.showOncePerDevice){
+            localStorage.setItem(String(conf.storageKey || "lap_prize_intro_seen_v1"), "1");
+          }
+        }catch{}
+        prizeOverlay.style.display = "none";
+        document.body.classList.remove("modal-open");
+      }
     });
 
     // =====================================================
@@ -2674,7 +2723,6 @@ button:active{ transform:translateY(0) scale(.99); }
 
         const openNew = !!CONFIG.claimUX.openInNewTab;
 
-        // tutup overlay sedikit lebih cepat biar UI terasa “kliknya masuk”
         await sleep(220);
         showClaimOverlay(false);
         setClaimLoading(false);
@@ -2733,11 +2781,6 @@ button:active{ transform:translateY(0) scale(.99); }
         if (statusNote) statusNote.textContent = "Share dibatalkan.";
       }
     });
-
-    // =====================================================
-    // INIT
-    // =====================================================
-    PrizeOverlay.init();
   });
 })();
 </script>
