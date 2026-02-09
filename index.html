@@ -891,12 +891,12 @@ button:active{ transform:translateY(0) scale(.99); }
 }
 
 /* ─────────────────────────────────────────────────────────────
- * BLOK 18 — POPUP (CLEAN + RAPI)
- *  ✅ "SELAMAT!" + "Anda Mendapatkan Hadiah"
- *  ✅ hilangkan label "PRIZE"
- *  ✅ isi tidak mepet border emas (padding & spacing diperbaiki)
- *  ✅ prize bar support thumbnail PNG + teks
+ * BLOK 18 — POPUP (CLEAN • RAPI • PREMIUM)
+ *  ✅ Prize: no double layer + sheen clipped rapi
+ *  ✅ Meta rows: lebih masuk + sejajar + lega
  * ─────────────────────────────────────────────────────────── */
+
+/* overlay */
 #popup{
   position:fixed;
   inset:0;
@@ -906,7 +906,8 @@ button:active{ transform:translateY(0) scale(.99); }
   z-index:20;
 
   background:
-    radial-gradient(900px 600px at 50% 20%, rgba(255,228,166,.10), transparent 60%),
+    radial-gradient(900px 600px at 50% 18%, rgba(255,228,166,.11), transparent 60%),
+    radial-gradient(760px 520px at 50% 92%, rgba(255,58,68,.06), transparent 62%),
     var(--ovBg);
 
   padding:18px;
@@ -917,18 +918,18 @@ button:active{ transform:translateY(0) scale(.99); }
 }
 @keyframes popFade{ from{ opacity:0; } to{ opacity:1; } }
 
+/* card */
 .popupCard{
   width:min(520px,92vw);
   border-radius: calc(var(--radius) + 2px);
   position:relative;
   text-align:center;
 
-  /* ✅ lebih lega dari border emas */
-  padding:28px 22px 22px;
+  padding:28px 18px 18px;
 
   background:
-    radial-gradient(820px 520px at 50% 22%, rgba(255,255,255,.14), transparent 58%),
-    radial-gradient(420px 240px at 50% 0%, rgba(255,228,166,.18), transparent 72%),
+    radial-gradient(860px 560px at 50% 18%, rgba(255,255,255,.14), transparent 58%),
+    radial-gradient(440px 250px at 50% 0%, rgba(255,228,166,.18), transparent 72%),
     linear-gradient(180deg, rgba(255,214,126,.16), rgba(255,214,126,.04)),
     linear-gradient(180deg, rgba(90,11,20,.95), rgba(22,4,10,.98));
 
@@ -943,14 +944,12 @@ button:active{ transform:translateY(0) scale(.99); }
 
   animation: popIn2 .42s var(--ease2) both;
 }
-@media (max-width:420px){
-  .popupCard{ padding:26px 18px 18px; }
-}
-
 @keyframes popIn2{
   from{ opacity:0; transform:translateY(22px) scale(.92); }
   to{ opacity:1; transform:translateY(0) scale(1); }
 }
+
+/* inner frame */
 .popupCard::before{
   content:"";
   position:absolute;
@@ -963,6 +962,8 @@ button:active{ transform:translateY(0) scale(.99); }
     0 0 14px rgba(255,228,166,.18);
   pointer-events:none;
 }
+
+/* top glass sweep */
 .popupCard::after{
   content:"";
   position:absolute;
@@ -971,23 +972,21 @@ button:active{ transform:translateY(0) scale(.99); }
   pointer-events:none;
 
   background:
-    radial-gradient(240px 170px at 18% 12%, rgba(255,255,255,.16), transparent 70%),
-    radial-gradient(240px 170px at 82% 12%, rgba(255,255,255,.12), transparent 72%),
-    linear-gradient(180deg, rgba(0,0,0,.14), transparent 26%),
-    linear-gradient(120deg, transparent 0 35%, rgba(255,255,255,.06) 48%, transparent 62%);
+    radial-gradient(260px 180px at 18% 10%, rgba(255,255,255,.16), transparent 72%),
+    radial-gradient(260px 180px at 82% 10%, rgba(255,255,255,.12), transparent 74%),
+    linear-gradient(180deg, rgba(0,0,0,.14), transparent 28%),
+    linear-gradient(120deg, transparent 0 38%, rgba(255,255,255,.06) 50%, transparent 64%);
 
   opacity:.92;
 }
 
 .closeX{ display:none !important; }
 
-/* ─────────────────────────────
- * HEADER TEXT
- * ─────────────────────────── */
+/* titles */
 .rewardText{
   position:relative;
   z-index:2;
-  margin:2px 0 14px; /* ✅ lebih lega */
+  margin:2px 0 12px;
   text-shadow:
     0 12px 26px rgba(0,0,0,.42),
     0 0 18px rgba(255,228,166,.10);
@@ -1006,97 +1005,160 @@ button:active{ transform:translateY(0) scale(.99); }
   opacity:.90;
 }
 
-/* ─────────────────────────────
- * PRIZE BAR (PNG + LABEL)
- * ─────────────────────────── */
+/* ───────── Prize box (lebih kecil + sheen anti bocor) ───────── */
 .rewardPrize{
   position:relative;
   z-index:2;
 
   display:grid;
-  grid-template-columns: 56px 1fr;
-  gap:14px;
+  grid-template-columns: 48px 1fr; /* ✅ kecilkan kolom kiri */
+  gap:10px;
   align-items:center;
 
-  /* ✅ tidak mepet border emas */
-  margin: 6px auto 16px;
-  padding: 14px 14px;
-  border-radius:20px;
+  margin:0 auto 12px;
+  width:100%;
+  max-width:100%;
 
-  border:1px solid rgba(255,228,166,.42);
+  /* ✅ lebih ramping */
+  padding:12px 12px;
+  border-radius:16px;
+
+  border:1px solid rgba(255,228,166,.34);
   background:
-    radial-gradient(420px 220px at 50% 0%, rgba(255,228,166,.18), transparent 70%),
-    rgba(8,2,6,.32);
-  box-shadow: 0 18px 40px rgba(0,0,0,.36);
+    radial-gradient(520px 260px at 50% 0%, rgba(255,228,166,.14), transparent 72%),
+    radial-gradient(260px 170px at 18% 14%, rgba(255,255,255,.06), transparent 70%),
+    linear-gradient(180deg, rgba(12,2,6,.34), rgba(8,2,6,.22));
 
-  max-width: 100%;
+  box-shadow:
+    0 16px 38px rgba(0,0,0,.38),
+    inset 0 1px 0 rgba(255,255,255,.05);
+
+  /* ✅ anti-bocor */
+  overflow:hidden;
+  isolation:isolate;
+  transform: translateZ(0);
+
+  /* ✅ clip presisi (paling ampuh buat kasus bocor kanan-atas) */
+  clip-path: inset(0 round 16px);
+  -webkit-clip-path: inset(0 round 16px);
 }
 
-.rewardThumb{
-  width:56px;
-  height:56px;
-  border-radius:18px;
-  border:1px solid rgba(255,228,166,.26);
+/* sheen (lebih “masuk” & ke-clip rapat) */
+.rewardPrize::after{
+  content:"";
+  position:absolute;
+
+  /* ✅ jangan terlalu keluar biar tidak nyenggol tepi */
+  inset:-34% -44%;
+  pointer-events:none;
+
   background:
-    radial-gradient(40px 34px at 30% 25%, rgba(255,255,255,.16), transparent 70%),
-    linear-gradient(135deg, rgba(255,228,166,.10), rgba(199,154,64,.06));
+    linear-gradient(115deg,
+      transparent 0 47%,
+      rgba(255,255,255,0) 49%,
+      rgba(255,255,255,.13) 52%,
+      rgba(255,228,166,.09) 56%,
+      rgba(255,255,255,0) 60%,
+      transparent 0),
+    radial-gradient(420px 220px at 50% 0%, rgba(255,228,166,.09), transparent 70%);
+
+  mix-blend-mode: screen;
+  opacity:.78;
+
+  border-radius: inherit;
+
+  /* ✅ mask tambahan supaya sheen “ketahan” di dalam shape (iOS friendly) */
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  mask-image: radial-gradient(white, black);
+
+  transform: translate3d(-16%, 10%, 0) rotate(-6deg);
+  animation: prizeSheen 4.4s var(--ease2) infinite;
+}
+
+@keyframes prizeSheen{
+  0%   { transform: translate3d(-20%, 12%, 0) rotate(-6deg); opacity:.58; }
+  45%  { opacity:.86; }
+  100% { transform: translate3d(18%, -10%, 0) rotate(-6deg); opacity:.58; }
+}
+
+/* thumb kecil & rapi */
+.rewardThumb{
+  width:48px;
+  height:48px;
+  border-radius:14px;
+  border:1px solid rgba(255,228,166,.22);
+
+  background:
+    radial-gradient(40px 34px at 30% 22%, rgba(255,255,255,.14), transparent 70%),
+    linear-gradient(135deg, rgba(255,228,166,.10), rgba(199,154,64,.05));
+
   display:grid;
   place-items:center;
-  box-shadow: 0 12px 26px rgba(0,0,0,.24);
+  box-shadow: 0 10px 22px rgba(0,0,0,.22);
   overflow:hidden;
+  position:relative;
+  transform: translateZ(0);
 }
-
+.rewardThumb::after{
+  content:"";
+  position:absolute;
+  inset:-12%;
+  pointer-events:none;
+  background: linear-gradient(120deg, transparent 0 46%, rgba(255,255,255,.10) 54%, transparent 64%);
+  opacity:.48;
+}
 .rewardThumb img{
   width:100%;
   height:100%;
   object-fit:cover;
   display:block;
   opacity:.96;
-  transform:translateZ(0);
 }
 
-.rewardValWrap{
-  min-width:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-}
-
+/* prize value */
+.rewardValWrap{ min-width:0; }
 .rewardValWrap .val{
-  font-size:clamp(15px, 3.4vw, 19px);
-  line-height:1.12;
+  font-size:clamp(14px, 3.2vw, 18px);
+  line-height:1.18;
   font-weight:1000;
-  letter-spacing:.5px;
+  letter-spacing:.45px;
   color:rgba(255,246,224,.98);
-  text-shadow:0 10px 22px rgba(0,0,0,.32);
+  text-shadow:
+    0 10px 22px rgba(0,0,0,.32),
+    0 0 12px rgba(255,228,166,.08);
   word-break:break-word;
 }
 
-/* ─────────────────────────────
- * META ROWS (USER / WAKTU)
- * ─────────────────────────── */
+/* ───────── Status rows (lebih masuk & rapi) ───────── */
 .popMeta{
   position:relative;
   z-index:2;
 
-  /* ✅ lebih lega dari border emas */
-  margin: 10px 0 18px;
+  /* semua row masuk ke dalam */
+  margin: 10px auto 14px;
+  padding: 0 6px;
+
   display:grid;
-  gap:12px;
+  gap:10px;
 }
+
 .metaRow{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:12px;
+  gap:10px;
 
-  /* ✅ padding lebih besar biar ga mepet */
-  padding:13px 14px;
+  width:100%;
+  padding:12px 12px;
   border-radius:16px;
 
-  border:1px solid rgba(255,228,166,.20);
-  background: rgba(12,2,6,.22);
+  border:1px solid rgba(255,228,166,.16);
+  background:
+    radial-gradient(320px 160px at 20% 0%, rgba(255,228,166,.07), transparent 70%),
+    rgba(12,2,6,.22);
+
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+  overflow:hidden;
 }
 .metaRow .k{
   font-size:11px;
@@ -1110,34 +1172,37 @@ button:active{ transform:translateY(0) scale(.99); }
   letter-spacing:.25px;
   color:rgba(255,228,166,.98);
   text-align:right;
-
   max-width: 70%;
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
-
-  /* ✅ biar tidak nempel */
-  padding-left:10px;
 }
 
-/* ✅ status note tetap ada */
+/* status note */
 .statusNote{
   position:relative;
   z-index:2;
-  margin:8px 0 0;
+  margin:10px 0 0;
   font-size:12px;
   opacity:.88;
   min-height:16px;
 }
 
+/* buttons wrap */
 .popupBtns{
   position:relative;
   z-index:2;
   display:grid;
   gap:12px;
   justify-items:center;
-  margin-top:16px;
+  margin-top:14px;
   padding-top:2px;
+}
+
+/* motion safety */
+@media (prefers-reduced-motion: reduce){
+  .popupCard{ animation:none; }
+  .rewardPrize::after{ animation:none; opacity:.70; }
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -1605,7 +1670,7 @@ button:active{ transform:translateY(0) scale(.99); }
       <button class="closeX" id="btnClose" type="button" aria-label="Tutup">&times;</button>
 
       <div class="rewardText" id="reward-text">
-        <div class="t1">SELAMAT!</div>
+        <div class="t1">SELAMAT</div>
         <div class="t2">Anda Mendapatkan Hadiah</div>
       </div>
 
@@ -1820,19 +1885,18 @@ prizeIntro: {
     return pool[pool.length - 1].label;
   }
 
-function fmtTime(ts){
+function fmtTime(ts = Date.now(), tz = "Asia/Jakarta"){
   try{
-    const d = new Date(ts || Date.now());
-
-    // ✅ contoh: "Senin, 09 Februari 2026 • 21.47.28"
-    const hari = d.toLocaleDateString("id-ID", { weekday:"long" });
-    const tanggal = d.toLocaleDateString("id-ID", { day:"2-digit", month:"long", year:"numeric" });
-    const jam = d.toLocaleTimeString("id-ID", { hour:"2-digit", minute:"2-digit", second:"2-digit" }).replace(/:/g,".");
-
-    return `${hari}, ${tanggal} • ${jam}`;
-  }catch{
-    return String(ts || "");
-  }
+    const d = ts instanceof Date ? ts : new Date(ts);
+    if (isNaN(d)) return "";
+    const date = new Intl.DateTimeFormat("id-ID", {
+      day:"2-digit", month:"2-digit", year:"numeric", timeZone: tz
+    }).format(d).replace(/\./g, "/");
+    const time = new Intl.DateTimeFormat("id-ID", {
+      hour:"2-digit", minute:"2-digit", hour12:false, timeZone: tz
+    }).format(d).replace(/:/g, ".");
+    return `${date} • ${time}`;
+  } catch { return ""; }
 }
   async function apiFetch(path, body){
     const base = (CONFIG.site.baseUrl || "").replace(/\/+$/,"");
