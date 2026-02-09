@@ -1207,14 +1207,23 @@ button:active{ transform:translateY(0) scale(.99); }
   font-size:12px;
   color:rgba(255,246,224,.98);
   text-shadow:0 12px 26px rgba(0,0,0,.42);
-  line-height:1.15;
-  min-height: 28px;
+
+  line-height:1.12;
+  min-height: 30px;
+
   display:flex;
   align-items:center;
   justify-content:center;
+  flex-direction:column;
+
   padding: 0 4px;
+
+  /* biar rapi & konsisten */
+  text-align:center;
+  white-space:normal;
   word-break:break-word;
 }
+.prizeName br{ display:block; content:""; }
 
 .prizeMiniHint{
   margin:2px 0 0;
@@ -1661,7 +1670,7 @@ prizeIntro: {
     // ✅ AUDIO
     audio: {
       enabled: true,
-      bgUrl:   "",
+      bgUrl:   "https://s19.aconvert.com/convert/p3r68-cdx67/pnilp-nw2w7.mp3",
       winUrl:  "",
       clickUrl:"",
       volumeBg: 0.55,
@@ -2252,9 +2261,33 @@ prizeIntro: {
           "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cdefs%3E%3CradialGradient id='g' cx='.35' cy='.28' r='.9'%3E%3Cstop offset='0' stop-color='%23fff6df' stop-opacity='.20'/%3E%3Cstop offset='1' stop-color='%23c79a40' stop-opacity='.05'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='160' height='160' rx='26' fill='url(%23g)'/%3E%3Cpath d='M34 104l24-28 18 16 30-38 22 50H34Z' fill='rgba(255,228,166,.18)'/%3E%3Ccircle cx='56' cy='54' r='14' fill='rgba(255,228,166,.14)'/%3E%3C/svg%3E";
       }
 
-      const name = document.createElement("div");
-      name.className = "prizeName";
-      name.textContent = it.name || `Hadiah ${i+1}`;
+function escHtml(s){
+  return String(s ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#39;");
+}
+
+function twoLineLabel(label){
+  const t = String(label || "").replace(/\s+/g, " ").trim();
+  if (!t) return { a:"Hadiah", b:"" };
+
+  const parts = t.split(" ");
+  if (parts.length <= 2){
+    return { a: parts.join(" "), b: "" };
+  }
+  return {
+    a: parts.slice(0, 2).join(" "),
+    b: parts.slice(2).join(" ")
+  };
+}
+
+const name = document.createElement("div");
+name.className = "prizeName";
+const L = twoLineLabel(it.name || `Hadiah ${i+1}`);
+name.innerHTML = L.b ? `${escHtml(L.a)}<br>${escHtml(L.b)}` : escHtml(L.a);
 
       thumb.appendChild(img);
       card.appendChild(thumb);
