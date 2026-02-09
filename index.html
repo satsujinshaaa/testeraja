@@ -894,6 +894,8 @@ button:active{ transform:translateY(0) scale(.99); }
  * BLOK 18 — POPUP (CLEAN + RAPI)
  *  ✅ "SELAMAT!" + "Anda Mendapatkan Hadiah"
  *  ✅ hilangkan label "PRIZE"
+ *  ✅ isi tidak mepet border emas (padding & spacing diperbaiki)
+ *  ✅ prize bar support thumbnail PNG + teks
  * ─────────────────────────────────────────────────────────── */
 #popup{
   position:fixed;
@@ -916,12 +918,13 @@ button:active{ transform:translateY(0) scale(.99); }
 @keyframes popFade{ from{ opacity:0; } to{ opacity:1; } }
 
 .popupCard{
-  width:min(500px,92vw);
+  width:min(520px,92vw);
   border-radius: calc(var(--radius) + 2px);
   position:relative;
   text-align:center;
 
-  padding:26px 18px 18px;
+  /* ✅ lebih lega dari border emas */
+  padding:28px 22px 22px;
 
   background:
     radial-gradient(820px 520px at 50% 22%, rgba(255,255,255,.14), transparent 58%),
@@ -940,6 +943,10 @@ button:active{ transform:translateY(0) scale(.99); }
 
   animation: popIn2 .42s var(--ease2) both;
 }
+@media (max-width:420px){
+  .popupCard{ padding:26px 18px 18px; }
+}
+
 @keyframes popIn2{
   from{ opacity:0; transform:translateY(22px) scale(.92); }
   to{ opacity:1; transform:translateY(0) scale(1); }
@@ -974,10 +981,13 @@ button:active{ transform:translateY(0) scale(.99); }
 
 .closeX{ display:none !important; }
 
+/* ─────────────────────────────
+ * HEADER TEXT
+ * ─────────────────────────── */
 .rewardText{
   position:relative;
   z-index:2;
-  margin:2px 0 10px;
+  margin:2px 0 14px; /* ✅ lebih lega */
   text-shadow:
     0 12px 26px rgba(0,0,0,.42),
     0 0 18px rgba(255,228,166,.10);
@@ -996,53 +1006,36 @@ button:active{ transform:translateY(0) scale(.99); }
   opacity:.90;
 }
 
+/* ─────────────────────────────
+ * PRIZE BAR (PNG + LABEL)
+ * ─────────────────────────── */
 .rewardPrize{
   position:relative;
   z-index:2;
-  display:block;
-  margin:0 auto 12px;
-  padding:12px 14px;
-  border-radius:16px;
-  border:1px solid rgba(255,228,166,.42);
-  background:
-    radial-gradient(420px 220px at 50% 0%, rgba(255,228,166,.18), transparent 70%),
-    rgba(8,2,6,.32);
-  box-shadow: 0 18px 40px rgba(0,0,0,.36);
-  font-weight:1000;
-  letter-spacing:.5px;
-  color:rgba(255,246,224,.98);
-  max-width: 100%;
-}
-.rewardPrize .val{
-  font-size:clamp(15px, 3.4vw, 19px);
-  line-height:1.15;
-  text-shadow:0 10px 22px rgba(0,0,0,.32);
-  word-break:break-word;
-}
 
-.rewardPrize{
-  position:relative;
-  z-index:2;
   display:grid;
-  grid-template-columns: 54px 1fr;
-  gap:12px;
+  grid-template-columns: 56px 1fr;
+  gap:14px;
   align-items:center;
 
-  margin:0 auto 12px;
-  padding:12px 12px;
-  border-radius:18px;
+  /* ✅ tidak mepet border emas */
+  margin: 6px auto 16px;
+  padding: 14px 14px;
+  border-radius:20px;
+
   border:1px solid rgba(255,228,166,.42);
   background:
     radial-gradient(420px 220px at 50% 0%, rgba(255,228,166,.18), transparent 70%),
     rgba(8,2,6,.32);
   box-shadow: 0 18px 40px rgba(0,0,0,.36);
+
   max-width: 100%;
 }
 
 .rewardThumb{
-  width:54px;
-  height:54px;
-  border-radius:16px;
+  width:56px;
+  height:56px;
+  border-radius:18px;
   border:1px solid rgba(255,228,166,.26);
   background:
     radial-gradient(40px 34px at 30% 25%, rgba(255,255,255,.16), transparent 70%),
@@ -1059,11 +1052,20 @@ button:active{ transform:translateY(0) scale(.99); }
   object-fit:cover;
   display:block;
   opacity:.96;
+  transform:translateZ(0);
+}
+
+.rewardValWrap{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
 }
 
 .rewardValWrap .val{
-  font-size:clamp(14px, 3.2vw, 18px);
-  line-height:1.15;
+  font-size:clamp(15px, 3.4vw, 19px);
+  line-height:1.12;
   font-weight:1000;
   letter-spacing:.5px;
   color:rgba(255,246,224,.98);
@@ -1071,21 +1073,28 @@ button:active{ transform:translateY(0) scale(.99); }
   word-break:break-word;
 }
 
+/* ─────────────────────────────
+ * META ROWS (USER / WAKTU)
+ * ─────────────────────────── */
 .popMeta{
   position:relative;
   z-index:2;
-  margin: 8px 0 14px;
+
+  /* ✅ lebih lega dari border emas */
+  margin: 10px 0 18px;
   display:grid;
-  gap:10px;
+  gap:12px;
 }
 .metaRow{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:10px;
+  gap:12px;
 
-  padding:11px 12px;
-  border-radius:14px;
+  /* ✅ padding lebih besar biar ga mepet */
+  padding:13px 14px;
+  border-radius:16px;
+
   border:1px solid rgba(255,228,166,.20);
   background: rgba(12,2,6,.22);
 }
@@ -1101,10 +1110,14 @@ button:active{ transform:translateY(0) scale(.99); }
   letter-spacing:.25px;
   color:rgba(255,228,166,.98);
   text-align:right;
+
   max-width: 70%;
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
+
+  /* ✅ biar tidak nempel */
+  padding-left:10px;
 }
 
 /* ✅ status note tetap ada */
@@ -1123,7 +1136,7 @@ button:active{ transform:translateY(0) scale(.99); }
   display:grid;
   gap:12px;
   justify-items:center;
-  margin-top:14px;
+  margin-top:16px;
   padding-top:2px;
 }
 
@@ -1807,18 +1820,20 @@ prizeIntro: {
     return pool[pool.length - 1].label;
   }
 
-  function fmtTime(ts){
-    try{
-      const d = new Date(ts || Date.now());
-      return d.toLocaleString(undefined, {
-        year:"numeric", month:"2-digit", day:"2-digit",
-        hour:"2-digit", minute:"2-digit", second:"2-digit"
-      });
-    }catch{
-      return String(ts || "");
-    }
-  }
+function fmtTime(ts){
+  try{
+    const d = new Date(ts || Date.now());
 
+    // ✅ contoh: "Senin, 09 Februari 2026 • 21.47.28"
+    const hari = d.toLocaleDateString("id-ID", { weekday:"long" });
+    const tanggal = d.toLocaleDateString("id-ID", { day:"2-digit", month:"long", year:"numeric" });
+    const jam = d.toLocaleTimeString("id-ID", { hour:"2-digit", minute:"2-digit", second:"2-digit" }).replace(/:/g,".");
+
+    return `${hari}, ${tanggal} • ${jam}`;
+  }catch{
+    return String(ts || "");
+  }
+}
   async function apiFetch(path, body){
     const base = (CONFIG.site.baseUrl || "").replace(/\/+$/,"");
     const url  = (String(path || "").startsWith("http") ? path : (base + path));
